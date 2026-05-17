@@ -19,8 +19,8 @@ Binding process document. Read once; revisit when conventions feel off.
 
 - **Never commit to `main`.** Every change lives on a feature branch. `main` only receives explicit fast-forward merges via PR.
 - **Push after every commit.** Local-only commits are not allowed. Spec, docs, and version bumps must always be on origin.
-- **Topic branches accumulate many commits.** A single branch normally hosts dozens of `code!`s before a PR is opened. Don't open a new branch per `code!`. Don't open a PR after each commit.
-- **PR is user-triggered.** The `code!` 5-step sequence ENDS at step 5 (deploy). It does NOT auto-open a PR.
+- **Topic branches accumulate many commits.** A single branch normally hosts dozens of `gogogo!`s before a PR is opened. Don't open a new branch per `gogogo!`. Don't open a PR after each commit.
+- **PR is user-triggered.** The `gogogo!` 5-step sequence ENDS at step 5 (deploy). It does NOT auto-open a PR.
 - **Merge with rebase to preserve linear history.** `gh pr merge --rebase --delete-branch` is the canonical merge under branch protection.
 - **Delete branches after successful merge** (bundled with `--delete-branch`).
 - **Never `git checkout` / `git switch` without explicit instruction.** "Check the latest stuff" ≠ checkout.
@@ -31,7 +31,7 @@ Binding process document. Read once; revisit when conventions feel off.
 | Phase | Frequency |
 |---|---|
 | §1 Set up branch | Once per branch |
-| §2 Commits + push | Many per branch — once per `code!` |
+| §2 Commits + push | Many per branch — once per `gogogo!` |
 | §3 Open PR | Once per branch, on user trigger |
 | §4 Review | Once per branch, between PR open and merge |
 | §5 Address feedback | As needed, more commits on the same branch |
@@ -40,12 +40,12 @@ Binding process document. Read once; revisit when conventions feel off.
 
 ## TL;DR
 
-1. Topic branch from `main`. Push branch immediately on `git checkout -b`. Branch persists across many `code!`s.
-2. **No code edits without the literal `code!` in the current user message.**
-3. On `code!`, atomic 5-step: **spec → bump+CHANGELOG → code → commit → deploy**. Push after every commit.
+1. Topic branch from `main`. Push branch immediately on `git checkout -b`. Branch persists across many `gogogo!`s.
+2. **No code edits without the literal `gogogo!` in the current user message.**
+3. On `gogogo!`, atomic 5-step: **spec → bump+CHANGELOG → code → commit → deploy**. Push after every commit.
 4. Every change bumps `VERSION`. ANY change.
 5. PR opens only on user trigger ("PR" / "ready"). Body uses `## Summary` + `## Test plan`.
-6. Review (ultrareview or manual). Address feedback with more `code!`s on the same branch.
+6. Review (ultrareview or manual). Address feedback with more `gogogo!`s on the same branch.
 7. On user "merge": `gh pr merge --rebase --delete-branch`.
 8. Deploy on every commit to `main` (no separate dev/stage/live during this phase).
 
@@ -139,7 +139,7 @@ Whichever path runs, the **deliverable is GitHub comments, posted via `gh api`, 
 
 ## 5. Address review feedback
 
-Each round of fixes follows the full `code!` workflow. New commits go on the same branch.
+Each round of fixes follows the full `gogogo!` workflow. New commits go on the same branch.
 
 ## 6. Merge
 
@@ -181,15 +181,15 @@ gh pr view <PR#> --json state    # MERGED
 
 ---
 
-# `code!` passphrase — hard gate + mandatory workflow
+# `gogogo!` passphrase — hard gate + mandatory workflow
 
 ## The hard gate
 
-**Do NOT write, edit, or modify any code unless the user's CURRENT message contains the literal substring `code!`.**
+**Do NOT write, edit, or modify any code unless the user's CURRENT message contains the literal substring `gogogo!`.**
 
-Before any state-mutating tool call, self-check: *"Does THIS exact message from the user contain the literal substring `code!`?"*
+Before any state-mutating tool call, self-check: *"Does THIS exact message from the user contain the literal substring `gogogo!`?"*
 
-- Absent → reply with the plan + "Send `code!` and I'll do it." STOP.
+- Absent → reply with the plan + "Send `gogogo!` and I'll do it." STOP.
 - Present → execute the 5-step sequence below.
 
 The check is the FIRST step of every code-change response. **Auto mode does NOT override this gate.**
@@ -198,13 +198,13 @@ The check is the FIRST step of every code-change response. **Auto mode does NOT 
 
 `now lets X` · `let's X` · `can you X` · `please X` · `do X` · `go` · `proceed` · `ship it` · `yes` · `yeah` · `ok do it` · `sure` · `we should X` · imperatives like `merge` / `revert` / `commit` / `deploy` / `push` · detailed feature descriptions in imperative mood · user pasting an exact diff with "just do the fix"
 
-All → reply with the plan + "Send `code!` and I'll do it" → STOP.
+All → reply with the plan + "Send `gogogo!` and I'll do it" → STOP.
 
 ## Phrases that mean DEFINITELY NOT code
 
 `understood?` · `wdyt?` · `make sense?` · `ok?` · any closing confirmation question.
 
-## Allowed without `code!`
+## Allowed without `gogogo!`
 
 Reading files · grep · read-only git · web search · planning text · clarifying questions · writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`).
 
@@ -214,16 +214,16 @@ Reading files · grep · read-only git · web search · planning text · clarify
 
 | Rationalization | Why it's wrong |
 |---|---|
-| "Intent is unambiguous, just ship it" | Gate is the literal `code!` substring, not intent. |
-| "User said `code!` recently, this is in scope" | Every code change needs a FRESH `code!`. |
+| "Intent is unambiguous, just ship it" | Gate is the literal `gogogo!` substring, not intent. |
+| "User said `gogogo!` recently, this is in scope" | Every code change needs a FRESH `gogogo!`. |
 | "Auto mode says minimize interruptions" | Auto mode does NOT override this gate. |
-| "Direct imperative + clarity = authorization" | Imperative grammar ≠ `code!`. |
-| "User said yes" | `yes` is not `code!`. |
+| "Direct imperative + clarity = authorization" | Imperative grammar ≠ `gogogo!`. |
+| "User said yes" | `yes` is not `gogogo!`. |
 | "It's just a docs/SPEC tweak" | Tracked-file edits need the gate. |
 | "User pasted the diff verbatim" | WHAT ≠ WHEN. |
 | "User is rushing" | Schedule is not my problem; the gate is. |
 
-## Mandatory 5-step sequence on `code!`
+## Mandatory 5-step sequence on `gogogo!`
 
 Atomic.
 

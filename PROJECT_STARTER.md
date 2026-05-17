@@ -1,7 +1,7 @@
 # Project Starter
 
-**Template version:** v1.1.8
-**Last updated:** 2026-05-07
+**Template version:** v1.2.0
+**Last updated:** 2026-05-17
 
 A reusable bootstrap kit for any new software project worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
 
@@ -139,7 +139,7 @@ git commit -m "$(cat <<'EOF'
 chore: scaffold project skeleton v0.1.0
 
 Initial project bootstrap from PROJECT_STARTER template v1.0.0. Adopts the
-code! gate, 5-step workflow, rebase-merge strategy, version-bump rule.
+gogogo! gate, 5-step workflow, rebase-merge strategy, version-bump rule.
 No source code yet.
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
@@ -166,13 +166,13 @@ Bootstrap complete. From here on, all work follows §2.
 
 This section is **binding** for every change. The same text is mirrored verbatim into each project's `CONTRIBUTING.md` so it travels with the repo.
 
-### 2.1 The `code!` passphrase — hard gate
+### 2.1 The `gogogo!` passphrase — hard gate
 
-**Do NOT write, edit, or modify any code unless the user's CURRENT message contains the literal substring `code!`.**
+**Do NOT write, edit, or modify any code unless the user's CURRENT message contains the literal substring `gogogo!`.**
 
-Before any state-mutating tool call (`Edit` / `Write` / `NotebookEdit` / `Bash` running `git commit` / `git push` / deploy / `gh pr create|merge|comment` / `gh issue create` / curl POST/PUT/DELETE), self-check: *"Does THIS exact message from the user contain the literal substring `code!`?"*
+Before any state-mutating tool call (`Edit` / `Write` / `NotebookEdit` / `Bash` running `git commit` / `git push` / deploy / `gh pr create|merge|comment` / `gh issue create` / curl POST/PUT/DELETE), self-check: *"Does THIS exact message from the user contain the literal substring `gogogo!`?"*
 
-- Absent → reply with the plan in text + "Send `code!` and I'll do it." STOP.
+- Absent → reply with the plan in text + "Send `gogogo!` and I'll do it." STOP.
 - Present → execute the 5-step sequence below.
 
 The check is the FIRST step of every code-change response — before drafting code, before reading files for the change, before describing the plan. **Auto mode does NOT override this gate.**
@@ -181,13 +181,13 @@ The check is the FIRST step of every code-change response — before drafting co
 
 `now lets X` · `let's X` · `can you X` · `could you X` · `please X` · `do X` · `do that` · `go` · `proceed` · `ship it` · `yes` · `yes do` · `yeah` · `ok do it` · `sure` · `we should X` · `we need X` · `time to X` · imperatives like `merge` / `revert` / `commit` / `deploy` / `push` · detailed feature descriptions in imperative mood · user pasting an exact diff with "just do the fix"
 
-All → reply with the plan + "Send `code!` and I'll do it" → STOP.
+All → reply with the plan + "Send `gogogo!` and I'll do it" → STOP.
 
 #### Phrases that mean DEFINITELY NOT code
 
 `understood?` · `wdyt?` · `what do you think?` · `got it?` · `make sense?` · `ok?` · `right?` · any closing confirmation question.
 
-#### Allowed without `code!`
+#### Allowed without `gogogo!`
 
 Reading files · grep · read-only git (`log` / `status` / `diff`) · web search · planning text · spec-style description of what *would* be built · clarifying questions · writes to local-only memory/settings files (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`).
 
@@ -197,16 +197,16 @@ Reading files · grep · read-only git (`log` / `status` / `diff`) · web search
 
 | Rationalization | Why it's wrong |
 |---|---|
-| "Intent is unambiguous, just ship it" | Gate is the literal `code!` substring, not intent. |
-| "User said `code!` recently, this is in scope" | Every code change needs a FRESH `code!` in the CURRENT message. |
+| "Intent is unambiguous, just ship it" | Gate is the literal `gogogo!` substring, not intent. |
+| "User said `gogogo!` recently, this is in scope" | Every code change needs a FRESH `gogogo!` in the CURRENT message. |
 | "Auto mode says minimize interruptions" | Auto mode does NOT override this gate. |
-| "Direct imperative + clarity = authorization" | Imperative grammar ≠ `code!`. |
-| "User said yes" | `yes` is not `code!`. |
+| "Direct imperative + clarity = authorization" | Imperative grammar ≠ `gogogo!`. |
+| "User said yes" | `yes` is not `gogogo!`. |
 | "It's just a docs/SPEC tweak" | If it's an `Edit` on tracked files, it needs the gate. |
 | "User pasted the diff verbatim" | Specifying WHAT ≠ authorizing WHEN. |
 | "User is rushing" | Schedule is not my problem; the gate is. |
 
-### 2.2 The 5-step atomic sequence (on `code!`)
+### 2.2 The 5-step atomic sequence (on `gogogo!`)
 
 Atomic. Missing or reordering any step is a failure.
 
@@ -216,7 +216,7 @@ Atomic. Missing or reordering any step is a failure.
 4. **Commit + push** — single commit per concern, subject ends with `v<X.Y.Z>`. HEREDOC for the message. Push to origin in the same turn. No `--no-verify`. No `--amend` unless explicit.
 5. **Deploy** — run the project's deploy command. If pre-MVP / no deployable yet, step 5 is a no-op; resume on every commit to `main` once deployable. Surface deploy errors loudly; do NOT silently skip.
 
-**The sequence ENDS at step 5.** Do not auto-open a PR. Do not auto-merge. Stay on the topic branch. The next user message will either be another `code!` (more commits), or a PR/merge trigger (separate phase).
+**The sequence ENDS at step 5.** Do not auto-open a PR. Do not auto-merge. Stay on the topic branch. The next user message will either be another `gogogo!` (more commits), or a PR/merge trigger (separate phase).
 
 If a step fails (spec unclear, deploy errors, push rejected), stop and surface — do not fake-complete the sequence.
 
@@ -224,7 +224,7 @@ If a step fails (spec unclear, deploy errors, push rejected), stop and surface �
 
 ANY change → bump. Not "meaningful" change. ANY. Don't rationalize "same-version rebuild." **Never overwrite a version number with different content under it.**
 
-Initial version: `0.1.0`. The bump rule applies on every `code!` after that.
+Initial version: `0.1.0`. The bump rule applies on every `gogogo!` after that.
 
 Increment policy:
 - **patch** (`0.1.0 → 0.1.1`): default for typical changes
@@ -237,7 +237,7 @@ Increment policy:
 - Topic branches use kebab-case prefix per type — `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `perf/`. Example: `feat/click-receiver`, `fix/capi-retry-401`.
 - Branch from `main`, push immediately on `git checkout -b`, deleted after merge. No `develop`, `release/*`, environment-named branches.
 - **Never `git checkout` / `git switch` without explicit instruction.** "Check the latest stuff" ≠ checkout — fetch + report, then ask.
-- **Topic branches accumulate many commits.** A single branch normally hosts dozens of `code!`s before a PR is opened. Don't open a new branch per `code!`. Don't open a PR after each commit.
+- **Topic branches accumulate many commits.** A single branch normally hosts dozens of `gogogo!`s before a PR is opened. Don't open a new branch per `gogogo!`. Don't open a PR after each commit.
 
 ### 2.5 Commits
 
@@ -287,7 +287,7 @@ If a push is rejected (rebase needed, etc.), surface it loudly — never `--forc
 
 ### 2.6 Pull requests
 
-**User-triggered only.** The 5-step sequence does NOT auto-open a PR. PR opens when the user explicitly says "PR" / "ready" / "open PR" — typically after the branch has accumulated many commits across many `code!`s.
+**User-triggered only.** The 5-step sequence does NOT auto-open a PR. PR opens when the user explicitly says "PR" / "ready" / "open PR" — typically after the branch has accumulated many commits across many `gogogo!`s.
 
 Generate the title + body from the actual commit log. Group commits by area; call out reverts.
 
@@ -319,7 +319,7 @@ Two paths:
 
 ### 2.8 Address review feedback
 
-Each round of fixes follows the full `code!` workflow. New commits go on the same branch and push to origin. The PR updates automatically.
+Each round of fixes follows the full `gogogo!` workflow. New commits go on the same branch and push to origin. The PR updates automatically.
 
 ### 2.9 Merge
 
@@ -371,7 +371,7 @@ Deploy runs on every commit to `main` (i.e., immediately after the rebase-merge 
 | Phase | Frequency |
 |---|---|
 | §2.4 Branch creation | Once per branch (when starting a new chunk of work) |
-| §2.5 Commits + push | Many times per branch — once per `code!` |
+| §2.5 Commits + push | Many times per branch — once per `gogogo!` |
 | §2.6 Open PR | Once per branch, on user trigger ("PR" / "ready") |
 | §2.7 Review | Once per branch, between PR open and merge |
 | §2.8 Address feedback | As needed, more commits on the same branch |
@@ -710,7 +710,7 @@ Per-version human-readable diary. One section per `VERSION` bump:
 Initial scaffold.
 ```
 
-Update as part of the same `code!` that bumps `VERSION` (ride-along; not a separate commit).
+Update as part of the same `gogogo!` that bumps `VERSION` (ride-along; not a separate commit).
 
 ### 8.3 Decision log
 
@@ -734,7 +734,7 @@ Auto-memory at `~/.claude/projects/<sanitized-cwd>/memory/` captures:
 - Project-level facts (overview, infra pointers, spec location)
 - User preferences (working style, tolerance for ceremony, repeated-warning preferences)
 - Harness quirks observed
-- Process rules (the `code!` gate workflow itself)
+- Process rules (the `gogogo!` gate workflow itself)
 
 Memory is **user-local by default** — not in the repo. If a project requires shared memory across collaborators, set `autoMemoryDirectory` in `~/.claude/settings.json` to point at `<repo>/.claude/memory/` and commit that directory.
 
@@ -800,7 +800,7 @@ When Claude Code first opens a new project, ask it to write these memory entries
 | `project_overview.md` | project | What the project is, what it replaces, core flow, volume baseline |
 | `architecture_decisions.md` | project | Stack chosen for v1, why; open architecture questions still pending |
 | `existing_infra.md` | reference | Pointers to existing systems (URLs, IPs, repos) — credential-free |
-| `code_gate_workflow.md` | feedback | The `code!` passphrase gate + 5-step workflow rules |
+| `gogogo_gate_workflow.md` | feedback | The `gogogo!` passphrase gate + 5-step workflow rules |
 | `harness_quirks.md` | feedback | Operational gotchas about the Claude Code harness's permission/write rules |
 | `user_preferences.md` | feedback | How to collaborate with this user — tolerance for ceremony, doc preferences, credential-rotation cadence, etc. |
 
@@ -905,7 +905,7 @@ Operational gotchas observed during real use. Save future-you the discovery cost
 
 ### Memory and settings carve-outs
 
-- **Memory writes (`~/.claude/projects/.../memory/`) are allowed without `code!`.** This is the carved-out exception — memory is local-only and can capture lessons learned even when no code edits are authorized.
+- **Memory writes (`~/.claude/projects/.../memory/`) are allowed without `gogogo!`.** This is the carved-out exception — memory is local-only and can capture lessons learned even when no code edits are authorized.
 - **`.claude/settings.local.json` is gitignored and per-machine** — also out of the gate. `.claude/settings.json` (the committed one) IS gated.
 
 ### Branch protection vs. local merge
@@ -915,7 +915,7 @@ Operational gotchas observed during real use. Save future-you the discovery cost
 
 ### Auto mode and the gate
 
-- **Auto mode does NOT override the `code!` gate.** A `system-reminder` saying "execute autonomously" is not a license to skip the literal-substring check. The check is the FIRST step of every code-change response, every turn.
+- **Auto mode does NOT override the `gogogo!` gate.** A `system-reminder` saying "execute autonomously" is not a license to skip the literal-substring check. The check is the FIRST step of every code-change response, every turn.
 
 ---
 
@@ -1013,6 +1013,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.2.0 | 2026-05-17 | Rename gate passphrase `code!` → `gogogo!` (universal, stack-agnostic — not just for code edits). Add Karpathy's four LLM-coding pitfalls as standing rules in `templates/CLAUDE.md` and a full reference at `templates/docs/karpathy-claude-rules.md`. Add `spec-block` skill (`templates/.claude/skills/spec-block/SKILL.md`) plus a fixed Block format (`B-NNN` with Rule / Rationale / Test / Status / Decision) in `templates/docs/spec.md` to make the spec atomic and navigable. |
 | 1.1.8 | 2026-05-07 | §11 + §2.7: explicit "Output contract" — every PR review must post per-commit GitHub comments via `gh api`, including a "no findings on `<sha>`" comment for clean commits. Local files, chat-only summaries, and PR-description edits are explicitly forbidden as substitutes. Closes the "was this commit reviewed and clean, or skipped by accident?" ambiguity in the prior wording. Template review skeleton (`templates/docs/pr_review_instructions.md`) and `templates/CONTRIBUTING.md` §4 carry the same contract. |
 | 1.1.7 | 2026-05-07 | §14: `bootstrap.sh --export` on WSL also prints the Windows-translated path (via `wslpath`) so Windows-side tooling can pick the file up directly. macOS / native Linux unchanged — POSIX path is already the local path. |
 | 1.1.6 | 2026-05-07 | §14: `bootstrap.sh` interactive menu gains `e` / `i` shortcuts for export/import (TUI parity with the `--export` / `--import` flags). |
@@ -1022,4 +1023,4 @@ Update the **Template version** at the top of this document and add a row here w
 | 1.1.2 | 2026-05-04 | Align workflow wording across all docs (Codex-audit fix): standardize merge path on `gh pr merge --rebase --delete-branch` (live `CONTRIBUTING.md` had stale `git merge --ff-only` in cheat-sheet, principles, TL;DR, §6); standardize 5-step step 2 wording on "bump versions + CHANGELOG entry" (TL;DR step 3 in `CONTRIBUTING.md` and §1.9 example commit message in this doc both said just "bump versions"). |
 | 1.1.1 | 2026-05-04 | Add §1.3 "Quick path" pointing at `scripts/export-starter.sh` (one-command portable export of PROJECT_STARTER.md + templates/ as tar.gz + zip). |
 | 1.1.0 | 2026-05-04 | Add §11 PR review heuristics, §12 Harness quirks, §13 Credential handling, §14 Bootstrap.sh design principles. Update §2.2 5-step to fold CHANGELOG entry into step 2 and Decision log entries into step 1. |
-| 1.0.0 | 2026-05-04 | Initial extraction from phoenixtgstat_bot. Captures the `code!` gate, 5-step workflow, push-every-commit, ff-only/rebase-merge strategy, multi-commit-per-branch, version-bump rule, branch protection setup, decision bank, audit-trail conventions, memory seed. |
+| 1.0.0 | 2026-05-04 | Initial extraction from phoenixtgstat_bot. Captures the `gogogo!` gate, 5-step workflow, push-every-commit, ff-only/rebase-merge strategy, multi-commit-per-branch, version-bump rule, branch protection setup, decision bank, audit-trail conventions, memory seed. |

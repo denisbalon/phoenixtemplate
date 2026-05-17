@@ -1,12 +1,12 @@
 # Claude Code session guidance
 
-## `code!` passphrase — read this first (HARD GATE)
+## `gogogo!` passphrase — read this first (HARD GATE)
 
-**Never write, edit, or modify any code unless the user's CURRENT message contains the literal substring `code!`.** Reading files, grepping, planning in chat, asking clarifying questions, and writing to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
+**Never write, edit, or modify any code unless the user's CURRENT message contains the literal substring `gogogo!`.** Reading files, grepping, planning in chat, asking clarifying questions, and writing to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
 
-When `code!` is present, follow the **5-step atomic workflow**: spec (incl. decision log entry if architectural) → bump versions + CHANGELOG entry → code → commit (push immediately) → deploy. Subject ends `v<X.Y.Z>`. Every change bumps `VERSION` AND adds a `CHANGELOG.md` entry. Every commit is pushed to origin in the same turn — no local-only commits.
+When `gogogo!` is present, follow the **5-step atomic workflow**: spec (incl. decision log entry if architectural) → bump versions + CHANGELOG entry → code → commit (push immediately) → deploy. Subject ends `v<X.Y.Z>`. Every change bumps `VERSION` AND adds a `CHANGELOG.md` entry. Every commit is pushed to origin in the same turn — no local-only commits.
 
-**The sequence ENDS at deploy.** It does NOT auto-open a PR. The current topic branch accumulates many commits across many `code!`s. PR opens only when the user says "PR" / "ready" / similar. Merge is another separate user-triggered step ("merge") — `gh pr merge --rebase --delete-branch` after PR + review.
+**The sequence ENDS at deploy.** It does NOT auto-open a PR. The current topic branch accumulates many commits across many `gogogo!`s. PR opens only when the user says "PR" / "ready" / similar. Merge is another separate user-triggered step ("merge") — `gh pr merge --rebase --delete-branch` after PR + review.
 
 `.claude/settings.json` (committed) IS gated; `.claude/settings.local.json` (gitignored) is not.
 
@@ -32,6 +32,17 @@ A `SessionStart` hook in `.claude/settings.json` runs `scripts/check-env.sh`. If
 
 - **Never paste credentials into chat.** Anything entered in the conversation is logged.
 - <PROJECT_SPECIFIC: any leaked credentials and rotation status; any production endpoints worth flagging; CF-Connecting-IP vs X-Forwarded-For preferences; etc.>
+
+## Coding pitfalls to avoid (Karpathy's four)
+
+Standing rules for every session. Full text + sources in [docs/karpathy-claude-rules.md](docs/karpathy-claude-rules.md).
+
+1. **Think before coding.** State assumptions explicitly; surface alternatives when ambiguous; verify load-bearing facts (file, signature, schema) before depending on them.
+2. **Simplicity first.** Implement only what was asked. No speculative scaffolding, no "while I was here" cleanup, no premature abstractions. Three similar lines beats a wrong factory.
+3. **Surgical changes.** Touch only what the task requires. Match existing style. Don't bundle drive-by refactors into the diff — mention them in chat instead.
+4. **Goal-driven execution.** Define the success criterion *before* writing code, then actually run the check (test, endpoint, browser). "Types pass" ≠ "works."
+
+Slogan: *don't tell the agent what to do — give it success criteria and watch it go.*
 
 ## Coding conventions
 
