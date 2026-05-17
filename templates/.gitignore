@@ -1,0 +1,51 @@
+# Secrets / config
+.env
+.env.*
+!.env.example
+
+# Local Claude Code config (per-machine; settings.json is committed)
+.claude/settings.local.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+
+# uv
+# (.python-version is COMMITTED — pins the runtime)
+
+# Node (delete if not Node)
+node_modules/
+.npm
+.pnp.*
+
+# Local state / data (typically lives outside the repo in production)
+data/
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+logs/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

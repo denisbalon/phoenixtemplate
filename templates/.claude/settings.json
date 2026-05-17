@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(scripts/check-env.sh)",
+      "Bash(scripts/bootstrap.sh)",
+      "Bash(./scripts/check-env.sh)",
+      "Bash(./scripts/bootstrap.sh)",
+      "Bash(bash scripts/check-env.sh)",
+      "Bash(bash scripts/bootstrap.sh)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/check-env.sh 2>&1 | head -20",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
