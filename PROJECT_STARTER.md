@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.2.0
+**Template version:** v1.3.0
 **Last updated:** 2026-05-17
 
 A reusable bootstrap kit for any new software project worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
@@ -168,22 +168,46 @@ This section is **binding** for every change. The same text is mirrored verbatim
 
 ### 2.1 The `gogogo!` passphrase — hard gate
 
-**Do NOT write, edit, or modify any code unless the user's CURRENT message contains the literal substring `gogogo!`.**
+**Do NOT take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.**
 
-Before any state-mutating tool call (`Edit` / `Write` / `NotebookEdit` / `Bash` running `git commit` / `git push` / deploy / `gh pr create|merge|comment` / `gh issue create` / curl POST/PUT/DELETE), self-check: *"Does THIS exact message from the user contain the literal substring `gogogo!`?"*
+`gogogo!` is the **execute trigger**. It must be preceded by an **action verb** in the same message — the verb specifies *what* to execute. `gogogo!` is the signature; the verb is the contract.
 
-- Absent → reply with the plan in text + "Send `gogogo!` and I'll do it." STOP.
-- Present → execute the 5-step sequence below.
+#### Action verb → workflow
 
-The check is the FIRST step of every code-change response — before drafting code, before reading files for the change, before describing the plan. **Auto mode does NOT override this gate.**
+| Phrase | Action | Workflow |
+|---|---|---|
+| `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full feature change | 5-step (§2.2): spec → bump+CHANGELOG → code → commit+push → deploy |
+| `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) | §2.5 only |
+| `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request from current branch | §2.6 |
+| `review gogogo!` | Run `/ultrareview` (or manual) | §2.7 |
+| `merge gogogo!` | Merge the open PR (rebase + delete-branch) | §2.9 |
+| `deploy gogogo!` | Deploy current `main` | §2.11 |
+| `revert gogogo!` | Revert last commit + redeploy | §2.12 |
+
+Before any state-mutating tool call (`Edit` / `Write` / `NotebookEdit` / `Bash` running `git commit` / `git push` / deploy / `gh pr create|merge|comment` / `gh issue create` / curl POST/PUT/DELETE), self-check:
+
+1. Does THIS exact message contain the literal substring `gogogo!`?
+2. What is the action verb immediately before it?
+3. Does that verb match the action I'm about to take?
+
+- No `gogogo!` → reply with the plan in text + "Send `<verb> gogogo!` and I'll do it." STOP.
+- `gogogo!` with no verb → reply *"Which action? code / commit / PR / merge / deploy / review / revert?"* and STOP.
+- `<verb> gogogo!` but I was about to do a *different* action → STOP, surface the mismatch, do nothing.
+- `<verb> gogogo!` matching the action → execute the workflow for that verb.
+
+The check is the FIRST step of every action response — before drafting code, before reading files for the change, before describing the plan. **Auto mode does NOT override this gate.**
 
 #### Phrases that LOOK like authorization but aren't
 
-`now lets X` · `let's X` · `can you X` · `could you X` · `please X` · `do X` · `do that` · `go` · `proceed` · `ship it` · `yes` · `yes do` · `yeah` · `ok do it` · `sure` · `we should X` · `we need X` · `time to X` · imperatives like `merge` / `revert` / `commit` / `deploy` / `push` · detailed feature descriptions in imperative mood · user pasting an exact diff with "just do the fix"
+Bare imperatives *without* `gogogo!`:
 
-All → reply with the plan + "Send `gogogo!` and I'll do it" → STOP.
+`now lets X` · `let's X` · `can you X` · `could you X` · `please X` · `do X` · `do that` · `go` · `proceed` · `ship it` · `yes` · `yes do` · `yeah` · `ok do it` · `sure` · `we should X` · `we need X` · `time to X` · `merge` (alone) · `revert` (alone) · `commit` (alone) · `deploy` (alone) · `push` (alone) · `PR` (alone) · detailed feature descriptions in imperative mood · user pasting an exact diff with "just do the fix"
 
-#### Phrases that mean DEFINITELY NOT code
+All → reply with the plan + "Send `<verb> gogogo!` and I'll do it" → STOP.
+
+The action verbs in the table above (`PR`, `merge`, `deploy`, etc.) are ONLY authorizing when paired with `gogogo!` in the same message. `merge` alone never triggers a merge.
+
+#### Phrases that mean DEFINITELY NOT action
 
 `understood?` · `wdyt?` · `what do you think?` · `got it?` · `make sense?` · `ok?` · `right?` · any closing confirmation question.
 
@@ -198,13 +222,15 @@ Reading files · grep · read-only git (`log` / `status` / `diff`) · web search
 | Rationalization | Why it's wrong |
 |---|---|
 | "Intent is unambiguous, just ship it" | Gate is the literal `gogogo!` substring, not intent. |
-| "User said `gogogo!` recently, this is in scope" | Every code change needs a FRESH `gogogo!` in the CURRENT message. |
+| "User said `gogogo!` recently, this is in scope" | Every action needs a FRESH `<verb> gogogo!` in the CURRENT message. |
 | "Auto mode says minimize interruptions" | Auto mode does NOT override this gate. |
 | "Direct imperative + clarity = authorization" | Imperative grammar ≠ `gogogo!`. |
 | "User said yes" | `yes` is not `gogogo!`. |
 | "It's just a docs/SPEC tweak" | If it's an `Edit` on tracked files, it needs the gate. |
 | "User pasted the diff verbatim" | Specifying WHAT ≠ authorizing WHEN. |
 | "User is rushing" | Schedule is not my problem; the gate is. |
+| "Bare `gogogo!`, I'll default to the 5-step" | Bare `gogogo!` is ambiguous — ask for the verb. |
+| "`merge gogogo!` is close enough to authorize a PR open too" | One verb, one action. `PR gogogo!` for PR; `merge gogogo!` for merge. |
 
 ### 2.2 The 5-step atomic sequence (on `gogogo!`)
 
@@ -287,7 +313,7 @@ If a push is rejected (rebase needed, etc.), surface it loudly — never `--forc
 
 ### 2.6 Pull requests
 
-**User-triggered only.** The 5-step sequence does NOT auto-open a PR. PR opens when the user explicitly says "PR" / "ready" / "open PR" — typically after the branch has accumulated many commits across many `gogogo!`s.
+**User-triggered only.** The 5-step sequence does NOT auto-open a PR. PR opens when the user explicitly says **`PR gogogo!`** / **`ready gogogo!`** / **`open PR gogogo!`** — typically after the branch has accumulated many commits across many `<verb> gogogo!`s. The bare word "PR" without `gogogo!` does NOT authorize.
 
 Generate the title + body from the actual commit log. Group commits by area; call out reverts.
 
@@ -323,7 +349,7 @@ Each round of fixes follows the full `gogogo!` workflow. New commits go on the s
 
 ### 2.9 Merge
 
-Only after the user explicitly says "merge". Never implicit.
+Only after the user explicitly says **`merge gogogo!`**. Never implicit. The bare word "merge" without `gogogo!` does NOT authorize.
 
 With branch protection on (§1.6), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked.
 
@@ -1013,6 +1039,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.3.0 | 2026-05-17 | §2.1 gate rewrite: `gogogo!` is now the execute trigger only; it must be preceded by an action verb in the same message specifying *what* to execute. Adds verb→workflow table covering `code/feat/fix/... gogogo!` (full 5-step), `commit gogogo!`, `PR gogogo!`, `review gogogo!`, `merge gogogo!`, `deploy gogogo!`, `revert gogogo!`. Bare `gogogo!` is ambiguous and triggers a clarification question. §2.6 and §2.9 updated to reference the new explicit phrases. Same convention propagated to `templates/CLAUDE.md` and `templates/CONTRIBUTING.md` (cheat-sheet + TL;DR + gate section). Two new rationalizations added to the refuse-list. Implements D-004 (this repo's `docs/spec.md`). |
 | 1.2.0 | 2026-05-17 | Rename gate passphrase `code!` → `gogogo!` (universal, stack-agnostic — not just for code edits). Add Karpathy's four LLM-coding pitfalls as standing rules in `templates/CLAUDE.md` and a full reference at `templates/docs/karpathy-claude-rules.md`. Add `spec-block` skill (`templates/.claude/skills/spec-block/SKILL.md`) plus a fixed Block format (`B-NNN` with Rule / Rationale / Test / Status / Decision) in `templates/docs/spec.md` to make the spec atomic and navigable. |
 | 1.1.8 | 2026-05-07 | §11 + §2.7: explicit "Output contract" — every PR review must post per-commit GitHub comments via `gh api`, including a "no findings on `<sha>`" comment for clean commits. Local files, chat-only summaries, and PR-description edits are explicitly forbidden as substitutes. Closes the "was this commit reviewed and clean, or skipped by accident?" ambiguity in the prior wording. Template review skeleton (`templates/docs/pr_review_instructions.md`) and `templates/CONTRIBUTING.md` §4 carry the same contract. |
 | 1.1.7 | 2026-05-07 | §14: `bootstrap.sh --export` on WSL also prints the Windows-translated path (via `wslpath`) so Windows-side tooling can pick the file up directly. macOS / native Linux unchanged — POSIX path is already the local path. |

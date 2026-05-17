@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.3.0 — 2026-05-17
+
+Mirrors `PROJECT_STARTER.md` template v1.3.0.
+
+### Gate convention
+
+- `gogogo!` is now the **execute trigger**; it must be preceded by an **action verb** in the same message specifying *what* to execute. Bare `gogogo!` (no verb) is ambiguous — Claude asks "Which action?" and stops. (`PROJECT_STARTER.md` §2.1, `templates/CLAUDE.md`, `templates/CONTRIBUTING.md`)
+- New verb → workflow table covers: `code/feat/fix/... gogogo!` (full 5-step), `commit gogogo!`, `PR gogogo!`, `review gogogo!`, `merge gogogo!`, `deploy gogogo!`, `revert gogogo!`.
+- §2.6 (PR) and §2.9 (merge) updated to reference the new explicit phrases (`PR gogogo!`, `merge gogogo!`) instead of bare imperatives.
+- Cheat-sheet and TL;DR in `templates/CONTRIBUTING.md` updated to match.
+- Two new rationalizations added to the refuse-list: "bare `gogogo!` → default to 5-step" and "verb-A `gogogo!` is close enough to authorize action B".
+
+Implements D-004 (`docs/spec.md`). Adds B-006.
+
 ## v1.2.0 — 2026-05-17
 
 Mirrors `PROJECT_STARTER.md` template v1.2.0. First release of this repo as a standalone template kit; previously imported as `project-starter-v1.1.8-2026-05-07.tar.gz`.
@@ -28,7 +42,7 @@ Mirrors `PROJECT_STARTER.md` template v1.2.0. First release of this repo as a st
 
 ### This repo
 
-- Adopt the workflow on this repo: add `VERSION`, `CHANGELOG.md` (this file), and `docs/spec.md` written in the new Block format. Eats our own dog food.
+- Adopt the workflow on this repo: add `VERSION`, `CHANGELOG.md`, and `docs/spec.md` (written in the new Block format — eating our own dog food).
 
 ## v0.1.0 — 2026-05-17 (implicit)
 

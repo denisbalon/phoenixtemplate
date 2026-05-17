@@ -2,11 +2,27 @@
 
 ## `gogogo!` passphrase — read this first (HARD GATE)
 
-**Never write, edit, or modify any code unless the user's CURRENT message contains the literal substring `gogogo!`.** Reading files, grepping, planning in chat, asking clarifying questions, and writing to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
+**Never take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.** Reading files, grepping, planning in chat, clarifying questions, and writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
 
-When `gogogo!` is present, follow the **5-step atomic workflow**: spec (incl. decision log entry if architectural) → bump versions + CHANGELOG entry → code → commit (push immediately) → deploy. Subject ends `v<X.Y.Z>`. Every change bumps `VERSION` AND adds a `CHANGELOG.md` entry. Every commit is pushed to origin in the same turn — no local-only commits.
+`gogogo!` is the **execute trigger**. It must be preceded by an **action verb** in the same message — the verb specifies *what* to execute.
 
-**The sequence ENDS at deploy.** It does NOT auto-open a PR. The current topic branch accumulates many commits across many `gogogo!`s. PR opens only when the user says "PR" / "ready" / similar. Merge is another separate user-triggered step ("merge") — `gh pr merge --rebase --delete-branch` after PR + review.
+### Verb → action
+
+| Phrase | Action |
+|---|---|
+| `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy) |
+| `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) |
+| `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request |
+| `review gogogo!` | Run `/ultrareview` (or manual) |
+| `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
+| `deploy gogogo!` | Run the project's deploy command |
+| `revert gogogo!` | Revert last commit + redeploy |
+
+**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / review / revert?"* and STOP.
+**Verb without `gogogo!` does not authorize** → `merge` alone, `PR` alone, etc. never trigger anything. Plan-text + "Send `<verb> gogogo!`".
+**`<verb-A> gogogo!` doesn't authorize action B** → one verb, one action.
+
+When the verb maps to the 5-step workflow, the atomic sequence is: spec (incl. decision log if architectural) → bump versions + CHANGELOG entry → code → commit (push immediately) → deploy. Subject ends `v<X.Y.Z>`. Every change bumps `VERSION` AND adds a `CHANGELOG.md` entry. Every commit is pushed to origin in the same turn — no local-only commits.
 
 `.claude/settings.json` (committed) IS gated; `.claude/settings.local.json` (gitignored) is not.
 

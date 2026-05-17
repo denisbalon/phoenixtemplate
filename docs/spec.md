@@ -58,6 +58,25 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Status:** frozen
 **Decision:** —
 
+### Block B-006: `gogogo!` must be preceded by an action verb
+
+**Rule:** `gogogo!` is the execute trigger only. The action it executes is named by an **action verb** that must appear in the same message, immediately before `gogogo!`. Bare `gogogo!` (no verb) is ambiguous and triggers a clarification question, not an action. Recognized verbs and their workflows:
+
+| Phrase | Action |
+|---|---|
+| `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step (spec → bump+CHANGELOG → code → commit+push → deploy) |
+| `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) |
+| `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request from current branch |
+| `review gogogo!` | Run `/ultrareview` (or manual review) |
+| `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
+| `deploy gogogo!` | Run the project's deploy command |
+| `revert gogogo!` | Revert last commit + redeploy |
+
+**Rationale:** Pairing `gogogo!` with a verb makes the gate explicit about *what* is being authorized, not just *that* something is. Avoids the failure mode where the agent picks a default action (open a PR, run a merge) on bare `gogogo!`. The verb is the contract; `gogogo!` is the signature.
+**Test:** manual — `grep -A20 '2.1 The .gogogo' PROJECT_STARTER.md` shows the verb table; `grep 'gogogo!' templates/CLAUDE.md` shows the convention.
+**Status:** frozen
+**Decision:** D-004
+
 ## Decision log
 
 One entry per architectural decision. Decisions live forever; chat history that produced them does not.
@@ -82,6 +101,13 @@ One entry per architectural decision. Decisions live forever; chat history that 
 **Considered:** (a) doc-only (in `docs/`), (b) standing rules only (in `CLAUDE.md`), (c) both.
 **Why:** Doc-only loses because docs only apply when someone reads them. Rules-only loses the audit trail and the why. Both gets the auto-load benefit (rules apply every session) AND the reference (full text + attribution + how-it-fits when needed).
 **Implemented in:** v1.2.0.
+
+### D-004 (2026-05-17) `gogogo!` requires an action-verb prefix
+
+**Chose:** Treat `gogogo!` as the execute trigger only; require an action verb immediately before it specifying *what* to execute. Bare `gogogo!` triggers a clarification question.
+**Considered:** (a) keep `gogogo!` as bare authorization that defaults to the 5-step code workflow, (b) require an explicit verb, (c) hybrid — bare allowed with implicit default.
+**Why:** (a) opens a failure mode where the agent picks the wrong workflow on ambiguous bare `gogogo!` (e.g. opening a PR when the user meant "commit current work"). (c) is (a) with extra steps — the implicit default is still implicit. (b) makes the contract explicit: one verb per action, no defaults. Trades one extra word of typing for zero ambiguity at the gate. Verb table includes `PR`, `merge`, `deploy`, `commit`, `review`, `revert`, plus the conventional commit types (`feat/fix/chore/docs/refactor/test/perf`) that map to the full 5-step.
+**Implemented in:** v1.3.0.
 
 ## Open project-level decisions
 
