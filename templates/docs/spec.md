@@ -8,16 +8,36 @@ Living spec. <PROJECT_SPECIFIC: reference to any external/legacy spec if applica
 
 ## Process & versioning
 
-Process for making changes — branching, commits, the **`code!` passphrase gate**, the **5-step atomic workflow** (spec → bump+CHANGELOG → code → commit → deploy; ENDS at deploy, does not auto-open a PR), the **push-after-every-commit** policy, the **multi-commit-per-branch** rule, the **rebase-merge** strategy, the **version-bump-on-every-change** rule — is binding and lives in [`CONTRIBUTING.md`](../CONTRIBUTING.md). Current version: `<X.Y.Z>` (see `VERSION` at repo root). Per-version diary lives in [`CHANGELOG.md`](../CHANGELOG.md). Architectural decisions live in the Decision log below.
+Process for making changes — branching, commits, the **`gogogo!` passphrase gate**, the **5-step atomic workflow** (spec → bump+CHANGELOG → code → commit → deploy; ENDS at deploy, does not auto-open a PR), the **push-after-every-commit** policy, the **multi-commit-per-branch** rule, the **rebase-merge** strategy, the **version-bump-on-every-change** rule — is binding and lives in [`CONTRIBUTING.md`](../CONTRIBUTING.md). Current version: `<X.Y.Z>` (see `VERSION` at repo root). Per-version diary lives in [`CHANGELOG.md`](../CHANGELOG.md). Architectural decisions live in the Decision log below.
 
 The reusable template behind this project's process and structure lives at [`PROJECT_STARTER.md`](../PROJECT_STARTER.md).
 
 ## Frozen behavior
 
-Decisions that are binding on implementation. Update via PR; never silently change.
+Binding product behavior, written as **Blocks**. Each Block is atomic, numbered (`B-NNN`), and addressable from PRs, decisions, and tests. Format is fixed — don't invent fields. Use the `spec-block` skill (`/spec-block`) to add new ones so the format stays consistent.
 
-- <Frozen rule 1>
-- <Frozen rule 2>
+### Block format
+
+```
+### Block B-NNN: <Title>
+**Rule:** <one-line invariant the system must uphold>
+**Rationale:** <why — constraint, decision, prior incident>
+**Test:** <path/to/test_file.py::test_name or "manual">
+**Status:** proposed | draft | frozen | superseded
+**Decision:** D-NNN (if implementing a decision-log entry; else "—")
+```
+
+**Editing rules:**
+- Frozen Blocks don't get edited in place — supersede via a new Block + Decision-log entry, and flip the old one to `superseded`.
+- Status promotion (`proposed → draft → frozen`) IS allowed in place and rides in the commit that adds the proving test.
+
+### Block B-001: <Title>
+
+**Rule:** <one-line rule>
+**Rationale:** <why>
+**Test:** <test pointer or "manual">
+**Status:** proposed
+**Decision:** —
 
 ## Database schema
 
