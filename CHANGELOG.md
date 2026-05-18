@@ -6,6 +6,39 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.14.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.14.0. **First of three commits implementing Codex Phase 3 (env metadata explicit).**
+
+### Declare `.env.example` schema via `@directive` comments
+
+Codex Phase 3.1/3.2/3.3: `bootstrap.sh` and `check-env.sh` previously inferred required vs. optional from English prose (case-insensitive grep for "Optional" in any preceding comment line). Fragile by construction — rewording broke the gate silently. Validators lived in a separate sidecar (`templates/scripts/validators.sh` from v1.12.0). The schema was split across two surfaces with two different mechanisms.
+
+This release introduces `@directive` comments as the single explicit-metadata format for env vars. `.env.example` stays the source of truth (Phase 3.3 answered by format choice — no separate schema, no rendering layer):
+
+```bash
+# @description: Sentry DSN for error reporting
+# @optional
+# @sensitive
+SENTRY_DSN=
+```
+
+Six directives cover everything `bootstrap.sh` + `check-env.sh` need: `@description`, `@required` / `@optional`, `@default`, `@validator`, `@sensitive`. Free-text comments still allowed for human context — bootstrap.sh shows them in prompts but doesn't parse them as metadata. See B-020 in `docs/spec.md` for the full vocabulary.
+
+### Reorder vs. the design proposal
+
+The design proposal sequenced this as commit-1 (parser learns directives) → commit-2 (migrate `.env.example`) → commit-3 (kill validators.sh). With "hard cut" decided, that creates a broken intermediate at commit-1 (parser only understands directives, but template still ships legacy `.env.example`). Reorder: **migrate data first, swap parser second.** Old parser still works on the migrated file because case-insensitive grep for "Optional" matches "@optional" in SENTRY_DSN's block — and no other vars or section headers contain the word "Optional" anywhere. Zero broken intermediate states.
+
+### What this commit ships
+
+- **`templates/.env.example`** rewritten in directive format. File header rewritten to NOT contain the word "optional" anywhere (would otherwise false-match the legacy parser's grep on subsequent vars). Each shipped placeholder var (`VAR_NAME`, `ANOTHER_VAR`, `DB_PATH`, `SENTRY_DSN`, `LOG_LEVEL`, `DEV_MODE`) carries explicit directives.
+- **`docs/spec.md` B-020 added in `draft` status** — format defined + data migrated; parser doesn't yet enforce. Will promote to `frozen` in v1.14.1 when parser is rewritten directive-only.
+
+### What the next two commits will do
+
+- **v1.14.1 (`refactor`):** rewrite `bootstrap.sh` + `check-env.sh` to directive-only parsing. Hard cut — consumers with un-migrated legacy `.env.example` will need to migrate. B-020 promoted to `frozen`.
+- **v1.15.0 (`refactor`):** kill `templates/scripts/validators.sh`. Supersede B-018. Validator metadata now lives inline in `.env.example` via `@validator:` directives — no second mechanism.
+
 ## v1.13.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.13.0.
