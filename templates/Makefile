@@ -33,13 +33,13 @@ bootstrap:
 check-env:
 	./scripts/check-env.sh
 
-## request-codex-review: post a PR comment triggering Codex review of the current branch's PR
-##   (one-shot wrapper around the request-codex-review skill — same canonical comment body)
-##   Refuses to post on closed/merged PRs (must be state == OPEN).
+## request-codex-review: run a local Codex CLI review of the current branch against main
+##   Synchronous; output streams to stdout. Requires `codex` CLI installed and logged in.
+##   The final review block (priority-tagged findings) is at the end of a verbose exec trace.
 request-codex-review:
-	@PR_JSON=$$(gh pr view --json number,state 2>/dev/null) || { echo "✗ No PR for current branch. Open one first."; exit 1; } ; \
-	PR=$$(echo "$$PR_JSON" | jq -r .number) ; \
-	STATE=$$(echo "$$PR_JSON" | jq -r .state) ; \
-	if [ "$$STATE" != "OPEN" ]; then echo "✗ PR #$$PR is $$STATE, not OPEN. Refusing to post on a closed/merged PR."; exit 1; fi ; \
-	gh pr comment $$PR --body "$$(printf '@codex review\n\nPlease follow the PR review rubric in `docs/pr_review_instructions.md`:\n- Severity: Block / Strong / Nit\n- Per-commit comments — walk every commit `main..HEAD` in order\n- On clean commits, post an explicit \"no findings on <sha> — <subject>\" comment\n- One overall summary review at the end, rolled up by severity\n\nLook around the repo (spec, architecture, recent changes) before diving into the diff if useful.\n')" && \
-	echo "✓ Codex notified on PR #$$PR"
+	@command -v codex >/dev/null 2>&1 || { echo "✗ codex CLI not in PATH. Install per https://github.com/openai/codex."; exit 1; }
+	@BR=$$(git branch --show-current) ; \
+	if [ "$$BR" = "main" ]; then echo "✗ On main; nothing to review."; exit 1; fi ; \
+	if [ -z "$$(git log main..HEAD --oneline 2>/dev/null)" ]; then echo "✗ No commits ahead of main on $$BR."; exit 1; fi ; \
+	echo "→ codex review --base main  (branch: $$BR)" ; \
+	codex review --base main

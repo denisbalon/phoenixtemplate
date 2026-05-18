@@ -133,27 +133,31 @@ PR review is **reviewer-agnostic** — the rubric and output contract in `docs/p
 
 | Reviewer | Independence | Cost | When |
 |---|---|---|---|
-| **Codex** (`@codex review` PR comment) | High | Cheap | **Default.** Routine PRs. |
+| **Codex** (`codex review --base main` local CLI) | High | Cheap | **Default.** Routine PRs. |
 | **`/ultrareview <PR#>`** | Low (same model family) | Billed | High-stakes second opinion only. |
 | **Another LLM** (Cursor, Gemini CLI, etc.) | High | Varies | When Codex is down. |
 | **Manual** (you + `docs/pr_review_instructions.md`) | Highest | Time | Architectural / pre-v1.0.0. |
 
 Reviewers run **serially**, not in parallel. One per PR.
 
-### Codex invocation
+### Codex invocation (local CLI — the default since v1.6.0)
 
-1. Install the **Codex GitHub App** on the repo (one-time): GitHub → Settings → Integrations → Codex.
-2. On the open PR, post a comment that names the rubric explicitly:
+1. Install the **`codex` CLI** locally (one-time): `npm install -g @openai/codex` (or https://github.com/openai/codex).
+2. Log in once: `codex login`.
+3. From the project root:
 
+   ```sh
+   codex review --base main
    ```
-   @codex review — follow docs/pr_review_instructions.md
-   (Block / Strong / Nit, per-commit comments, "no findings on <sha>" on clean commits, summary at end).
-   ```
 
-3. Codex posts comments matching the output contract below.
+   Synchronous output; `[P1] / [P2] / [P3]` priority-tagged findings.
 4. Address findings via more `<verb> gogogo!`s on the same branch.
 
-**One-command shortcut:** `/request-codex-review` skill or `make request-codex-review` target — auto-detects the PR, composes the canonical body (including the rubric file reference), posts, confirms. Async-and-done; no polling.
+**One-command shortcut:** `/request-codex-review` skill or `make request-codex-review` target — verifies prereqs, runs the CLI, surfaces findings.
+
+**Output format note:** local CLI uses `[P1] / [P2] / [P3]`, not `Block / Strong / Nit`. Treat P1 ≈ Block, P2 ≈ Strong, P3 ≈ Nit. The `--base` flag and a custom prompt are mutually exclusive in the CLI, so the built-in review prompt is used. For strict rubric compliance, use `codex exec`.
+
+**Deprecated GitHub App path:** prior to v1.6.0 the skill posted `@codex review` PR comments expecting a GitHub App. Most accounts don't have one; CLI is now canonical.
 
 ### Output contract (universal)
 
