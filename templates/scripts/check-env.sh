@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Verify .env contains every required var declared in .env.example.
-# Required = any var whose preceding comment block does NOT contain "Optional".
-# Exit 0 = complete. Exit 1 = incomplete. Exit 2 = setup error (missing .env.example).
+# Required = any var without an @optional directive (see docs/spec.md B-020
+# for the @directive schema format).
+# Exit 0 = complete. Exit 1 = incomplete. Exit 2 = setup error.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -13,24 +14,20 @@ if [ ! -f "$EXAMPLE" ]; then
   exit 2
 fi
 
+# Parse .env.example schema via shared helper. Populates VARS / IS_OPTIONAL
+# (along with other arrays we don't use here).
+# shellcheck source=/dev/null
+source "$(dirname "${BASH_SOURCE[0]}")/_env-schema-parse.sh"
+
 required=()
 optional=()
-current_comment=""
-while IFS= read -r line || [ -n "$line" ]; do
-  if [[ "$line" =~ ^[[:space:]]*# ]] || [[ -z "${line// }" ]]; then
-    current_comment+="$line"$'\n'
-    continue
+for var in "${VARS[@]}"; do
+  if [ -n "${IS_OPTIONAL[$var]-}" ]; then
+    optional+=("$var")
+  else
+    required+=("$var")
   fi
-  if [[ "$line" =~ ^([A-Z_][A-Z0-9_]*)= ]]; then
-    var="${BASH_REMATCH[1]}"
-    if echo "$current_comment" | grep -qi 'Optional'; then
-      optional+=("$var")
-    else
-      required+=("$var")
-    fi
-  fi
-  current_comment=""
-done < "$EXAMPLE"
+done
 
 declare -A actual=()
 if [ -f "$ENV_FILE" ]; then
