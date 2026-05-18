@@ -1,7 +1,7 @@
 # Project Starter
 
-**Template version:** v1.3.0
-**Last updated:** 2026-05-17
+**Template version:** v1.4.0
+**Last updated:** 2026-05-18
 
 A reusable bootstrap kit for any new software project worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
 
@@ -336,12 +336,37 @@ BODY
 
 ### 2.7 Review
 
-Two paths:
+PR review is **reviewer-agnostic** — the rubric and output contract in `docs/pr_review_instructions.md` apply whether the reviewer is Codex, `/ultrareview`, another LLM, or a human running through it manually. **Independence beats deepening:** a different model with fresh context catches what the original model missed.
 
-- **Path A — `/ultrareview <PR#>`** (preferred when working). Slash command in Claude Code. Multi-agent cloud review, billed. Posts findings to the PR automatically. As of 2026-05-04 there's a known bug (issue #53648) breaking GitHub access checks for some accounts — fall back to Path B if it fails.
-- **Path B — manual review per `docs/pr_review_instructions.md`.** Hostile-architect, per-commit, posted via `gh api` as inline comments + summary review.
+**Default reviewer: Codex** via its GitHub App. Cheap, independent (different model family), integrated into PRs natively, reads `docs/pr_review_instructions.md` when explicitly named in the invocation. The branch owner triggers the review out-of-session once the branch is finished — Claude does NOT dispatch reviewers mid-branch.
 
-**Output contract (both paths):** the deliverable is GitHub comments via `gh api`, **one per commit on the branch — including commits with no findings**. Clean commits get an explicit "no findings on `<sha>`" comment so silence isn't mistaken for omission. Plus one overall summary review rolled up by severity. Never a local file, never a chat-only summary, never PR-description edits. Full rules: §11 "Output contract" and `docs/pr_review_instructions.md`.
+#### Reviewer options
+
+| Reviewer | Independence | Cost | When |
+|---|---|---|---|
+| **Codex** (`@codex review` PR comment) | High — different model family, fresh context | Cheap | **Default.** Routine PRs. |
+| **`/ultrareview <PR#>`** | Low — same model family as the author | Billed | Optional second opinion on high-stakes (security, infra, money-path) changes. Known bug as of 2026-05-04 (issue #53648) breaking GitHub access checks for some accounts — fall back to Codex or manual. |
+| **Another LLM** (Cursor, Gemini CLI, GPT-5 via CI runner, etc.) | High — different model | Varies | When Codex is down or you want a third opinion. |
+| **Manual** (you reading the diff against `docs/pr_review_instructions.md`) | Highest — human judgment | Time | Architectural changes, pre-v1.0.0 gates. |
+
+Reviewers run **serially**, not in parallel. The branch owner picks one per PR.
+
+#### Codex invocation
+
+1. Install the **Codex GitHub App** on the repo (one-time): GitHub → Settings → Integrations → Codex.
+2. On the open PR, leave a comment that explicitly names the rubric file:
+
+   ```
+   @codex review — follow docs/pr_review_instructions.md
+   (Block / Strong / Nit, per-commit comments, "no findings on <sha>" on clean commits, summary at end).
+   ```
+
+3. Codex posts inline + summary comments matching the output contract below.
+4. Address findings via more `<verb> gogogo!`s on the same branch. The PR auto-updates.
+
+#### Output contract (universal, all reviewers)
+
+The deliverable is GitHub comments via `gh api` (or the reviewer's native PR-comment integration), **one per commit on the branch — including commits with no findings**. Clean commits get an explicit "no findings on `<sha>` — `<subject>`" comment so silence isn't mistaken for omission. Plus one overall summary review rolled up by severity (Block / Strong / Nit). Never a local file, never a chat-only summary, never PR-description edits. Full rules: §11 "Output contract" and `docs/pr_review_instructions.md`.
 
 ### 2.8 Address review feedback
 
@@ -1039,6 +1064,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.4.0 | 2026-05-18 | §2.7 PR review reframed as **reviewer-agnostic**: same rubric + output contract for Codex / `/ultrareview` / other LLMs / manual. **Default reviewer: Codex** (cheap, independent, different model family). Adds reviewer matrix (cost / independence / when-to-use), Codex invocation steps (GitHub App install + PR-comment naming the rubric explicitly), and the "reviewers run serially, not in parallel" rule. `templates/docs/pr_review_instructions.md` gains a reviewer-agnostic preamble. `templates/CONTRIBUTING.md` §4 rewritten to match. The `review gogogo!` verb mapping intentionally unchanged — branch-owner triggers review out-of-session when the branch is finished. Implements D-005 (this repo's `docs/spec.md`). |
 | 1.3.0 | 2026-05-17 | §2.1 gate rewrite: `gogogo!` is now the execute trigger only; it must be preceded by an action verb in the same message specifying *what* to execute. Adds verb→workflow table covering `code/feat/fix/... gogogo!` (full 5-step), `commit gogogo!`, `PR gogogo!`, `review gogogo!`, `merge gogogo!`, `deploy gogogo!`, `revert gogogo!`. Bare `gogogo!` is ambiguous and triggers a clarification question. §2.6 and §2.9 updated to reference the new explicit phrases. Same convention propagated to `templates/CLAUDE.md` and `templates/CONTRIBUTING.md` (cheat-sheet + TL;DR + gate section). Two new rationalizations added to the refuse-list. Implements D-004 (this repo's `docs/spec.md`). |
 | 1.2.0 | 2026-05-17 | Rename gate passphrase `code!` → `gogogo!` (universal, stack-agnostic — not just for code edits). Add Karpathy's four LLM-coding pitfalls as standing rules in `templates/CLAUDE.md` and a full reference at `templates/docs/karpathy-claude-rules.md`. Add `spec-block` skill (`templates/.claude/skills/spec-block/SKILL.md`) plus a fixed Block format (`B-NNN` with Rule / Rationale / Test / Status / Decision) in `templates/docs/spec.md` to make the spec atomic and navigable. |
 | 1.1.8 | 2026-05-07 | §11 + §2.7: explicit "Output contract" — every PR review must post per-commit GitHub comments via `gh api`, including a "no findings on `<sha>`" comment for clean commits. Local files, chat-only summaries, and PR-description edits are explicitly forbidden as substitutes. Closes the "was this commit reviewed and clean, or skipped by accident?" ambiguity in the prior wording. Template review skeleton (`templates/docs/pr_review_instructions.md`) and `templates/CONTRIBUTING.md` §4 carry the same contract. |
