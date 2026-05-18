@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Deploy <PROJECT_NAME> to <TARGET>.
-# Prereqs: SSH key access to the target host, .env present locally, working tree clean (or pass --dirty).
+# Prereqs:
+#   - SSH key access to the target host
+#   - .env present locally
+#   - working tree fully clean (no unstaged, no staged, no untracked files
+#     except .gitignore'd paths), unless --dirty is passed
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -8,8 +12,16 @@ HOST="${DEPLOY_HOST:-root@<HOST>}"
 REMOTE_DIR="${REMOTE_DIR:-<project-name>}"
 
 if [ "${1:-}" != "--dirty" ] && git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
-  if ! git -C "$ROOT" diff --quiet --exit-code 2>/dev/null; then
-    echo "✗ working tree dirty. Commit or pass --dirty to override." >&2
+  problems=()
+  git -C "$ROOT" diff --quiet 2>/dev/null || problems+=("unstaged changes (git diff)")
+  git -C "$ROOT" diff --cached --quiet 2>/dev/null || problems+=("staged but uncommitted (git diff --cached)")
+  [ -z "$(git -C "$ROOT" ls-files --others --exclude-standard 2>/dev/null)" ] || problems+=("untracked files (git ls-files --others --exclude-standard)")
+  if [ ${#problems[@]} -gt 0 ]; then
+    echo "✗ working tree not clean:" >&2
+    for p in "${problems[@]}"; do
+      echo "  - $p" >&2
+    done
+    echo "Commit + push, or pass --dirty to override." >&2
     exit 1
   fi
 fi

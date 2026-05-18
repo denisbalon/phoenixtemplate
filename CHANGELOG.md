@@ -6,6 +6,14 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.9.1 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.9.1. Patch — fixes the deploy cleanliness check Codex flagged at improvement-plan Phase 1.3.
+
+### Fix
+
+- **`templates/scripts/deploy.sh` cleanliness check was incomplete.** The previous `git diff --quiet --exit-code` only detected unstaged changes against the working tree. It missed: (a) staged-but-uncommitted edits (`git diff --cached`), and (b) untracked files (`git ls-files --others --exclude-standard`). Either could ship a surprise — a half-staged refactor not yet committed, or a brand-new module the dev forgot to `git add`. Replaced the single check with three checks (unstaged, staged, untracked), each reported separately when the tree is dirty. The `--dirty` override still works. Untracked is intentionally part of the gate (catches forgotten-to-add files in `src/`) but respects `.gitignore` via `--exclude-standard` so locally ignored paths like `.env` don't block. Script header comment now documents the policy explicitly.
+
 ## v1.9.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.9.0.
