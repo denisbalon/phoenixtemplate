@@ -1,6 +1,13 @@
 # PR review instructions
 
-This file is read by PR-review automation (`/ultrareview`, GitHub Actions, external reviewer agents). It is **not** for the dev session — that's [`CLAUDE.md`](../CLAUDE.md).
+**Reviewer-agnostic.** This document is the rubric + output contract for whatever reviewer is running against this PR:
+
+- **Codex** via its GitHub App (the project default — branch owner posts `@codex review — follow docs/pr_review_instructions.md ...` on the PR)
+- **`/ultrareview <PR#>`** in Claude Code (second-opinion path for high-stakes changes)
+- **Another LLM** (Cursor, Gemini CLI, GPT-5 via a CI runner, etc.) pointed at this file
+- **A human** reading the diff with this file open
+
+The rubric is the same regardless of who's running it. The wiring (how the reviewer gets invoked) lives in `CONTRIBUTING.md` §4. This file is **not** for the dev session — that's [`CLAUDE.md`](../CLAUDE.md).
 
 ## Output contract — read this before anything else
 

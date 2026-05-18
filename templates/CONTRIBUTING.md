@@ -125,12 +125,37 @@ BODY
 
 ## 4. Review
 
-Path A — `/ultrareview <PR#>` (preferred when working).
-Path B — manual review per `docs/pr_review_instructions.md`.
+PR review is **reviewer-agnostic** — the rubric and output contract in `docs/pr_review_instructions.md` apply to whichever reviewer runs. **Independence beats deepening:** a different model with fresh context catches what the original model missed.
 
-### Output contract (both paths)
+**Default reviewer: Codex** via its GitHub App. The branch owner triggers the review out-of-session once the branch is finished — Claude does NOT dispatch reviewers mid-branch.
 
-Whichever path runs, the **deliverable is GitHub comments, posted via `gh api`, one per commit on the branch — including commits with no findings**:
+### Reviewer options
+
+| Reviewer | Independence | Cost | When |
+|---|---|---|---|
+| **Codex** (`@codex review` PR comment) | High | Cheap | **Default.** Routine PRs. |
+| **`/ultrareview <PR#>`** | Low (same model family) | Billed | High-stakes second opinion only. |
+| **Another LLM** (Cursor, Gemini CLI, etc.) | High | Varies | When Codex is down. |
+| **Manual** (you + `docs/pr_review_instructions.md`) | Highest | Time | Architectural / pre-v1.0.0. |
+
+Reviewers run **serially**, not in parallel. One per PR.
+
+### Codex invocation
+
+1. Install the **Codex GitHub App** on the repo (one-time): GitHub → Settings → Integrations → Codex.
+2. On the open PR, post a comment that names the rubric explicitly:
+
+   ```
+   @codex review — follow docs/pr_review_instructions.md
+   (Block / Strong / Nit, per-commit comments, "no findings on <sha>" on clean commits, summary at end).
+   ```
+
+3. Codex posts comments matching the output contract below.
+4. Address findings via more `<verb> gogogo!`s on the same branch.
+
+### Output contract (universal)
+
+The deliverable is GitHub comments, posted via `gh api` (or the reviewer's native PR-comment integration), **one per commit on the branch — including commits with no findings**:
 
 - **Walk every commit** `main..HEAD` in order. Each gets at least one comment on the PR (inline on specific lines, or a commit-level review).
 - **Clean commits get an explicit "no findings on `<sha>` — `<subject>`" comment.** Silence is indistinguishable from "the reviewer forgot this commit." The explicit comment closes that gap and makes the audit trail complete.

@@ -58,6 +58,14 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Status:** frozen
 **Decision:** —
 
+### Block B-007: PR review is reviewer-agnostic; Codex is the default
+
+**Rule:** The rubric and output contract in `templates/docs/pr_review_instructions.md` apply to whichever reviewer runs (Codex, `/ultrareview`, another LLM, or manual human). **Codex is the default reviewer** via its GitHub App; `@codex review — follow docs/pr_review_instructions.md (Block / Strong / Nit, per-commit comments, "no findings" on clean commits, summary at end)` is the canonical invocation. Reviewers run serially — never in parallel.
+**Rationale:** Independence beats deepening. A different model with fresh context catches what the original model missed. Codex is cheap, independent (different model family), and integrated into GitHub PRs natively. `/ultrareview` (still Claude under the hood) shares blind spots with the author and is billed; reserve for high-stakes second opinions. The output contract is reviewer-agnostic because the PR is the audit trail regardless of who wrote the comments.
+**Test:** manual — `grep -A5 'Default reviewer' templates/CONTRIBUTING.md` shows Codex; `grep -i 'codex' templates/docs/pr_review_instructions.md` returns a match in the preamble.
+**Status:** frozen
+**Decision:** D-005
+
 ### Block B-006: `gogogo!` must be preceded by an action verb
 
 **Rule:** `gogogo!` is the execute trigger only. The action it executes is named by an **action verb** that must appear in the same message, immediately before `gogogo!`. Bare `gogogo!` (no verb) is ambiguous and triggers a clarification question, not an action. Recognized verbs and their workflows:
@@ -101,6 +109,13 @@ One entry per architectural decision. Decisions live forever; chat history that 
 **Considered:** (a) doc-only (in `docs/`), (b) standing rules only (in `CLAUDE.md`), (c) both.
 **Why:** Doc-only loses because docs only apply when someone reads them. Rules-only loses the audit trail and the why. Both gets the auto-load benefit (rules apply every session) AND the reference (full text + attribution + how-it-fits when needed).
 **Implemented in:** v1.2.0.
+
+### D-005 (2026-05-18) Codex as default PR reviewer; rubric is reviewer-agnostic
+
+**Chose:** Make `templates/docs/pr_review_instructions.md` reviewer-agnostic (preamble names Codex / `/ultrareview` / other LLMs / manual as equally valid paths against the same rubric). Default reviewer is **Codex**, invoked via the GitHub App with a comment that explicitly references the rubric file. Reviewers run serially.
+**Considered:** (a) keep `/ultrareview` as Path A / manual as Path B (current state — reviewer-locked), (b) Codex-default + rubric stays universal, (c) multi-reviewer in parallel (Codex + `/ultrareview` both run), (d) expand the `review gogogo!` verb to take a reviewer flavor.
+**Why:** (a) privileges a Claude-family reviewer that shares the author's blind spots. (c) wastes budget for typical PRs; the user does manual review separately when a branch is finished, so parallel automation is redundant. (d) was explicitly rejected by the user — review is done out-of-session against a finished branch, not dispatched mid-branch from Claude. (b) wins: same rubric, cheaper + independent reviewer by default, no verb-mapping churn.
+**Implemented in:** v1.4.0.
 
 ### D-004 (2026-05-17) `gogogo!` requires an action-verb prefix
 
