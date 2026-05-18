@@ -6,6 +6,51 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.15.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.15.0. **Third and final commit implementing Codex Phase 3 (env metadata explicit). Phase 3 complete.**
+
+### Kill `templates/scripts/validators.sh` — superseded by `@directive` system
+
+`validators.sh` shipped in v1.12.0 as the deliberate extension point for project-specific validators (B-018). The `@directive` system shipped in v1.14.0–v1.14.1 (B-020) provides the same per-var validator extension point inline in `.env.example` via `@validator:` directives. Two mechanisms for the same job — exactly the kind of duplication the Codex plan kept warning against.
+
+Removing the sidecar:
+
+- **`templates/scripts/validators.sh`** deleted (`git rm`).
+- **`templates/scripts/bootstrap.sh`** — the 9-line "Project-specific validators sidecar (deprecated)" block that sourced it is removed.
+
+The v1.12.0 work isn't wasted — it was the right step at the time and shipped a working extension point. Just superseded by a cleaner unified mechanism three versions later. Spec churn matches the B-008 → B-009 → B-010 lineage from the review-flow saga.
+
+### Breaking change
+
+Consumers using `templates/scripts/validators.sh` to add project-specific validators must migrate those entries to `@validator:` directives in their `.env.example`. For example:
+
+```sh
+# in old validators.sh:
+VALIDATORS[STRIPE_API_KEY]='^sk_(live|test)_[A-Za-z0-9]{24,}$'
+
+# becomes, in .env.example:
+# @description: Stripe API key
+# @required
+# @sensitive
+# @validator: ^sk_(live|test)_[A-Za-z0-9]{24,}$
+STRIPE_API_KEY=
+```
+
+Per the user's hard-cut decision in the Phase 3 design discussion.
+
+### Spec
+
+- **B-018** (validators.sh sidecar) flipped to **superseded by B-020**. Rationale: same job covered inline by `@validator:` directives; one mechanism is better than two.
+
+### Phase 3 complete
+
+- ✓ v1.14.0 — `.env.example` migrated to `@directive` format; B-020 draft.
+- ✓ v1.14.1 — parser swap to directive-only via shared helper; B-020 frozen.
+- ✓ v1.15.0 — kill `validators.sh`; B-018 superseded by B-020.
+
+Per the updated codex plan execution order, next is Phase 2 (documentation architecture).
+
 ## v1.14.1 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.14.1. **Second of three commits implementing Codex Phase 3 (env metadata explicit).** Parser swap — hard cut from legacy prose-grep to `@directive`-only.
