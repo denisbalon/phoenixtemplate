@@ -50,7 +50,11 @@ STAGE_NAME="$STAGE/$NAME"
 mkdir -p "$STAGE_NAME"
 
 cp "$ROOT/PROJECT_STARTER.md" "$STAGE_NAME/"
-cp -R "$ROOT/templates" "$STAGE_NAME/"
+# Trailing /. promotes the *contents* of templates/ into $STAGE_NAME (instead
+# of nesting templates/ as a subdir). This matches PROJECT_STARTER §1.3's
+# quick-path flow where tar -xzf --strip-components=1 + chmod +x scripts/*.sh
+# expects scripts/ at the project root, not under templates/.
+cp -R "$ROOT/templates/." "$STAGE_NAME/"
 
 # tar.gz (always)
 TAR_OUT="$OUT_DIR/${NAME}.tar.gz"

@@ -6,6 +6,27 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.11.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.11.0.
+
+### Template self-tests on CI (Codex Phase 8 — highest leverage after Phase 1)
+
+The repo now proves end-to-end that the template instantiates and runs. Every push and PR against `main` exercises the full consumer flow: export-starter → tar extract → placeholder substitution → `uv sync` → `pytest` + `ruff check` + `mypy src`. Any breakage in template files, scripts, CI assumptions, or doc claims now fails CI and blocks the PR. Codex's improvement plan called this out as the single biggest leverage point: "Everything else gets easier once the template can prove it works."
+
+- **`scripts/smoke-test.sh`** (new, repo root, executable): instantiates the template end-to-end into a tempdir. Substitutes the `<package_name>` placeholder via one `mv` + one `sed`. Runs the four tool checks (`uv sync`, `pytest`, `ruff check .`, `mypy src`) from the synthesized project. Fails loud on any step. Tempdir cleanup via `trap`. `PKG` env var overrides the default package name (`smoketest`).
+- **`.github/workflows/template-self-test.yml`** (new — meta-repo's first CI workflow; consumer projects already have their own `templates/.github/workflows/ci.yml`): ubuntu-latest, `astral-sh/setup-uv@v3`, runs `./scripts/smoke-test.sh` on push + PR.
+
+### Fix: `scripts/export-starter.sh` archive layout
+
+The smoke test caught a real bug on its very first run: v1.10.0's `export-starter.sh` kept `templates/` nested as a subdirectory inside the archive. After `tar -xzf --strip-components=1`, the consumer ended up with `<root>/templates/scripts/` instead of `<root>/scripts/`, so PROJECT_STARTER.md §1.3's `chmod +x scripts/*.sh` immediately following the extract would fail. Fixed by changing `cp -R templates` to `cp -R templates/.` (trailing `/.` promotes contents instead of preserving the parent directory name). Same-day fix surfaced by the same-commit smoke test — exactly the drift-catching loop Codex's Phase 8 promises.
+
+### Spec
+
+- **B-014** added: template self-tests on every push + PR via meta-repo CI. Names `scripts/smoke-test.sh` + `.github/workflows/template-self-test.yml` + the four tool checks. Frozen.
+- **B-015** added: corrected archive layout — `templates/` contents promoted to the archive root level (not kept nested). Supersedes B-013 with full rationale ("the full templates/ tree" wording was ambiguous; smoke test caught the gap). Frozen.
+- **B-013** flipped to superseded by B-015.
+
 ## v1.10.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.10.0.
