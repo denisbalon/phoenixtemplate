@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.5.0
+**Template version:** v1.5.1
 **Last updated:** 2026-05-18
 
 A reusable bootstrap kit for any new software project worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
@@ -1071,6 +1071,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.5.1 | 2026-05-18 | Patch fixing three bugs surfaced by the first Codex CLI review (`codex review --base main`): (a) `docs/spec.md` prose hardcoded a version number that drifted past VERSION bumps — replaced with a pure VERSION reference; (b) `make request-codex-review` posted to closed/merged PRs without checking `.state` — now requires `state == OPEN`; (c) B-001's test pointer used a too-broad `grep -r 'code!' .` that would false-fail because CHANGELOG and Decision log retain historical mentions — narrowed to active gate-doc files only. |
 | 1.5.0 | 2026-05-18 | §2.7 Codex invocation gains a **one-command shortcut**: the `request-codex-review` skill (`templates/.claude/skills/request-codex-review/SKILL.md`) and the matching `make request-codex-review` Makefile target. Both post the canonical PR-comment body that names `docs/pr_review_instructions.md` explicitly (load-bearing for Codex to use the project's rubric). Skill is async-and-done: posts one comment, confirms, stops; does not poll for results. Implements D-006 (this repo's `docs/spec.md`). |
 | 1.4.0 | 2026-05-18 | §2.7 PR review reframed as **reviewer-agnostic**: same rubric + output contract for Codex / `/ultrareview` / other LLMs / manual. **Default reviewer: Codex** (cheap, independent, different model family). Adds reviewer matrix (cost / independence / when-to-use), Codex invocation steps (GitHub App install + PR-comment naming the rubric explicitly), and the "reviewers run serially, not in parallel" rule. `templates/docs/pr_review_instructions.md` gains a reviewer-agnostic preamble. `templates/CONTRIBUTING.md` §4 rewritten to match. The `review gogogo!` verb mapping intentionally unchanged — branch-owner triggers review out-of-session when the branch is finished. Implements D-005 (this repo's `docs/spec.md`). |
 | 1.3.0 | 2026-05-17 | §2.1 gate rewrite: `gogogo!` is now the execute trigger only; it must be preceded by an action verb in the same message specifying *what* to execute. Adds verb→workflow table covering `code/feat/fix/... gogogo!` (full 5-step), `commit gogogo!`, `PR gogogo!`, `review gogogo!`, `merge gogogo!`, `deploy gogogo!`, `revert gogogo!`. Bare `gogogo!` is ambiguous and triggers a clarification question. §2.6 and §2.9 updated to reference the new explicit phrases. Same convention propagated to `templates/CLAUDE.md` and `templates/CONTRIBUTING.md` (cheat-sheet + TL;DR + gate section). Two new rationalizations added to the refuse-list. Implements D-004 (this repo's `docs/spec.md`). |
