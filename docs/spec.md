@@ -142,6 +142,13 @@ One entry per architectural decision. Decisions live forever; chat history that 
 **Why:** Doc-only loses because docs only apply when someone reads them. Rules-only loses the audit trail and the why. Both gets the auto-load benefit (rules apply every session) AND the reference (full text + attribution + how-it-fits when needed).
 **Implemented in:** v1.2.0.
 
+### D-009 (2026-05-18) Product identity: Python/uv/FastAPI/VPS starter now; multi-preset later as roadmap
+
+**Chose:** Declare `phoenixprojecttemplate` a **Python/uv/FastAPI/VPS-shaped starter** in its current form. The bootstrap process, `gogogo!` gate convention, 5-step workflow, spec-block format, Karpathy standing rules, and reviewer-agnostic PR-review rubric are stack-agnostic and apply to any project. The language-preset scaffolding (`Makefile`, CI workflow, `scripts/deploy.sh`, `templates/.env.example` validators) is Python-only today. Multi-preset support (Node/pnpm, Go, no-runtime) is **roadmap**, not current fact.
+**Considered:** (a) ship Python-only and frame the repo accurately as a Python starter now (this option); (b) build multi-preset support (`templates/_common/` + `presets/python-uv/`, `presets/node-pnpm/`, etc.) *before* the next release so the agnostic claim becomes true; (c) keep claiming "project-agnostic" everywhere and hope the gap doesn't bite consumers.
+**Why:** (a) is the honest near-term framing. Codex's improvement plan flagged the gap directly: top-level docs say "project-agnostic" but `templates/Makefile` invokes `uv run uvicorn`, CI assumes `pyproject.toml` and `src/<package>/`, and `scripts/deploy.sh` is VPS-shaped. (b) is the right long-term direction but is multi-week work — building presets before declaring identity puts a strategic decision on the critical path of weeks of scaffolding. (c) is the status quo and is dishonest by construction. The reframe is one commit; multi-preset can land later when the architecture is designed (see open item: "Stack-agnostic restructure — roadmap per D-009"). Until then, "Python/uv/FastAPI/VPS starter" matches what consumers actually get.
+**Implemented in:** v1.8.0. Triggered by Codex's improvement-plan review (`codex improvement plan.md`) flagging the agnostic/Python mismatch as Phase 2 + Phase 12 work. Reframes PROJECT_STARTER.md top section + adds a Current Scope subsection. Does not change templates or shipped code — only the framing.
+
 ### D-008 (2026-05-18) Remove all Claude-side reviewer wiring; review is out-of-band and reviewer-agnostic
 
 **Chose:** Delete the `request-codex-review` skill, the `make request-codex-review` Makefile target, and the `review gogogo!` verb. Rewrite `templates/docs/pr_review_instructions.md` as a reviewer-agnostic rubric that names no default reviewer. After `PR gogogo!`, the user opens any reviewer they prefer in a separate session, points it at the open PR and the rubric, and the reviewer posts comments via `gh` directly. Claude is out of the review business entirely.
@@ -191,7 +198,7 @@ One entry per architectural decision. Decisions live forever; chat history that 
 Resolve as they come up. Move resolved entries to the Decision log above.
 
 - [ ] **De-personalize the template.** `bootstrap.sh` hardcodes `phoenixtgstat_bot` in its menu header and bakes in Telegram/Meta/Keitaro VALIDATORS. Should be derived from the consuming project, not hardcoded. (PROJECT_STARTER.md item A1–A3)
-- [ ] **Stack-agnostic restructure.** Today the templates assume Python+uv+FastAPI+VPS. Split into `templates/_common/` + `presets/python-uv/`, `presets/node-pnpm/`, `presets/go/`, `presets/none/`. (Item C10–C12)
+- [ ] **Stack-agnostic restructure** — *roadmap per D-009.* Today the templates assume Python+uv+FastAPI+VPS. Multi-preset support (`templates/_common/` + `presets/python-uv/`, `presets/node-pnpm/`, `presets/go/`, `presets/none/`) is deferred to a later release. Until shipped, this repo is honestly framed as a Python/uv/FastAPI/VPS starter. (Item C10–C12)
 - [ ] **One-shot project bootstrap script.** `scripts/new-project.sh <slug> <package>` doing §1.1–§1.10 of PROJECT_STARTER.md in a single command — including `gh repo create`, branch protection via `gh api`, merge settings via `gh api`. (Item D13)
 - [ ] **Build the missing `scripts/export-starter.sh`.** Referenced in §1.3 but never shipped. Keep for offline-transfer use case. (Item B4)
 - [ ] **Implement `bootstrap.sh --export` / `--import` / `e` / `i` / WSL `wslpath` translation.** Documented in PROJECT_STARTER.md §14 but the script doesn't have them. (Item B5)

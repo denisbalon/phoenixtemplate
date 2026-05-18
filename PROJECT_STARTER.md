@@ -1,15 +1,30 @@
 # Project Starter
 
-**Template version:** v1.7.1
+**Template version:** v1.8.0
 **Last updated:** 2026-05-18
 
-A reusable bootstrap kit for any new software project worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
+A reusable bootstrap kit for new software projects worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
 
-This document is **project-agnostic**. The companion [`templates/`](templates/) directory holds copy-paste-ready file scaffolds (scripts, doc skeletons, config). Each new project copies the relevant template files in §4, customizes the placeholders, and answers §5's decision bank before writing code.
+**Current shipped scope: a Python/uv/FastAPI/VPS starter.** The process layer (bootstrap checklist, `gogogo!` gate, 5-step workflow, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric) is **stack-agnostic** and works for any project. The language-preset layer (Makefile, CI workflow, deploy script, `.env.example` validators, `pyproject.toml` once shipped, `src/<package>/`) is **Python-only today**. Multi-preset support (Node/pnpm, Go, no-runtime) is roadmap per D-009 — see §0.1.
+
+The companion [`templates/`](templates/) directory holds copy-paste-ready file scaffolds (scripts, doc skeletons, config). Each new project copies the relevant template files in §4, customizes the placeholders, and answers §5's decision bank before writing code.
 
 ---
 
 ## 0. How to use this document
+
+### 0.1 Current scope
+
+The repo ships two layers with different scopes:
+
+| Layer | Scope | What it contains |
+|---|---|---|
+| **Process** (stack-agnostic) | Any project | `gogogo!` gate convention, 5-step atomic workflow, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric, bootstrap checklist (§1 minus the language-specific bits), version-bump + CHANGELOG rules |
+| **Language preset** (Python-only today) | Python/uv/FastAPI/VPS | `templates/Makefile`, `templates/.github/workflows/ci.yml`, `templates/scripts/deploy.sh`, `templates/.env.example` validators, expected `pyproject.toml` + `src/<package>/` + `tests/` layout |
+
+If you're starting a project in a **different stack** today, you can still adopt the process layer manually (read §2, copy `templates/CLAUDE.md` + `templates/CONTRIBUTING.md` + `templates/docs/`, customize) but the language-preset files will need stack-appropriate substitutes you write yourself. Multi-preset support (Node, Go, no-runtime) is on the roadmap (D-009) but not shipped — when it lands, this section flips.
+
+### 0.2 Reading order
 
 1. **Read §1 once** — the bootstrap checklist, zero to first commit.
 2. **Read §2 once** — the binding workflow you'll follow on every change.
@@ -1046,6 +1061,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.8.0 | 2026-05-18 | Declare product identity (D-009): this template is a **Python/uv/FastAPI/VPS starter today**; multi-preset is roadmap, not current fact. Drops the "this document is project-agnostic" claim from §0 and replaces it with an honest paragraph naming current shipped scope; adds `§0.1 Current scope` making the stack-agnostic vs. Python-only boundary explicit. No templates change; no code change; only framing. Spec: D-009 added; "Open project-level decisions" tags stack-agnostic-restructure as "roadmap per D-009". Triggered by Codex's `codex improvement plan.md` (Phase 2 + Phase 12). |
 | 1.7.1 | 2026-05-18 | Patch — three doc-consistency fixes surfaced by Codex's review of PR #1 (first dogfood of the v1.7.0 flow). (a) `templates/docs/pr_review_instructions.md` hardcoded `gh api` as the only transport; updated to match B-010's two-path rule (gh + native PR integration). (b) `templates/CONTRIBUTING.md §4` had snuck in "or by the user copy-pasting" as a third path; removed — B-010 doesn't sanction it. (c) `PROJECT_STARTER.md §2.7` told reviewers on this meta-repo to open `docs/pr_review_instructions.md`, but the repo only ships `templates/docs/pr_review_instructions.md`; added a one-line pointer file at `docs/pr_review_instructions.md` so the self-review path resolves. No behavior change; no spec change — three Codex findings (Block/Block/Strong) addressed by aligning surfaces to the already-canonical B-010. |
 | 1.7.0 | 2026-05-18 | Remove all Claude-side reviewer wiring. The v1.6.0 local-CLI skill + Makefile target + `review gogogo!` verb are all deleted; `templates/docs/pr_review_instructions.md` preamble rewritten as reviewer-agnostic with no default reviewer named; §2.7 in this doc and §4 in `templates/CONTRIBUTING.md` rewritten as a short paragraph saying review is out-of-band. After `PR gogogo!`, the user opens any reviewer they prefer in a separate session, points it at the open PR and the rubric, and the reviewer posts comments via `gh` directly. Resolves the [P1] Codex flagged on the v1.6.0 branch (stdout-only skill couldn't satisfy the per-commit comment contract) by removing the contradiction at its source — Claude no longer claims a contract it can't satisfy. Spec: B-006/B-007/B-009 superseded by B-010 + B-011; D-005/D-007 superseded by D-008. |
 | 1.6.0 | 2026-05-18 | Pivot `request-codex-review` skill + Makefile target from GitHub-App PR-comment (`gh pr comment @codex`) to **local CLI** (`codex review --base main`). Original design assumed a Codex GitHub App that doesn't exist on the user's account; the CLI has a purpose-built `review` subcommand that works synchronously and found three real bugs on its first dry run. §2.7 in this doc and §4 in `templates/CONTRIBUTING.md` updated with the new invocation flow and an output-format note (`[P1]/[P2]/[P3]`, not `Block/Strong/Nit` — `--base` is mutually exclusive with custom prompts in the CLI). GitHub App path documented as a fallback for accounts that have one. Spec: B-008 superseded by B-009; D-006 superseded by D-007 (with an honest "why it was wrong" note). |

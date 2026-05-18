@@ -6,6 +6,22 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.8.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.8.0.
+
+### Declare product identity: Python/uv/FastAPI/VPS starter (now) + multi-preset (roadmap)
+
+Codex's `codex improvement plan.md` flagged the gap at Phase 2/12: top-level docs claim "project-agnostic" but `templates/Makefile` invokes `uv run uvicorn`, CI assumes `pyproject.toml` + `src/<package>/`, `scripts/deploy.sh` is VPS-shaped. Claiming agnostic without shipping presets is dishonest by construction.
+
+This release picks the honest near-term framing (Codex's Phase 12 Option A): **this repo is a Python/uv/FastAPI/VPS starter today.** The stack-agnostic parts (bootstrap process, `gogogo!` gate, 5-step workflow, spec-block format, Karpathy rules, reviewer-agnostic PR rubric) apply to any project. The Python-shaped parts (language preset, Makefile, CI, deploy) are honestly named. Multi-preset support is on the roadmap (D-009) — when it lands, the agnostic claim becomes true and gets re-asserted.
+
+No templates change. No shipped code changes. Only framing.
+
+- **`PROJECT_STARTER.md`** top section reframed: drop the "This document is project-agnostic" line; replace with an honest paragraph naming the current shipped scope (Python/uv/FastAPI/VPS) and what's stack-agnostic vs. Python-specific. New `### 0.1 Current scope` subsection makes the boundary explicit.
+- **`docs/spec.md`** — new D-009 captures the decision and the considered alternatives (ship Python-only honest; build multi-preset before next release; keep claiming agnostic).
+- **"Open project-level decisions"** — stack-agnostic-restructure item tagged "roadmap per D-009" so it stays on radar but is no longer treated as a near-term gap.
+
 ## v1.7.1 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.7.1. Patch — three doc-consistency fixes surfaced by Codex's review of PR #1 (the first real exercise of the v1.7.0 reviewer-agnostic flow, dogfooded on this very branch).
