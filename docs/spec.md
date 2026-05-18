@@ -63,8 +63,8 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Rule:** When the user asks Claude to send the current branch to Codex for review (or invokes `/request-codex-review`), Claude runs the `request-codex-review` skill at `templates/.claude/skills/request-codex-review/SKILL.md`. The skill verifies prereqs (`codex` CLI installed, current branch is not `main`, branch has commits ahead of `main`), runs `codex review --base main` synchronously, captures and surfaces the final review block to the user, and stops. Does NOT post to GitHub, does NOT auto-fix, does NOT mutate any state beyond the local CLI invocation. A `make request-codex-review` Makefile target wraps the same checks + invocation for terminal use outside Claude sessions.
 **Rationale:** Codex is the project's default reviewer. The local CLI path matches the user's actual setup (codex installed locally; no GitHub App) and matches their established habit of running codex from the project folder. Synchronous output lets findings be triaged in the same session that ran the review. Supersedes B-008 (`gh pr comment @codex` → GitHub App), which targeted a path the user's account doesn't have.
 **Test:** manual — `codex review --help` shows the `--base` flag; `make -C templates -n request-codex-review` dry-runs the new invocation cleanly (no `gh pr comment`).
-**Status:** frozen
-**Decision:** D-007
+**Status:** superseded by B-010 (v1.7.0). Reason: skill, Makefile target, and verb all removed; review is out-of-band and reviewer-agnostic — user runs any reviewer in a separate session per B-010.
+**Decision:** D-007 (superseded by D-008)
 
 ### Block B-008: `request-codex-review` skill is the one-command Codex trigger
 
@@ -79,8 +79,8 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Rule:** The rubric and output contract in `templates/docs/pr_review_instructions.md` apply to whichever reviewer runs (Codex, `/ultrareview`, another LLM, or manual human). **Codex is the default reviewer** via its GitHub App; `@codex review — follow docs/pr_review_instructions.md (Block / Strong / Nit, per-commit comments, "no findings" on clean commits, summary at end)` is the canonical invocation. Reviewers run serially — never in parallel.
 **Rationale:** Independence beats deepening. A different model with fresh context catches what the original model missed. Codex is cheap, independent (different model family), and integrated into GitHub PRs natively. `/ultrareview` (still Claude under the hood) shares blind spots with the author and is billed; reserve for high-stakes second opinions. The output contract is reviewer-agnostic because the PR is the audit trail regardless of who wrote the comments.
 **Test:** manual — `grep -A5 'Default reviewer' templates/CONTRIBUTING.md` shows Codex; `grep -i 'codex' templates/docs/pr_review_instructions.md` returns a match in the preamble.
-**Status:** frozen
-**Decision:** D-005
+**Status:** superseded by B-010 (v1.7.0). Reason: project no longer ships a default reviewer; the reviewer-agnostic principle survives but Codex-as-default and the GitHub-App invocation are removed.
+**Decision:** D-005 (superseded by D-008)
 
 ### Block B-006: `gogogo!` must be preceded by an action verb
 
@@ -98,8 +98,24 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 
 **Rationale:** Pairing `gogogo!` with a verb makes the gate explicit about *what* is being authorized, not just *that* something is. Avoids the failure mode where the agent picks a default action (open a PR, run a merge) on bare `gogogo!`. The verb is the contract; `gogogo!` is the signature.
 **Test:** manual — `grep -A20 '2.1 The .gogogo' PROJECT_STARTER.md` shows the verb table; `grep 'gogogo!' templates/CLAUDE.md` shows the convention.
+**Status:** superseded by B-011 (v1.7.0). Reason: `review gogogo!` row removed; with B-010 in force, the verb had no Claude-driven action left to gate.
+**Decision:** D-004 (refined by D-008)
+
+### Block B-010: PR review is out-of-band and reviewer-agnostic
+
+**Rule:** PR review is a user-initiated action that runs in a separate session, not a Claude workflow step. The project ships no Claude-side reviewer trigger — no skill, no Makefile target, no verb, no reminder. `templates/docs/pr_review_instructions.md` is a reviewer-agnostic rubric and names no default reviewer. After `PR gogogo!`, the user opens whichever reviewer they prefer (Codex CLI, `/ultrareview`, another LLM, manual) in a separate terminal or session, points it at the open PR and the rubric, and the reviewer posts comments via `gh` (or its native PR integration) directly. Claude does not dispatch, prepare, remind about, or wrap any reviewer flow.
+**Rationale:** Every prior attempt to wire Claude to a reviewer (B-007 Codex-via-GitHub-App default, B-008 PR-comment skill, B-009 local-CLI skill) was Claude doing a job the user was already doing better in a separate window. Reviewer choice is the user's; the same rubric works for all reviewers. Removing the wiring also resolves the [P1] Codex flagged on the v1.6.0 branch (the local-CLI skill couldn't satisfy the per-commit PR-comment contract because it ran stdout-only). With review out-of-band, whichever reviewer the user runs interactively can satisfy the contract directly — and the project stops claiming a contract it can't keep. Supersedes B-007, B-009.
+**Test:** manual — `templates/docs/pr_review_instructions.md` preamble names no default reviewer; `templates/.claude/skills/` does not contain a `request-codex-review/` directory; `grep -E '^request-codex-review:' templates/Makefile` returns nothing.
 **Status:** frozen
-**Decision:** D-004
+**Decision:** D-008
+
+### Block B-011: action-verb table (no `review` verb)
+
+**Rule:** The recognized action verbs that pair with `gogogo!` are: `code` · `feat` · `fix` · `chore` · `docs` · `refactor` · `test` · `perf` · `ship` (full 5-step); `commit` (commit + push, no deploy); `PR` · `ready` · `open PR` (open pull request); `merge` (`gh pr merge --rebase --delete-branch`); `deploy` (run project deploy); `revert` (revert last commit + redeploy). There is no `review gogogo!` verb — review is out-of-band per B-010, so the verb would gate nothing Claude does.
+**Rationale:** A `gogogo!` verb authorizes a state-mutating action Claude takes. After B-010 made review fully user-side, `review gogogo!` had no Claude action left to authorize. Keeping the verb would either be a no-op or a misleading "Claude is preparing your review" reminder. Removing it keeps the verb table honest. Bare-`gogogo!` clarification prompt no longer offers `review` as a choice. Supersedes B-006.
+**Test:** manual — `grep -nE '^\| \`review gogogo' templates/CLAUDE.md templates/CONTRIBUTING.md PROJECT_STARTER.md docs/spec.md` returns nothing on the active rule rows (historical mentions in superseded blocks / changelogs are intentional audit trail).
+**Status:** frozen
+**Decision:** D-008
 
 ## Decision log
 
@@ -126,7 +142,16 @@ One entry per architectural decision. Decisions live forever; chat history that 
 **Why:** Doc-only loses because docs only apply when someone reads them. Rules-only loses the audit trail and the why. Both gets the auto-load benefit (rules apply every session) AND the reference (full text + attribution + how-it-fits when needed).
 **Implemented in:** v1.2.0.
 
+### D-008 (2026-05-18) Remove all Claude-side reviewer wiring; review is out-of-band and reviewer-agnostic
+
+**Chose:** Delete the `request-codex-review` skill, the `make request-codex-review` Makefile target, and the `review gogogo!` verb. Rewrite `templates/docs/pr_review_instructions.md` as a reviewer-agnostic rubric that names no default reviewer. After `PR gogogo!`, the user opens any reviewer they prefer in a separate session, points it at the open PR and the rubric, and the reviewer posts comments via `gh` directly. Claude is out of the review business entirely.
+**Considered:** (a) keep the v1.6.0 local-CLI skill and add a posting step so it satisfies the per-commit-comment contract; (b) switch to an interactive Codex TUI launcher (Makefile + reminder skill that prints the command in Claude); (c) remove all Claude-side wiring and make review fully out-of-band, reviewer-agnostic (this option).
+**Why:** (a) keeps Claude in the reviewer-dispatch business and continues the pattern of assuming a specific external tool (Codex CLI, GitHub App) is the canonical path. (b) was the planned v1.7.0 path until the user explicitly rejected it — "no make, no nothing. I go to different terminal, start codex, ask him to look around and look at pr review instructions, then review latest pr" — followed by "instructions should be agnostic to reviewer." (c) is the honest scope: Claude opens the PR (`PR gogogo!`); review is whatever the user does in a separate terminal with any reviewer they prefer. The rubric stays because it's reviewer-agnostic — but the wiring and the verb both go. Resolves the [P1] Codex flagged on the v1.6.0 branch by removing the contradiction (Claude no longer claims a per-commit-comment contract it can't satisfy from a stdout-only skill). Supersedes D-005 (Codex-as-default) and D-007 (local-CLI skill); D-006 was already superseded by D-007 in v1.6.0, retained as audit trail.
+**Implemented in:** v1.7.0. Triggered by user feedback that v1.6.0's skill — and the v1.7.0 launcher I'd planned in its place — were both Claude-side wiring for a user-side action. The rubric file is the only artifact the project needs to ship; the reviewer is whoever the user runs.
+
 ### D-007 (2026-05-18) Pivot `request-codex-review` from GitHub App to local CLI
+
+**Status:** Superseded by D-008 on 2026-05-18 (same day). The whole `request-codex-review` skill + Makefile target it shipped was removed in v1.7.0; review is now out-of-band and the project ships no reviewer wiring at all. The "local CLI works and finds real issues" finding still stands — it's just no longer relevant to what the project ships, because the project ships no invocation path for any reviewer.
 
 **Chose:** Reimplement the `request-codex-review` skill + Makefile target around `codex review --base main` (local CLI). Drop the GitHub-App-comment path as the default; document it as a fallback that only applies if the user installs a Codex App later.
 **Considered:** (a) keep the GitHub App skill (B-008) and add a parallel CLI skill, (b) supersede B-008 entirely with the CLI path, (c) build a `codex exec` wrapper instead of `codex review` so we can pass our exact rubric.
@@ -146,6 +171,8 @@ One entry per architectural decision. Decisions live forever; chat history that 
 **Implemented in:** v1.5.0. Reverted in v1.6.0 per D-007.
 
 ### D-005 (2026-05-18) Codex as default PR reviewer; rubric is reviewer-agnostic
+
+**Status:** Superseded by D-008 (v1.7.0). The reviewer-agnostic principle survives in B-010; the Codex-as-default and GitHub-App-invocation parts are removed — project no longer specifies a default reviewer.
 
 **Chose:** Make `templates/docs/pr_review_instructions.md` reviewer-agnostic (preamble names Codex / `/ultrareview` / other LLMs / manual as equally valid paths against the same rubric). Default reviewer is **Codex**, invoked via the GitHub App with a comment that explicitly references the rubric file. Reviewers run serially.
 **Considered:** (a) keep `/ultrareview` as Path A / manual as Path B (current state — reviewer-locked), (b) Codex-default + rubric stays universal, (c) multi-reviewer in parallel (Codex + `/ultrareview` both run), (d) expand the `review gogogo!` verb to take a reviewer flavor.

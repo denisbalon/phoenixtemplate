@@ -10,7 +10,6 @@ Binding process document. Read once; revisit when conventions feel off.
 | Made a commit | Push to origin same turn — no exceptions |
 | Touched any tracked `.md` | Commit it AND push (machine-swap survival) |
 | User says `PR gogogo!` / `ready gogogo!` | `gh pr create` with HEREDOC body |
-| `/ultrareview` failed | Fall back to `docs/pr_review_instructions.md` manual path |
 | User says `merge gogogo!` | `gh pr merge <PR#> --rebase --delete-branch` |
 | `--rebase` refuses | Rebase the feature branch with `--force-with-lease`, retry merge |
 | Anything ambiguous | Ask. Never `--force` without explicit OK. |
@@ -45,7 +44,7 @@ Binding process document. Read once; revisit when conventions feel off.
 3. On `code gogogo!` (or any feature-commit verb: `feat/fix/chore/docs/refactor/test/perf/ship`), atomic 5-step: **spec → bump+CHANGELOG → code → commit → deploy**. Push after every commit.
 4. Every change bumps `VERSION`. ANY change.
 5. PR opens only on `PR gogogo!` / `ready gogogo!` / `open PR gogogo!`. Body uses `## Summary` + `## Test plan`.
-6. Review on `review gogogo!` (ultrareview or manual). Address feedback with more `<verb> gogogo!`s on the same branch.
+6. Review happens **out-of-band** in a separate session — user runs any reviewer (Codex, `/ultrareview`, another LLM, manual) against `docs/pr_review_instructions.md` and the open PR. Claude does not dispatch reviewers. Address feedback with more `<verb> gogogo!`s on the same branch.
 7. On `merge gogogo!`: `gh pr merge --rebase --delete-branch`.
 8. Deploy on every commit to `main` (or explicitly via `deploy gogogo!`).
 
@@ -125,43 +124,20 @@ BODY
 
 ## 4. Review
 
-PR review is **reviewer-agnostic** — the rubric and output contract in `docs/pr_review_instructions.md` apply to whichever reviewer runs. **Independence beats deepening:** a different model with fresh context catches what the original model missed.
+**PR review is out-of-band.** Claude opens the PR on `PR gogogo!`; everything after that happens in a separate session with whatever reviewer the user picks. The project ships no reviewer-specific wiring — no skill, no Makefile target, no `review gogogo!` verb. The rubric and output contract in [`docs/pr_review_instructions.md`](docs/pr_review_instructions.md) are **reviewer-agnostic**: same rubric whether the reviewer is Codex CLI, `/ultrareview`, another LLM, or a human reading the diff.
 
-**Default reviewer: Codex** via its GitHub App. The branch owner triggers the review out-of-session once the branch is finished — Claude does NOT dispatch reviewers mid-branch.
+Workflow after `PR gogogo!`:
 
-### Reviewer options
+1. Open whichever reviewer you prefer in a separate terminal/session.
+2. Point it at `docs/pr_review_instructions.md` and the open PR.
+3. Reviewer posts per-commit comments via `gh` (or its native PR-comment integration). You approve each shell call if the reviewer asks (interactive reviewers like Codex CLI do; CI-driven ones don't).
+4. Return to Claude. Address feedback with more `<verb> gogogo!`s on the same branch.
 
-| Reviewer | Independence | Cost | When |
-|---|---|---|---|
-| **Codex** (`codex review --base main` local CLI) | High | Cheap | **Default.** Routine PRs. |
-| **`/ultrareview <PR#>`** | Low (same model family) | Billed | High-stakes second opinion only. |
-| **Another LLM** (Cursor, Gemini CLI, etc.) | High | Varies | When Codex is down. |
-| **Manual** (you + `docs/pr_review_instructions.md`) | Highest | Time | Architectural / pre-v1.0.0. |
+**Independence beats deepening.** A reviewer with fresh context and ideally a different model family catches what the original missed. Pick reviewers accordingly; run them serially, not in parallel.
 
-Reviewers run **serially**, not in parallel. One per PR.
+### Output contract (reviewer-agnostic)
 
-### Codex invocation (local CLI — the default since v1.6.0)
-
-1. Install the **`codex` CLI** locally (one-time): `npm install -g @openai/codex` (or https://github.com/openai/codex).
-2. Log in once: `codex login`.
-3. From the project root:
-
-   ```sh
-   codex review --base main
-   ```
-
-   Synchronous output; `[P1] / [P2] / [P3]` priority-tagged findings.
-4. Address findings via more `<verb> gogogo!`s on the same branch.
-
-**One-command shortcut:** `/request-codex-review` skill or `make request-codex-review` target — verifies prereqs, runs the CLI, surfaces findings.
-
-**Output format note:** local CLI uses `[P1] / [P2] / [P3]`, not `Block / Strong / Nit`. Treat P1 ≈ Block, P2 ≈ Strong, P3 ≈ Nit. The `--base` flag and a custom prompt are mutually exclusive in the CLI, so the built-in review prompt is used. For strict rubric compliance, use `codex exec`.
-
-**Deprecated GitHub App path:** prior to v1.6.0 the skill posted `@codex review` PR comments expecting a GitHub App. Most accounts don't have one; CLI is now canonical.
-
-### Output contract (universal)
-
-The deliverable is GitHub comments, posted via `gh api` (or the reviewer's native PR-comment integration), **one per commit on the branch — including commits with no findings**:
+Whichever reviewer runs, the deliverable is GitHub comments — posted via `gh api`, the reviewer's native PR-comment integration, or by the user copy-pasting — **one per commit on the branch, including commits with no findings**:
 
 - **Walk every commit** `main..HEAD` in order. Each gets at least one comment on the PR (inline on specific lines, or a commit-level review).
 - **Clean commits get an explicit "no findings on `<sha>` — `<subject>`" comment.** Silence is indistinguishable from "the reviewer forgot this commit." The explicit comment closes that gap and makes the audit trail complete.
@@ -227,7 +203,6 @@ gh pr view <PR#> --json state    # MERGED
 | `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy) |
 | `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) |
 | `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request |
-| `review gogogo!` | Run `/ultrareview` (or manual) |
 | `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
 | `deploy gogogo!` | Run the project's deploy command |
 | `revert gogogo!` | Revert last commit + redeploy |
@@ -239,7 +214,7 @@ Self-check before any state-mutating tool call:
 3. Does that verb match the action I'm about to take?
 
 - No `gogogo!` → reply with the plan + "Send `<verb> gogogo!` and I'll do it." STOP.
-- Bare `gogogo!` (no verb) → reply *"Which action? code / commit / PR / merge / deploy / review / revert?"* and STOP.
+- Bare `gogogo!` (no verb) → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. (Review is out-of-band — no verb for it.)
 - `<verb> gogogo!` but I was about to do a *different* action → STOP, surface the mismatch.
 - `<verb> gogogo!` matching the action → execute.
 

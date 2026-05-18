@@ -8,4 +8,4 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ## v0.1.0 — <YYYY-MM-DD>
 
-Initial scaffold from PROJECT_STARTER template v1.0.0. No source code yet.
+Initial scaffold from PROJECT_STARTER template v1.7.0. No source code yet.

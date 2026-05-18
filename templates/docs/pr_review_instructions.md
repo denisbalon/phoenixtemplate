@@ -1,13 +1,8 @@
 # PR review instructions
 
-**Reviewer-agnostic.** This document is the rubric + output contract for whatever reviewer is running against this PR:
+**Reviewer-agnostic.** This document is the rubric + output contract whichever reviewer you point at this PR — Codex CLI, `/ultrareview`, another LLM (Cursor, Gemini CLI, GPT-5 via CI), or a human reading the diff. **The project ships no default reviewer and no invocation wiring** — pick whatever you prefer, point it at this file and the open PR, and the rubric below applies.
 
-- **Codex** via its GitHub App (the project default — branch owner posts `@codex review — follow docs/pr_review_instructions.md ...` on the PR)
-- **`/ultrareview <PR#>`** in Claude Code (second-opinion path for high-stakes changes)
-- **Another LLM** (Cursor, Gemini CLI, GPT-5 via a CI runner, etc.) pointed at this file
-- **A human** reading the diff with this file open
-
-The rubric is the same regardless of who's running it. The wiring (how the reviewer gets invoked) lives in `CONTRIBUTING.md` §4. This file is **not** for the dev session — that's [`CLAUDE.md`](../CLAUDE.md).
+Review happens **out-of-band**: Claude opens the PR (`PR gogogo!`); you run the reviewer in a separate session. The reviewer reads this file, walks the diff, and posts comments via `gh` (or its native integration) per the output contract below. The branch-owner runs reviewers serially — never in parallel. Claude does not dispatch, prepare, remind about, or wrap any reviewer flow; this file is **not** for the dev session — that's [`CLAUDE.md`](../CLAUDE.md).
 
 ## Output contract — read this before anything else
 
@@ -21,7 +16,7 @@ The rubric is the same regardless of who's running it. The wiring (how the revie
 3. **Plus one overall summary review at the end** with findings rolled up by severity (Block / Strong / Nit per the rubric below).
 4. **Never produce instead of comments:** local files (`review.md`, `findings.txt`, etc. — don't even draft them locally), chat-only summaries (ephemeral), Slack/email/PR-description edits (the description belongs to the author).
 
-The rest of this document is the rubric for *what* to look for. The contract above is *where the output goes* — non-negotiable, applies to both `/ultrareview` and any manual or AI-assisted review run against this repo.
+The rest of this document is the rubric for *what* to look for. The contract above is *where the output goes* — non-negotiable, applies to every reviewer (interactive CLI, slash-command, CI-driven, manual).
 
 ## Block (must fix before merge)
 
