@@ -30,6 +30,7 @@ Binding product behavior, written as **Blocks**. Each Block is atomic, numbered 
 **Editing rules:**
 - Frozen Blocks don't get edited in place — supersede via a new Block + Decision-log entry, and flip the old one to `superseded`.
 - Status promotion (`proposed → draft → frozen`) IS allowed in place and rides in the commit that adds the proving test.
+- Once a Block is marked `superseded`, move it to a `## Historical blocks (superseded)` appendix at the bottom of this file in the same commit that supersedes it. The `## Frozen behavior` section then contains only `proposed`/`draft`/`frozen` blocks. Cross-references from active blocks (e.g. "Supersedes B-NNN") still resolve — the superseded block lives in the appendix, not the main section. Keeps the active spec readable as it grows without losing audit trail.
 
 ### Block B-001: <Title>
 
