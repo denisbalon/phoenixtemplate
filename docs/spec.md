@@ -109,6 +109,14 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Status:** frozen
 **Decision:** D-008
 
+### Block B-018: `bootstrap.sh` validators — generic core + project-specific sidecar
+
+**Rule:** `templates/scripts/bootstrap.sh` ships a `VALIDATORS` associative array containing ONLY truly generic patterns: `LOG_LEVEL` (log-level enum) and `DEV_MODE` (boolean). Project-specific validators (vendor regexes for tokens/IDs/URLs of services the consuming project happens to use) MUST live in `templates/scripts/validators.sh`, a sourced sidecar file that `bootstrap.sh` sources at load time IF it exists. The sidecar mutates `VALIDATORS` directly (it's sourced from inside `bootstrap.sh`'s scope, so `VALIDATORS[NEW_VAR]='regex'` Just Works). The shipped skeleton `validators.sh` contains an explanatory header plus commented-out example entries (Telegram, Stripe, generic URL/postgres patterns) for guidance, but adds zero validators by default. Consumers uncomment/customize for their own project.
+**Rationale:** The prior `bootstrap.sh` hardcoded Telegram/Meta/Keitaro/webhook validators in the generic core — application-specific bake-ins from the project this template was extracted from. Codex improvement-plan Phase 1.2 flagged the contradiction: a generic template that knows about Telegram tokens by default isn't actually generic. The sidecar approach gives consumers a deliberate extension point (Phase 1.2 acceptance criterion: "Project-specific validators live in a deliberate, documented layer") without requiring them to modify shipped template files (which would conflict with future template updates merging into their repo). Generic-only-by-default + explicit sidecar matches the v1.8.0 product-identity decision (D-009): we're a Python/uv/FastAPI/VPS starter; Telegram/Meta/Keitaro are vendor concerns for specific projects, not shipped expectations.
+**Test:** manual — `grep -nE '\[TELEGRAM_|\[META_|\[KEITARO_|\[WEBHOOK_BASE_URL' templates/scripts/bootstrap.sh` returns nothing in the live `VALIDATORS` array (audit-trail mentions in `CHANGELOG.md` and the Codex plan are intentional). `ls templates/scripts/validators.sh` exists. `bash -n templates/scripts/{bootstrap,validators}.sh` syntax-checks clean. Smoke test (B-014) still passes — bootstrap not directly exercised but the refactor introduces no regression.
+**Status:** frozen
+**Decision:** —
+
 ### Block B-017: generic `templates/scripts/*` derive project context, don't hardcode source-project names
 
 **Rule:** Scripts that ship in `templates/scripts/` and present any project-identifying display string (menu headers, banners, status output, etc.) MUST derive it from the consumer's project context — `basename "$ROOT"` (repo directory name), an environment variable, or an explicit `<PROJECT_NAME>`-style placeholder for the consumer to fill — NEVER hardcode a name from the project this template was extracted from. Specifically: `bootstrap.sh`'s interactive menu header derives the display name via `PROJECT_NAME=$(basename "$ROOT")` where `$ROOT` is the script's enclosing project root. Audit-trail mentions of the source project's name in `CHANGELOG.md` (e.g. "Initial extraction from phoenixtgstat_bot" in `PROJECT_STARTER.md` template-changelog) are intentional provenance and do not violate this rule.
@@ -245,9 +253,10 @@ One entry per architectural decision. Decisions live forever; chat history that 
 
 Resolve as they come up. Move resolved entries to the Decision log above.
 
-- [ ] **De-personalize the template.** Partial — `bootstrap.sh` menu header was hardcoded to `phoenixtgstat_bot` and bakes in Telegram/Meta/Keitaro VALIDATORS. (PROJECT_STARTER.md item A1–A3.) Status:
-  - [x] ~~Menu-header hardcode~~ — **Resolved in v1.11.2 (B-017).** `bootstrap.sh` now derives via `PROJECT_NAME=$(basename "$ROOT")`.
-  - [ ] Service-specific validators (`TELEGRAM_BOT_TOKEN`, `META_*`, `KEITARO_*` regexes in `bootstrap.sh` `VALIDATORS` array) still hardcoded. Codex Phase 1.2 — needs a small design call on whether validators live in a separate config file, plugin pattern, or get removed from generic core entirely.
+- [ ] **De-personalize the template.** Partial — original residue was `bootstrap.sh` menu header hardcoded to `phoenixtgstat_bot` + baked-in Telegram/Meta/Keitaro validators. (PROJECT_STARTER.md item A1–A3.) Status:
+  - [x] ~~Menu-header hardcode~~ — **Resolved in v1.11.2 (B-017).** `bootstrap.sh` derives via `PROJECT_NAME=$(basename "$ROOT")`.
+  - [x] ~~Service-specific validators~~ — **Resolved in v1.12.0 (B-018).** Generic core (`LOG_LEVEL`, `DEV_MODE` only) + sourced sidecar at `templates/scripts/validators.sh` where consumers add their own project-specific validators.
+  - [ ] Codex Phase 1.3 — broader audit for source-project residue across docs (vendor nouns, domain assumptions, app-specific examples). Same shape as v1.11.1's A5 (one more sweep, expected thin).
 - [ ] **Stack-agnostic restructure** — *roadmap per D-009.* Today the templates assume Python+uv+FastAPI+VPS. Multi-preset support (`templates/_common/` + `presets/python-uv/`, `presets/node-pnpm/`, `presets/go/`, `presets/none/`) is deferred to a later release. Until shipped, this repo is honestly framed as a Python/uv/FastAPI/VPS starter. (Item C10–C12)
 - [ ] **One-shot project bootstrap script.** `scripts/new-project.sh <slug> <package>` doing §1.1–§1.10 of PROJECT_STARTER.md in a single command — including `gh repo create`, branch protection via `gh api`, merge settings via `gh api`. (Item D13)
 - [x] ~~**Build the missing `scripts/export-starter.sh`.** Referenced in §1.3 but never shipped. Keep for offline-transfer use case. (Item B4)~~ — **Resolved in v1.10.0 (B-013).**
