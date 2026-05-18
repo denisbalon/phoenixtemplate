@@ -6,6 +6,24 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.16.1 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.16.1. Patch — Codex Phase 5 #2 (Known Limitations), small README addition.
+
+### Add Known Limitations section to README
+
+Pairs with v1.16.0's quickstart README. Without an explicit limitations section, new visitors might assume the template is more polished than it is and hit surprises when first using it. Codex Phase 5 #2: "State explicitly what is still manual. State what is not yet generic or multi-preset. Users are not surprised by remaining edges."
+
+Five concrete limitations, each with a one-paragraph explanation + link to the roadmap item where applicable:
+
+1. **Placeholder substitution is manual** — `bootstrap.sh` only does `.env` credential prompting; placeholder substitution (`<package_name>` mv + sed across `.py`/`.toml`/`Makefile`/`.yml`/`.sh`/`.example`; plus `<PROJECT_NAME>`/`<GITHUB_USER>`/`<HOST>`/`<DOMAIN>` edits) is manual. Open item #3 (`scripts/new-project.sh`) addresses this.
+2. **Single language preset** — Python/uv/FastAPI/VPS only. Multi-preset is roadmap per D-009.
+3. **`PROJECT_STARTER.md` is a 1000+ line monolith** — split into focused docs is roadmap (open item #7 + Codex plan Phase 1).
+4. **No automated drift detection** — doc references, placeholders, workflow-wording consistency manually audited today. Linters are roadmap (Codex plan Phase 3).
+5. **Windows requires WSL** — `src/<package_name>/` directory has angle-bracket characters that aren't valid Windows filenames; bash scripts assume POSIX shell. Per D-009 target is Linux/VPS — Windows isn't a first-class target.
+
+Section sits in README between Quickstart and Docs, with a pointer to `docs/spec.md` "Open project-level decisions" for the full roadmap so the README doesn't duplicate.
+
 ## v1.16.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.16.0. **First commit on new branch `improvements-2` after merging `improvements-1` (PR #1, v1.2.0–v1.15.0).**
