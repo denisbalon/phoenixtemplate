@@ -6,6 +6,37 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.17.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.17.0. **Codex Phase 1 #3 — first item of the doc-architecture refactor.**
+
+### Split `docs/spec.md` into active + historical-superseded sections
+
+`docs/spec.md` had grown to 295 lines mixing 14 active blocks with 6 superseded blocks in arbitrary file order (mostly chronological reverse). A reader trying to understand "what are the current rules?" had to filter superseded blocks out by eye on every visit. Codex Phase 1 #3 (renumbered from prior plan Phase 2 #3 in the most recent Codex plan refactor): "Keep active blocks in the main section. Move superseded blocks to a historical appendix or dedicated section. Keep the decision log as the durable audit trail."
+
+New structure:
+
+- **`## Frozen behavior`** — 14 active blocks in numerical order: B-001, B-002, B-003, B-004, B-005, B-010, B-011, B-012, B-014, B-015, B-016, B-017, B-019, B-020.
+- **`## Decision log`** — 9 decisions in numerical order: D-001 through D-009. Decisions remain in this section regardless of supersession status (each superseded decision retains its full Chose/Considered/Why content plus a `Status:` line explaining what replaced it — same convention as before; no decision content moved).
+- **`## Open project-level decisions`** — unchanged.
+- **`## Historical blocks (superseded)`** — new appendix at end of file. 6 superseded blocks in numerical order: B-006, B-007, B-008, B-009, B-013, B-018. Block content is preserved verbatim; cross-references from active blocks ("Supersedes B-NNN") still resolve.
+
+Zero content removed. Pure reorganization. Reader who wants current rules reads top of file and stops at "Open project-level decisions"; reader who wants audit trail or context for a supersession trail continues to the appendix.
+
+### Templates skeleton updated
+
+`templates/docs/spec.md` skeleton gains a third editing rule: "Once a Block is marked superseded, move it to a `## Historical blocks (superseded)` appendix at the bottom of this file in the same commit that supersedes it." Consumer projects starting from this skeleton follow the same convention.
+
+### Spec
+
+No new B block (organization change, not behavior). The convention itself is documented in `templates/docs/spec.md`'s editing rules.
+
+### Next on Phase 1
+
+- **Phase 1 #1** — canonical source for workflow policy choice. Architectural decision (PROJECT_STARTER.md vs templates/CONTRIBUTING.md as the canonical source). Needs a **design discussion turn** before code, same flow as Phase 3.
+- **Phase 1 #2** — split PROJECT_STARTER.md into BOOTSTRAP / WORKFLOW / TEMPLATE_INVENTORY / DEPLOY_BASELINE / HARNESS_QUIRKS. Depends on Phase 1 #1's decision.
+- **Phase 1 #4** — reduce duplication between PROJECT_STARTER / CONTRIBUTING / CLAUDE. Depends on Phase 1 #1's decision.
+
 ## v1.16.1 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.16.1. Patch — Codex Phase 5 #2 (Known Limitations), small README addition.
