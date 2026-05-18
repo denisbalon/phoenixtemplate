@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.11.0
+**Template version:** v1.11.1
 **Last updated:** 2026-05-18
 
 A reusable bootstrap kit for new software projects worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
@@ -93,7 +93,16 @@ cp $SOURCE/templates/CHANGELOG.md ./
 chmod +x scripts/*.sh
 ```
 
-Then customize: search for `<PROJECT_NAME>`, `<PACKAGE_NAME>`, `<PROJECT_DESCRIPTION>`, `<HOST>`, `<DOMAIN>` and similar placeholders. The README, CLAUDE.md, CONTRIBUTING.md, and docs/* skeletons are the main customization targets.
+Then customize: search for `<PROJECT_NAME>`, `<PACKAGE_NAME>`, `<PROJECT_DESCRIPTION>`, `<HOST>`, `<DOMAIN>` and similar placeholders. The README, CLAUDE.md, CONTRIBUTING.md, and docs/* skeletons are the main customization targets. The Python preset additionally requires renaming the `src/<package_name>/` directory to your real package name (`mv src/<package_name> src/<PACKAGE_NAME>`) plus running the same sed across `pyproject.toml`, `tests/`, and `Makefile`.
+
+**After substitution, generate the lockfile so CI's `uv sync --frozen` succeeds on the first push:**
+
+```sh
+uv lock          # produces uv.lock based on the now-substituted pyproject.toml
+git add uv.lock  # bundled into the first commit
+```
+
+Without this, the first push to a fresh repo will fail the CI workflow (`templates/.github/workflows/ci.yml` uses `--frozen` for reproducibility) with a missing-lockfile error. Bootstrap-automation that does this for you is on the roadmap (Package B in the Codex improvement plan).
 
 ### 1.4 Initial VERSION
 
@@ -1061,6 +1070,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.11.1 | 2026-05-18 | Patch — A5 audit (Codex Phase 1.4) of every command/file/path reference across `PROJECT_STARTER.md`, `templates/README.md`, `templates/CONTRIBUTING.md`, `templates/CLAUDE.md`, `templates/docs/*`. Surprisingly thin — most drift was already caught by v1.7.1 / v1.9.0-v1.11.0. One real gap fixed: §1.3 didn't tell consumers to run `uv lock && git add uv.lock` after placeholder substitution, so first push to a fresh repo failed CI's `uv sync --frozen` for missing lockfile. Personalization residue (`denisbalon/` hardcodes) and the `<package_name>` manual-substitution requirement are real gaps but deferred to Package B (de-personalize + bootstrap automation) — out of A5's path-audit scope. Spec: B-016 added (invariant — live doc references resolve to shipped files or are explicit examples; future C2 linter will test this automatically). |
 | 1.11.0 | 2026-05-18 | Template self-tests on CI (Codex Phase 8). New `scripts/smoke-test.sh` end-to-end-instantiates the template: export-starter → tar extract → sed substitute `<package_name>` → `uv sync` → pytest + ruff + mypy. New `.github/workflows/template-self-test.yml` runs the smoke test on every push and PR against `main` (meta-repo's first CI workflow). Same-commit fix to `scripts/export-starter.sh` archive layout: smoke test caught that v1.10.0 kept `templates/` nested, breaking §1.3's `chmod +x scripts/*.sh` line; fixed by promoting templates contents to the archive root via `cp -R templates/.` trailing-slash trick. Spec: B-014 added (self-test rule); B-015 added (correct layout); B-013 superseded by B-015 with audit-trail rationale. |
 | 1.10.0 | 2026-05-18 | Ship `scripts/export-starter.sh` at repo root (Codex Phase 1.1 + open item #4 — both resolved). Reads VERSION; writes `~/Downloads/project-starter-v<VERSION>-<DATE>.tar.gz` (always) and `.zip` (only if `zip` is installed). Archive top-level dir matches the archive name so `tar -xzf ... --strip-components=1` per §1.3 works. Closes the "quick path doc lies" gap that's existed since v1.1.1. Spec: B-013 added. |
 | 1.9.1 | 2026-05-18 | Patch — fix `templates/scripts/deploy.sh` cleanliness check (Codex Phase 1.3). Previous `git diff --quiet` only caught unstaged changes; now also blocks on staged-but-uncommitted edits (`git diff --cached --quiet`) and untracked files (`git ls-files --others --exclude-standard`, respecting `.gitignore`). Each scenario is reported separately on failure. `--dirty` override unchanged. Script header documents the policy. |
