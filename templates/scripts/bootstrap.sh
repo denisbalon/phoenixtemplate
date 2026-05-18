@@ -13,6 +13,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PROJECT_NAME="$(basename "$ROOT")"
 EXAMPLE="$ROOT/.env.example"
 ENV_FILE="$ROOT/.env"
 
@@ -197,7 +198,7 @@ write_env() {
 show_menu() {
   echo
   echo "════════════════════════════════════════════════════════════"
-  echo "  phoenixtgstat_bot — credential setup"
+  echo "  $PROJECT_NAME — credential setup"
   echo "════════════════════════════════════════════════════════════"
   echo
 

@@ -109,6 +109,14 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Status:** frozen
 **Decision:** D-008
 
+### Block B-017: generic `templates/scripts/*` derive project context, don't hardcode source-project names
+
+**Rule:** Scripts that ship in `templates/scripts/` and present any project-identifying display string (menu headers, banners, status output, etc.) MUST derive it from the consumer's project context — `basename "$ROOT"` (repo directory name), an environment variable, or an explicit `<PROJECT_NAME>`-style placeholder for the consumer to fill — NEVER hardcode a name from the project this template was extracted from. Specifically: `bootstrap.sh`'s interactive menu header derives the display name via `PROJECT_NAME=$(basename "$ROOT")` where `$ROOT` is the script's enclosing project root. Audit-trail mentions of the source project's name in `CHANGELOG.md` (e.g. "Initial extraction from phoenixtgstat_bot" in `PROJECT_STARTER.md` template-changelog) are intentional provenance and do not violate this rule.
+**Rationale:** A generic template that prints source-project branding is dishonest by construction — a consumer running the script sees another project's name and either concludes (a) the template is for that specific project rather than theirs, or (b) the template is sloppy with leftovers. Codex improvement-plan Phase 1.1 flagged the `bootstrap.sh` case explicitly. Establishing the rule formally lets the future C4 workflow-consistency linter (Codex Phase 5.3) test for it automatically and prevents regression as new generic scripts are added.
+**Test:** manual — `grep -nE 'phoenix[a-z]*_bot' templates/scripts/*.sh` returns nothing (only audit-trail mentions in `CHANGELOG.md` template-changelog and the Codex plan itself remain, which are intentional).
+**Status:** frozen
+**Decision:** —
+
 ### Block B-016: every live doc reference resolves to a shipped file or is an explicit example
 
 **Rule:** Every command, file path, and filename mentioned in active docs (`PROJECT_STARTER.md`, `templates/README.md`, `templates/CONTRIBUTING.md`, `templates/CLAUDE.md`, `templates/docs/*.md`) either (a) points at a file that ships in this repo, (b) is a literal placeholder marked by angle brackets like `<package_name>` / `<PROJECT_NAME>` / `<HOST>`, (c) is an illustrative example (e.g. `findings.txt` and `review.md` shown as forbidden alternatives in the output contract; `Cargo.toml` / `package.json` shown as non-Python stack examples), or (d) is a prescriptive recommendation for a user-local file the project doesn't ship (memory-seed filenames like `architecture_decisions.md` that consumers create in their own `.claude/memory/` dir). Historical mentions of removed files (e.g. `request-codex-review` skill in template-changelog tables for v1.5.0–v1.6.0) are intentional audit trail in changelog history and superseded spec blocks, not live references.
@@ -237,7 +245,9 @@ One entry per architectural decision. Decisions live forever; chat history that 
 
 Resolve as they come up. Move resolved entries to the Decision log above.
 
-- [ ] **De-personalize the template.** `bootstrap.sh` hardcodes `phoenixtgstat_bot` in its menu header and bakes in Telegram/Meta/Keitaro VALIDATORS. Should be derived from the consuming project, not hardcoded. (PROJECT_STARTER.md item A1–A3)
+- [ ] **De-personalize the template.** Partial — `bootstrap.sh` menu header was hardcoded to `phoenixtgstat_bot` and bakes in Telegram/Meta/Keitaro VALIDATORS. (PROJECT_STARTER.md item A1–A3.) Status:
+  - [x] ~~Menu-header hardcode~~ — **Resolved in v1.11.2 (B-017).** `bootstrap.sh` now derives via `PROJECT_NAME=$(basename "$ROOT")`.
+  - [ ] Service-specific validators (`TELEGRAM_BOT_TOKEN`, `META_*`, `KEITARO_*` regexes in `bootstrap.sh` `VALIDATORS` array) still hardcoded. Codex Phase 1.2 — needs a small design call on whether validators live in a separate config file, plugin pattern, or get removed from generic core entirely.
 - [ ] **Stack-agnostic restructure** — *roadmap per D-009.* Today the templates assume Python+uv+FastAPI+VPS. Multi-preset support (`templates/_common/` + `presets/python-uv/`, `presets/node-pnpm/`, `presets/go/`, `presets/none/`) is deferred to a later release. Until shipped, this repo is honestly framed as a Python/uv/FastAPI/VPS starter. (Item C10–C12)
 - [ ] **One-shot project bootstrap script.** `scripts/new-project.sh <slug> <package>` doing §1.1–§1.10 of PROJECT_STARTER.md in a single command — including `gh repo create`, branch protection via `gh api`, merge settings via `gh api`. (Item D13)
 - [x] ~~**Build the missing `scripts/export-starter.sh`.** Referenced in §1.3 but never shipped. Keep for offline-transfer use case. (Item B4)~~ — **Resolved in v1.10.0 (B-013).**

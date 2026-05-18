@@ -6,6 +6,19 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.11.2 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.11.2. Patch — first item of Package B / Codex Phase 1 (de-personalize). Removes the most visible source-project leftover in the generic template.
+
+### Fix
+
+- **`templates/scripts/bootstrap.sh:200` menu header hardcoded `phoenixtgstat_bot`.** A consumer running the script saw the source-project's name in the credential-setup banner. Replaced with a derived value: `PROJECT_NAME=$(basename "$ROOT")` near the top of the script; menu header now reads `"  $PROJECT_NAME — credential setup"`. The header now correctly shows the consumer's actual project directory name.
+
+### Spec
+
+- **B-017** added: generic `templates/scripts/*` derive project context from `basename "$ROOT"` / env / placeholder; never hardcode source-project names. Frozen. Future C4 consistency linter (Codex Phase 5.3) makes this testable automatically. Audit-trail mentions of the source project's name in `CHANGELOG.md` / `PROJECT_STARTER.md` template-changelog are intentional provenance — excluded from the rule.
+- **Open project-level decisions** — de-personalize item split into two sub-items: menu-header (resolved in this commit) + service-specific validators (Telegram/Meta/Keitaro regexes, still hardcoded — needs a design call before Phase 1.2 work begins).
+
 ## v1.11.1 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.11.1. Patch — A5 audit (Codex Phase 1.4) of every command / file path / filename mentioned across `PROJECT_STARTER.md`, `templates/README.md`, `templates/CONTRIBUTING.md`, `templates/CLAUDE.md`, `templates/docs/*.md` against the shipped tree.
