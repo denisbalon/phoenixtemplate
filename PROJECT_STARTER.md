@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.12.0
+**Template version:** v1.13.0
 **Last updated:** 2026-05-18
 
 A reusable bootstrap kit for new software projects worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
@@ -117,13 +117,13 @@ The version-bump rule (§2) applies on every subsequent change.
 Create the repo (use `--private` unless you know it should be public):
 
 ```sh
-gh repo create denisbalon/$PROJECT_SLUG --private --source=. --remote=origin --description "<short description>"
+gh repo create <GITHUB_USER>/$PROJECT_SLUG --private --source=. --remote=origin --description "<short description>"
 ```
 
 If the repo already exists (created via the GitHub UI), skip the `gh repo create` and instead:
 
 ```sh
-git remote add origin git@github.com:denisbalon/$PROJECT_SLUG.git
+git remote add origin git@github.com:<GITHUB_USER>/$PROJECT_SLUG.git
 ```
 
 ### 1.6 Branch protection on `main`
@@ -179,7 +179,7 @@ This is the **only direct push to `main`** the project will ever do. Branch prot
 ```sh
 git log --oneline -1                 # should show your initial commit
 gh repo view --json visibility,url   # should show your repo
-gh api /repos/denisbalon/$PROJECT_SLUG/branches/main/protection 2>&1 | head  # should NOT be 404
+gh api /repos/<GITHUB_USER>/$PROJECT_SLUG/branches/main/protection 2>&1 | head  # should NOT be 404
 ```
 
 Bootstrap complete. From here on, all work follows §2.
@@ -283,7 +283,7 @@ Increment policy:
 ### 2.4 Branching
 
 - **Never commit to `main`.** Every change lives on a feature branch. `main` only receives explicit fast-forward merges via PR.
-- Topic branches use kebab-case prefix per type — `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `perf/`. Example: `feat/click-receiver`, `fix/capi-retry-401`.
+- Topic branches use kebab-case prefix per type — `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `perf/`. Example: `feat/api-handler`, `fix/auth-retry-401`.
 - Branch from `main`, push immediately on `git checkout -b`, deleted after merge. No `develop`, `release/*`, environment-named branches.
 - **Never `git checkout` / `git switch` without explicit instruction.** "Check the latest stuff" ≠ checkout — fetch + report, then ask.
 - **Topic branches accumulate many commits.** A single branch normally hosts dozens of `gogogo!`s before a PR is opened. Don't open a new branch per `gogogo!`. Don't open a PR after each commit.
@@ -306,7 +306,7 @@ A reviewer reading the commit log six months from now should understand **what c
 
 - **Subject line** is the *result* in active voice with a concrete object. The subject says what changed and to what.
   - ❌ Bad: `fix bug`, `update docs`, `various changes`, `WIP`, `tweaks`, `address feedback`, `bump version`.
-  - ✅ Good: `fix CAPI 401 retry on expired token v0.2.3`, `update spec frozen-behavior with Subscribe modes v0.1.7`, `drop phoenixbot user from runbook §4 v0.1.8`.
+  - ✅ Good: `fix auth 401 retry on expired token v0.2.3`, `update spec frozen-behavior with new subscription modes v0.1.7`, `drop legacy admin user from runbook §4 v0.1.8`.
 - **Body** explains the *why* — not what (the diff shows that), but the constraint, decision, or context that justifies the change. 1–3 sentences. ~72-col wrap. Skip the body only when the subject is fully self-explanatory.
 - **Name the files/sections** in the body when the commit touches multiple. Reviewers shouldn't have to diff to know whether `runbook.md` or `setup.md` got the update.
 - **Reference issue / PR / Decision-log entry** when applicable: `Refs #N`, `Closes #N`, `Implements D-NNN`. Makes the audit trail traversable.
@@ -528,7 +528,7 @@ Open these as a Q&A with Claude before touching `src/`. Each has options + recom
 What runtime + framework? Picking sets language for `pyproject.toml`/`package.json`/`go.mod`, naming conventions, CI tools.
 
 Common picks:
-- **Python 3.12 + FastAPI + uvicorn** — async web service, excellent CAPI/Telegram tooling
+- **Python 3.12 + FastAPI + uvicorn** — async web service, mature async ecosystem, strong webhook/API/HTTP-client tooling
 - **Node 20 + Hono / Express** — when most of the team is JS-native
 - **Go 1.22+** — when raw performance matters more than ecosystem
 
@@ -602,7 +602,7 @@ Adapt to your VPS specifics. The procedure assumes Debian/Ubuntu/CentOS-family; 
 In your DNS provider (Cloudflare / Route 53 / etc.):
 - Add an `A` record: `<subdomain>` → `<vps-ipv4>`
 - Proxy/CDN setting depends on the use case:
-  - **DNS-only ("gray cloud" in Cloudflare)** for Telegram webhooks (CF proxy interferes)
+  - **DNS-only ("gray cloud" in Cloudflare)** for webhook receivers and other endpoints where an upstream is sensitive to TLS termination or header rewriting at the CDN edge (a frequent issue for some bot/notification platforms — verify with your upstream's docs)
   - **Proxied ("orange cloud")** for general web traffic that benefits from CDN/DDoS
 
 Verify propagation: `dig <subdomain>.<domain> +short` should return the VPS IP.
@@ -759,8 +759,8 @@ Per-version human-readable diary. One section per `VERSION` bump:
 
 ## v0.2.0 — 2026-05-15
 
-- Add Telegram webhook receiver — PR #12
-- Update spec §5.4 for delayed Subscribe mode — PR #11
+- Add webhook receiver for `<upstream-service>` — PR #12
+- Update spec §5.4 for delayed-confirmation mode — PR #11
 
 ## v0.1.0 — 2026-05-04
 
@@ -932,8 +932,8 @@ Interactive reviewers (Codex CLI, manual human at the keyboard) naturally satisf
 - **Hashing inputs:** verify hashing is on the right field (e.g., source ID, not internal DB ID), with the right normalization (lowercase, trim).
 - **Persistence vs. computation:** the URL the user actually hit is *persisted at receiver time*, not derived/reconstructed downstream.
 - **Auth headers:** webhook receivers verify the secret token; mismatch = 401, never silent accept.
-- **`allowed_updates` / event filters:** explicitly listed in setWebhook calls; defaults often exclude the events you need (e.g., Telegram's default omits `chat_join_request`).
-- **Currency / value defaults:** `0` for free conversions; faking value distorts upstream optimization (FB's bid algorithm, etc.).
+- **Event/update filters on webhook subscriptions:** explicitly listed in registration calls; defaults often exclude the events you need. *Example (Telegram bots):* `setWebhook`'s default `allowed_updates` omits `chat_join_request` — you must list it explicitly to receive those events.
+- **Currency / value defaults on conversion-tracking integrations:** `0` for free conversions; faking value distorts upstream optimization (most ads-platform bid algorithms use the value field as a signal).
 
 ---
 
@@ -984,7 +984,7 @@ The chat transcript is logged. Once a token / password / secret appears in a mes
 
 ### When a credential leaks into chat
 
-1. **Flag the leak once**, with the recommended action (revoke + regenerate at the source service). Be specific about *where* the user revokes (e.g., "Meta Events Manager → Settings → Conversions API").
+1. **Flag the leak once**, with the recommended action (revoke + regenerate at the source service). Be specific about *where* the user revokes — point at the exact admin UI path. *Example:* "<provider> admin console → Settings → API keys → revoke + create new".
 2. **Do not repeat the warning** in subsequent messages of the same session. The user manages rotation on their own schedule. Repeated reminders erode trust without improving security.
 3. If a *different* credential leaks, that's a new incident — flag it once.
 4. Continue normal work; the user's response to credential leaks is their call alone.
@@ -1070,6 +1070,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.13.0 | 2026-05-18 | Audit source-project residue in active docs + scripts (Codex Phase 1.3 — last item of Package B). Three categories: (a) `denisbalon/$PROJECT_SLUG` hardcodes in §1.5/§1.6 parametrized to `<GITHUB_USER>/$PROJECT_SLUG` (closes the v1.11.1 A5 deferral); (b) six vendor-specific examples in supposedly-generic prose made generic (branch names, commit-message examples, stack rationale, DNS guidance, sample CHANGELOG entry) or explicitly labeled (`**Example (Telegram bots):**` for §11's chat_join_request example, `**Example:**` for §13's Meta credential-revoke pointer); (c) `WEBHOOK_BASE_URL` env var in `templates/scripts/deploy.sh` renamed to `SERVICE_URL` (webhook-shaped name was Telegram-bot leftover). Breaking change: consumers with `WEBHOOK_BASE_URL` in `.env` should rename. Spec: B-019 added (active docs vendor-neutral by default; labeled exceptions). Package B / Codex Phase 1 (de-personalize) now complete: 1.1 ✓ (v1.11.2), 1.2 ✓ (v1.12.0), 1.3 ✓ (this release). |
 | 1.12.0 | 2026-05-18 | Strip vendor validators from `bootstrap.sh` core; ship `templates/scripts/validators.sh` sidecar (Codex Phase 1.2). Eight validators in the `VALIDATORS` associative array — six vendor-specific (TELEGRAM_BOT_TOKEN / TELEGRAM_WEBHOOK_SECRET / TELEGRAM_CHANNEL_ID / META_DEFAULT_PIXEL_ID / META_CAPI_TOKEN / KEITARO_POSTBACK_BASE / KEITARO_POSTBACK_KEY) plus app-shaped WEBHOOK_BASE_URL — were bake-ins from the source project. Core now contains only truly generic validators (`LOG_LEVEL`, `DEV_MODE`); vendor patterns moved to a sourced sidecar `templates/scripts/validators.sh` (skeleton with commented examples). Breaking change for consumers relying on the hardcoded patterns — uncomment in the new sidecar to restore. Spec: B-018 added (generic core + sidecar architecture). |
 | 1.11.2 | 2026-05-18 | Patch — first item of Package B / Codex Phase 1 (de-personalize). `templates/scripts/bootstrap.sh:200` menu header hardcoded `phoenixtgstat_bot` (source-project leftover); replaced with `$(basename "$ROOT")` derivation so the consumer's actual project directory name shows in the banner. Spec: B-017 added (generic scripts derive project context, don't hardcode source names; future C4 linter testable). Open item split — menu-header fixed; service-specific validators (Telegram/Meta/Keitaro regex bake-ins in the same script) still pending Codex Phase 1.2 (needs a small design call on extraction approach). |
 | 1.11.1 | 2026-05-18 | Patch — A5 audit (Codex Phase 1.4) of every command/file/path reference across `PROJECT_STARTER.md`, `templates/README.md`, `templates/CONTRIBUTING.md`, `templates/CLAUDE.md`, `templates/docs/*`. Surprisingly thin — most drift was already caught by v1.7.1 / v1.9.0-v1.11.0. One real gap fixed: §1.3 didn't tell consumers to run `uv lock && git add uv.lock` after placeholder substitution, so first push to a fresh repo failed CI's `uv sync --frozen` for missing lockfile. Personalization residue (`denisbalon/` hardcodes) and the `<package_name>` manual-substitution requirement are real gaps but deferred to Package B (de-personalize + bootstrap automation) — out of A5's path-audit scope. Spec: B-016 added (invariant — live doc references resolve to shipped files or are explicit examples; future C2 linter will test this automatically). |

@@ -26,8 +26,9 @@
 # Stripe (live + test keys):
 # VALIDATORS[STRIPE_API_KEY]='^sk_(live|test)_[A-Za-z0-9]{24,}$'
 #
-# Generic HTTPS URL (anchored, schema-strict):
-# VALIDATORS[WEBHOOK_BASE_URL]='^https?://[A-Za-z0-9._~/?#@!$&'\''()*+,;=:%-]+$'
+# Generic HTTPS URL (anchored, schema-strict) — example var name `SERVICE_URL`,
+# adjust for your project:
+# VALIDATORS[SERVICE_URL]='^https?://[A-Za-z0-9._~/?#@!$&'\''()*+,;=:%-]+$'
 #
 # Postgres connection string:
 # VALIDATORS[DATABASE_URL]='^postgres(ql)?://.+$'

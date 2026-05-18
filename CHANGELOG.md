@@ -6,6 +6,44 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.13.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.13.0.
+
+### Audit source-project residue in active docs + scripts (Codex Phase 1.3)
+
+Third and final item of Package B / Codex Phase 1 (de-personalize). The systematic sweep across PROJECT_STARTER.md, templates/README.md, templates/CONTRIBUTING.md, templates/CLAUDE.md, templates/docs/*, and templates/scripts/*.sh surfaced two categories of residue:
+
+**Hardcoded source-project usernames** (`denisbalon/$PROJECT_SLUG` in 3 places in PROJECT_STARTER.md §1.5 + §1.6) — flagged in v1.11.1's A5 audit, deferred to Package B, now fixed. Parametrized to `<GITHUB_USER>/$PROJECT_SLUG` using the existing placeholder convention.
+
+**Vendor-specific examples in supposedly-generic prose** (6 instances in PROJECT_STARTER.md):
+- §2.4 branch-naming examples (`feat/click-receiver`, `fix/capi-retry-401`) → generic (`feat/api-handler`, `fix/auth-retry-401`)
+- §2.5 commit-message examples (CAPI/Subscribe/phoenixbot) → generic equivalents
+- §5.1 stack rationale: "excellent CAPI/Telegram tooling" → "mature async ecosystem and excellent webhook/API tooling"
+- §6.1 DNS guidance: "DNS-only for Telegram webhooks" → reframed for "webhook receivers in general where the upstream is sensitive to TLS termination details"
+- §8.2 sample CHANGELOG entry: "Add Telegram webhook receiver" → generic "Add webhook receiver"
+- §11 cross-cutting concerns: Telegram `chat_join_request` example → explicitly labeled `**Example (Telegram bots):**`
+- §13 credential-leak revoke example: "Meta Events Manager" → explicitly labeled `**Example:**`
+
+**Webhook-shaped env var name** (`WEBHOOK_BASE_URL` in `templates/scripts/deploy.sh`) renamed to `SERVICE_URL`. The old name presumed the service was a webhook receiver — a Telegram-bot leftover from the source project. Service URL is generic.
+
+### Breaking change
+
+`WEBHOOK_BASE_URL` → `SERVICE_URL` in `templates/scripts/deploy.sh`. Any consumer with `WEBHOOK_BASE_URL` in their `.env` should rename it (the deploy will silently fall back to the `<DOMAIN>` placeholder otherwise). Acceptable per v1 development phase.
+
+### Spec
+
+- **B-019** added: active docs are vendor-neutral by default; vendor-specific guidance is explicitly labeled. Names the principle for `PROJECT_STARTER.md` + all `templates/**/*.md` + script env var names. Frozen. The future C4 consistency linter (Codex Phase 5.3) tests it automatically.
+- **Open project-level decisions** — De-personalize item now **fully resolved** (menu header v1.11.2 + validators v1.12.0 + docs/scripts audit v1.13.0).
+
+### Package B status
+
+- ✓ 1.1 Menu-header (v1.11.2 / B-017)
+- ✓ 1.2 Validators (v1.12.0 / B-018)
+- ✓ 1.3 Doc + script audit (v1.13.0 / B-019)
+
+Codex Phase 1 (de-personalize) is complete. Per the updated codex plan, next phase in execution order is Phase 3 (env metadata).
+
 ## v1.12.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.12.0.
