@@ -6,6 +6,18 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.5.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.5.0.
+
+### Codex review automation
+
+- Add `templates/.claude/skills/request-codex-review/SKILL.md` — one-command path to trigger Codex review of the current branch's PR. Detects PR number via `gh pr view`, composes a canonical invocation comment that names `docs/pr_review_instructions.md` explicitly (so Codex reads the rubric), posts via `gh pr comment`, confirms, stops. Does NOT poll for results — Codex posts back to the PR async.
+- Add `make request-codex-review` Makefile target — wraps the same canonical comment for one-shot terminal invocation outside Claude sessions.
+- Documents the re-review pattern (post a second comment naming "addressed prior findings, N new commits") and the no-mid-branch / no-state-mutation-beyond-comment guardrails.
+
+Implements D-006. Adds B-008.
+
 ## v1.4.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.4.0.

@@ -153,6 +153,8 @@ Reviewers run **serially**, not in parallel. One per PR.
 3. Codex posts comments matching the output contract below.
 4. Address findings via more `<verb> gogogo!`s on the same branch.
 
+**One-command shortcut:** `/request-codex-review` skill or `make request-codex-review` target — auto-detects the PR, composes the canonical body (including the rubric file reference), posts, confirms. Async-and-done; no polling.
+
 ### Output contract (universal)
 
 The deliverable is GitHub comments, posted via `gh api` (or the reviewer's native PR-comment integration), **one per commit on the branch — including commits with no findings**:
