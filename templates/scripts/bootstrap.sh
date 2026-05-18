@@ -59,18 +59,23 @@ fi
 
 SENSITIVE_RE='(TOKEN|SECRET|KEY|DSN|PASSWORD)'
 
+# Generic validators that apply to any project. Project-specific validators
+# (vendor token formats, service URL patterns, etc.) live in scripts/validators.sh
+# — sourced below if present. Keep this array minimal; consumers extend via the
+# sidecar without modifying this file.
 declare -A VALIDATORS=(
-  [TELEGRAM_BOT_TOKEN]='^[0-9]{8,12}:[A-Za-z0-9_-]{30,}$'
-  [TELEGRAM_WEBHOOK_SECRET]='^[A-Za-z0-9_-]{8,256}$'
-  [TELEGRAM_CHANNEL_ID]='^-?[0-9]+$'
-  [WEBHOOK_BASE_URL]='^https?://[A-Za-z0-9._~/?#@!$&'\''()*+,;=:%-]+$'
-  [META_DEFAULT_PIXEL_ID]='^[0-9]{14,17}$'
-  [META_CAPI_TOKEN]='^[A-Za-z0-9]{40,}$'
-  [KEITARO_POSTBACK_BASE]='^https?://[A-Za-z0-9._~/?#@!$&'\''()*+,;=:%-]+$'
-  [KEITARO_POSTBACK_KEY]='^[a-zA-Z0-9_-]{4,}$'
   [LOG_LEVEL]='^(DEBUG|INFO|WARNING|ERROR)$'
   [DEV_MODE]='^(true|false)$'
 )
+
+# Optional sidecar: scripts/validators.sh can ADD entries to VALIDATORS for
+# project-specific variables. It's sourced from inside this script's scope, so
+# `VALIDATORS[FOO]='regex'` lines in the sidecar take effect for the rest of
+# this run. See scripts/validators.sh for the format and commented examples.
+if [ -f "$ROOT/scripts/validators.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$ROOT/scripts/validators.sh"
+fi
 
 # Normalize input: trim whitespace + strip surrounding quotes + drop common
 # paste artifacts (control chars, box-drawing). Returns cleaned value via stdout.

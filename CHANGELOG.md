@@ -6,6 +6,27 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.12.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.12.0.
+
+### Strip vendor validators from `bootstrap.sh` core; ship `validators.sh` sidecar
+
+Codex improvement-plan Phase 1.2 — second item of Package B / Phase 1 (de-personalize). `templates/scripts/bootstrap.sh` previously hardcoded eight validators in its `VALIDATORS` associative array, six of which were vendor-specific bake-ins from the source project: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_WEBHOOK_SECRET`, `TELEGRAM_CHANNEL_ID`, `META_DEFAULT_PIXEL_ID`, `META_CAPI_TOKEN`, `KEITARO_POSTBACK_BASE`, `KEITARO_POSTBACK_KEY`, plus an application-shaped `WEBHOOK_BASE_URL`. A generic template that knows about Telegram tokens by default isn't actually generic — Codex Phase 1.2's acceptance criterion: "Project-specific validators live in a deliberate, documented layer."
+
+**Approach (Option A from the design menu, plus the required extension point):** strip all vendor-specific entries from the core; ship a sourced sidecar at `templates/scripts/validators.sh` as the deliberate extension point.
+
+- **`templates/scripts/bootstrap.sh` `VALIDATORS` array** now contains only `LOG_LEVEL` (log-level enum) and `DEV_MODE` (boolean) — both truly generic across any project.
+- **`templates/scripts/validators.sh`** (new, ships as skeleton): consumers add their own project-specific validators here. The file is sourced from inside `bootstrap.sh`'s scope, so `VALIDATORS[FOO]='regex'` Just Works without modifying core. Ships with an explanatory header + commented-out example entries (`TELEGRAM_BOT_TOKEN`, `STRIPE_API_KEY`, `DATABASE_URL`) for guidance, plus an intentionally-empty active section. Consumers uncomment what applies to their project or add their own.
+- **`templates/scripts/bootstrap.sh`** now `source`s `$ROOT/scripts/validators.sh` if it exists, immediately after declaring the generic `VALIDATORS` array. Sidecar mutations take effect for the rest of the script run.
+
+**Breaking change.** Any consumer who relied on the hardcoded TELEGRAM/META/KEITARO validators will see them disappear; their `validators.sh` skeleton has the same patterns commented out — uncomment to restore. Compliant with the v1.8.0 product-identity decision (D-009): we're a Python/uv/FastAPI/VPS starter; vendor-specific validators were the wrong default.
+
+### Spec
+
+- **B-018** added: bootstrap.sh validators — generic core + project-specific sidecar. Frozen. Names the file, the sourcing mechanism, the contents of each layer.
+- **Open project-level decisions** — de-personalize item updated: validators sub-item resolved; doc-residue audit (Codex Phase 1.3) still pending.
+
 ## v1.11.2 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.11.2. Patch — first item of Package B / Codex Phase 1 (de-personalize). Removes the most visible source-project leftover in the generic template.
