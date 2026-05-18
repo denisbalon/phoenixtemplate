@@ -6,6 +6,28 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.14.1 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.14.1. **Second of three commits implementing Codex Phase 3 (env metadata explicit).** Parser swap — hard cut from legacy prose-grep to `@directive`-only.
+
+### Parser rewrite + shared helper
+
+- **`templates/scripts/_env-schema-parse.sh`** (new — sourced helper, not invoked directly). Parses `.env.example`; populates global associative arrays `VARS`, `DESCRIPTIONS`, `DEFAULTS`, `VALIDATORS`, `IS_OPTIONAL`, `IS_SENSITIVE`, `COMMENTS`. Recognizes the six `@directive` types from B-020 (case-insensitive directive name to forgive typos like `@Optional`). Unknown `@`-prefixed directives emit a stderr warning and are ignored. Last-wins semantics on duplicate directives in the same var's block. Default-if-neither-`@required`-nor-`@optional`-given is `required`.
+- **`templates/scripts/bootstrap.sh`** — sources the helper; the old SENSITIVE_RE constant, the hardcoded `VALIDATORS` array, and the ~30-line inline parser loop are all removed. `mask()` now uses `IS_SENSITIVE[var]` (populated by parser) instead of regex auto-detection. `prompt_var()` now shows the `@description` value prominently plus `(optional)` / `(sensitive)` flag annotations. The validators.sh sidecar source line is retained for this release (v1.15.0 removes it).
+- **`templates/scripts/check-env.sh`** — sources the helper; the duplicated ~25-line parser loop is replaced with a 5-line iteration over `VARS` partitioning into `required`/`optional` based on `IS_OPTIONAL`. Rest of the script (compares against actual `.env`, reports missing required vars) is unchanged.
+
+### Hard cut — breaking change for un-migrated consumers
+
+A consumer whose `.env.example` still uses legacy prose ("Optional:" comments instead of `@optional` directives) will now have ALL vars marked required (no @optional → required by default). check-env.sh would refuse to pass. Migration is a one-time edit of `.env.example` to add `@required` / `@optional` / `@default` / `@validator` / `@sensitive` / `@description` directives per B-020. Per the user's hard-cut decision in the design discussion — accepted breaking change at this v1 development stage.
+
+### Spec
+
+- **B-020 promoted from `draft` to `frozen`** (per spec format rule: status promotion rides in the commit that adds the proving test). Test pointer updated to reflect new parser behavior; rule text gains the case-insensitivity + unknown-directive-warning + shared-helper detail.
+
+### What v1.15.0 will do
+
+Kill `templates/scripts/validators.sh` + remove the source-if-present block from bootstrap.sh; supersede B-018. Validator metadata now lives inline in `.env.example` via `@validator:` directives — the sidecar is redundant after v1.14.1.
+
 ## v1.14.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.14.0. **First of three commits implementing Codex Phase 3 (env metadata explicit).**

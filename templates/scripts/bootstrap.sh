@@ -19,28 +19,11 @@ ENV_FILE="$ROOT/.env"
 
 [ -f "$EXAMPLE" ] || { echo "FATAL: $EXAMPLE not found." >&2; exit 2; }
 
-# --- Parse .env.example into VARS / COMMENTS / DEFAULTS / IS_OPTIONAL --------
-
-declare -a VARS=()
-declare -A COMMENTS=() DEFAULTS=() IS_OPTIONAL=()
-
-current_comment=""
-while IFS= read -r line || [ -n "$line" ]; do
-  if [[ "$line" =~ ^[[:space:]]*# ]] || [[ -z "${line// }" ]]; then
-    current_comment+="$line"$'\n'
-    continue
-  fi
-  if [[ "$line" =~ ^([A-Z_][A-Z0-9_]*)=(.*)$ ]]; then
-    var="${BASH_REMATCH[1]}"
-    VARS+=("$var")
-    DEFAULTS["$var"]="${BASH_REMATCH[2]}"
-    COMMENTS["$var"]="$current_comment"
-    if echo "$current_comment" | grep -qi 'Optional'; then
-      IS_OPTIONAL["$var"]=1
-    fi
-  fi
-  current_comment=""
-done < "$EXAMPLE"
+# --- Parse .env.example schema via shared helper -----------------------------
+# Populates VARS / DESCRIPTIONS / DEFAULTS / VALIDATORS / IS_OPTIONAL /
+# IS_SENSITIVE / COMMENTS based on @directive comments per docs/spec.md B-020.
+# shellcheck source=/dev/null
+source "$(dirname "${BASH_SOURCE[0]}")/_env-schema-parse.sh"
 
 # --- Load existing .env -------------------------------------------------------
 
@@ -55,23 +38,11 @@ if [ -f "$ENV_FILE" ]; then
   done < "$ENV_FILE"
 fi
 
-# --- Validators + sensitive-value masking ------------------------------------
-
-SENSITIVE_RE='(TOKEN|SECRET|KEY|DSN|PASSWORD)'
-
-# Generic validators that apply to any project. Project-specific validators
-# (vendor token formats, service URL patterns, etc.) live in scripts/validators.sh
-# — sourced below if present. Keep this array minimal; consumers extend via the
-# sidecar without modifying this file.
-declare -A VALIDATORS=(
-  [LOG_LEVEL]='^(DEBUG|INFO|WARNING|ERROR)$'
-  [DEV_MODE]='^(true|false)$'
-)
-
-# Optional sidecar: scripts/validators.sh can ADD entries to VALIDATORS for
-# project-specific variables. It's sourced from inside this script's scope, so
-# `VALIDATORS[FOO]='regex'` lines in the sidecar take effect for the rest of
-# this run. See scripts/validators.sh for the format and commented examples.
+# --- Project-specific validators sidecar (deprecated; v1.15.0 removes) -------
+# Until v1.15.0 kills validators.sh, source it if present so consumers in the
+# transitional period don't lose their existing project-specific validators.
+# New projects should declare validators via @validator: directives in
+# .env.example (see B-020).
 if [ -f "$ROOT/scripts/validators.sh" ]; then
   # shellcheck source=/dev/null
   source "$ROOT/scripts/validators.sh"
@@ -102,7 +73,7 @@ normalize() {
 mask() {
   local var="$1" val="$2"
   if [ -z "$val" ]; then echo "(empty)"; return; fi
-  if [[ "$var" =~ $SENSITIVE_RE ]]; then
+  if [ -n "${IS_SENSITIVE[$var]-}" ]; then
     if [ "${#val}" -ge 8 ]; then
       echo "(set, ${#val} chars, ends …${val: -4})"
     else
@@ -121,11 +92,20 @@ prompt_var() {
   local default="${DEFAULTS[$var]-}"
   local validator="${VALIDATORS[$var]-}"
   local optional="${IS_OPTIONAL[$var]-}"
+  local description="${DESCRIPTIONS[$var]-}"
   local input
 
   echo
   echo "──────────────────────────────────────────────"
-  printf '%s' "${COMMENTS[$var]}"
+  if [ -n "$description" ]; then
+    echo "  $var — $description"
+  else
+    echo "  $var"
+  fi
+  local flags=""
+  [ -n "$optional" ] && flags+="optional"
+  [ -n "${IS_SENSITIVE[$var]-}" ] && flags+="${flags:+, }sensitive"
+  [ -n "$flags" ] && echo "  ($flags)"
 
   while true; do
     if [ -n "$current" ]; then
