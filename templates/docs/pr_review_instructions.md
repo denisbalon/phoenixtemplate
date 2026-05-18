@@ -6,9 +6,9 @@ Review happens **out-of-band**: Claude opens the PR (`PR gogogo!`); you run the 
 
 ## Output contract — read this before anything else
 
-**The deliverable of every review is GitHub comments, posted via `gh api`, one per commit on the branch — including commits with no findings.**
+**The deliverable of every review is GitHub comments, posted via `gh api` (or the reviewer's native PR-comment integration), one per commit on the branch — including commits with no findings.**
 
-1. **Per-commit coverage is mandatory.** Walk every commit `main..HEAD` in order. Each commit gets at least one comment on GitHub:
+1. **Per-commit coverage is mandatory.** Walk every commit `main..HEAD` in order. Each commit gets at least one comment on GitHub. Concrete commands below are for the `gh api` path; reviewers with native PR-comment integrations use those instead and the same per-commit rule still applies:
    - inline comments on specific lines (`gh api -X POST repos/<owner>/<repo>/pulls/<N>/comments -f path=... -F line=... -F commit_id=<sha> -f body=...`),
    - or a commit-level review (`gh api -X POST repos/<owner>/<repo>/pulls/<N>/reviews -F commit_id=<sha> -f event=COMMENT -f body=... -F 'comments[]=...'`),
    - or — for a clean commit — an explicit "no findings on `<sha>` — `<subject>`" comment (see 2).

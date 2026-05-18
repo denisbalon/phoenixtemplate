@@ -137,7 +137,7 @@ Workflow after `PR gogogo!`:
 
 ### Output contract (reviewer-agnostic)
 
-Whichever reviewer runs, the deliverable is GitHub comments — posted via `gh api`, the reviewer's native PR-comment integration, or by the user copy-pasting — **one per commit on the branch, including commits with no findings**:
+Whichever reviewer runs, the deliverable is GitHub comments — posted via `gh api` (or the reviewer's native PR-comment integration) — **one per commit on the branch, including commits with no findings**:
 
 - **Walk every commit** `main..HEAD` in order. Each gets at least one comment on the PR (inline on specific lines, or a commit-level review).
 - **Clean commits get an explicit "no findings on `<sha>` — `<subject>`" comment.** Silence is indistinguishable from "the reviewer forgot this commit." The explicit comment closes that gap and makes the audit trail complete.
