@@ -58,6 +58,14 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Status:** frozen
 **Decision:** —
 
+### Block B-008: `request-codex-review` skill is the one-command Codex trigger
+
+**Rule:** When the user asks Claude to send the current branch to Codex for review (or invokes `/request-codex-review`), Claude runs the `request-codex-review` skill at `templates/.claude/skills/request-codex-review/SKILL.md`. The skill posts a single PR comment via `gh pr comment` that explicitly names the rubric file (`docs/pr_review_instructions.md`), then stops. It does NOT poll for Codex's response, does NOT take any state-mutating action beyond the comment, and does NOT run mid-branch — only when the branch is finished and has an open PR. A `make request-codex-review` Makefile target wraps the same canonical body for terminal use outside Claude sessions.
+**Rationale:** The user's manual ritual is open-Codex-locally → ask-it-to-look-around → ask-it-to-read-the-rubric → ask-it-to-review-the-PR. The skill collapses (b)+(c)+(d) into a single PR comment that Codex's GitHub App picks up. Naming the rubric file in the comment is load-bearing — the user's habit, and the way Codex reliably uses the project's conventions. Async-and-done (no polling) keeps the Claude session free to do other work; the user reads results on the PR page.
+**Test:** manual — `ls templates/.claude/skills/request-codex-review/SKILL.md` exists; `grep -E '^request-codex-review:' templates/Makefile` finds the target.
+**Status:** frozen
+**Decision:** D-006
+
 ### Block B-007: PR review is reviewer-agnostic; Codex is the default
 
 **Rule:** The rubric and output contract in `templates/docs/pr_review_instructions.md` apply to whichever reviewer runs (Codex, `/ultrareview`, another LLM, or manual human). **Codex is the default reviewer** via its GitHub App; `@codex review — follow docs/pr_review_instructions.md (Block / Strong / Nit, per-commit comments, "no findings" on clean commits, summary at end)` is the canonical invocation. Reviewers run serially — never in parallel.
@@ -109,6 +117,13 @@ One entry per architectural decision. Decisions live forever; chat history that 
 **Considered:** (a) doc-only (in `docs/`), (b) standing rules only (in `CLAUDE.md`), (c) both.
 **Why:** Doc-only loses because docs only apply when someone reads them. Rules-only loses the audit trail and the why. Both gets the auto-load benefit (rules apply every session) AND the reference (full text + attribution + how-it-fits when needed).
 **Implemented in:** v1.2.0.
+
+### D-006 (2026-05-18) One-command Codex trigger via PR-comment skill (not local CLI)
+
+**Chose:** Build a `request-codex-review` skill + `make request-codex-review` Makefile target that post a canonical PR comment via `gh pr comment` (Path 1 + Path 3 from the design discussion). The GitHub App picks up the comment and Codex posts findings back to the PR.
+**Considered:** (a) just use `gh pr comment` manually each time (status quo), (b) wrap the local Codex CLI (`codex --prompt "review PR #N ..."`) so reviews run synchronously in the same terminal, (c) skill + Makefile wrapper around `gh pr comment` (this option), (d) full background-agent dispatch with polling.
+**Why:** (a) loses the canonical comment body — easy to forget naming the rubric file, which is load-bearing for Codex behavior. (b) duplicates the GitHub App for no added value: same Codex, but burns the user's OpenAI quota, serializes work in the local terminal, and adds setup overhead. (d) over-engineers an async workflow the user has explicitly said they prefer fire-and-check. (c) is minimal: zero new deps, matches the user's existing habit of triggering Codex out-of-session, makes the rubric reference mechanically guaranteed.
+**Implemented in:** v1.5.0.
 
 ### D-005 (2026-05-18) Codex as default PR reviewer; rubric is reviewer-agnostic
 
