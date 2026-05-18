@@ -48,5 +48,5 @@ ssh "$HOST" 'systemctl restart <project-name>'
 
 echo "→ healthcheck"
 sleep 2
-curl -fsS "${WEBHOOK_BASE_URL:-https://<DOMAIN>}/healthz" && echo
+curl -fsS "${SERVICE_URL:-https://<DOMAIN>}/healthz" && echo
 echo "✓ deploy complete"
