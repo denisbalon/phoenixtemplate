@@ -6,6 +6,42 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.18.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.18.0. **Codex Phase 1 #1 — three-tier doc-canonical model with deliberate AI-safety redundancy.**
+
+### Mark canonical scope across PROJECT_STARTER / CONTRIBUTING / CLAUDE; preserve protective rule duplication
+
+The original Codex Phase 1 #1 framing was "choose one canonical source for workflow policy" (per the design proposal). User pushback caught a critical historical context I'd missed: *"we had 3 places to hold the rules, just because you were constantly missing them."* The triple-source layout wasn't accidental architecture debt — it was defensive redundancy added empirically after each observed AI failure (missed gate, wrong verb mapping, ignored bare-gogogo handling).
+
+The refined framing: **one canonical source per concern, but rule statements stay deliberately duplicated for AI safety.** Three tiers:
+
+- **`PROJECT_STARTER.md` §2** (or post-split `WORKFLOW.md`) — canonical for **core workflow rules + rationale + alternatives + design philosophy**. The "why" lives here exclusively.
+- **`templates/CONTRIBUTING.md`** — canonical for **per-project operational concretization** (commands, sequences, per-stack version markers, deploy specifics). References PROJECT_STARTER for *why*. Carries rule statements inline as defensive redundancy.
+- **`templates/CLAUDE.md`** — **session-facing summary** the AI loads every session. Carries gate clause, verb table, bare-gogogo prompt, allowed-without-gate list, refuse-list inline — **not as pointers** — because the AI needs them in working context to apply them. Stripping these to pointers was observed historically to cause failures.
+
+Each of the three files now starts with an explicit `**Canonical scope:**` header marker declaring what it owns and naming the other tiers' canonical sources. Sections carrying duplicated rule statements are annotated as deliberate-redundancy with a "keep in sync" note.
+
+**What's deduplicated (safe to remove):** rationale, "why we chose this," alternative-considered narrative, design philosophy. These live canonically in PROJECT_STARTER and are NOT repeated in CONTRIBUTING/CLAUDE.
+
+**What stays duplicated (deliberate AI-safety equipment):** verb table; gate clause; bare-gogogo clarification prompt; allowed-without-`gogogo!` list; refuse-list (rationalizations to refuse); "phrases that look like authorization but aren't." All three files carry these verbatim.
+
+### Sync mechanism
+
+Manual until the C4 consistency linter ships (Codex Phase 3 #3 in current plan). The linter is now higher priority than the original ordering suggested — without it, the deliberate redundancy is one careless edit away from silently drifting. **Next planned commit: build the C4 linter (`feat gogogo!`).** Order reversed from my original "linter first" recommendation per user direction on this commit.
+
+### Plus: thin root CONTRIBUTING.md for the meta repo
+
+Until now we worked on `phoenixprojecttemplate` (the meta repo) by reading `templates/CONTRIBUTING.md` mentally. Added a minimal root `CONTRIBUTING.md` (~30 lines) that points at `PROJECT_STARTER.md §2` for the canonical workflow + names meta-specific overrides (deploy is no-op per B-005; version markers are just `VERSION`; meta repo's CI is `.github/workflows/template-self-test.yml`, not `templates/.github/workflows/ci.yml`). The meta repo now follows its own published workflow honestly.
+
+### Spec
+
+- **B-021** added: three-tier doc-canonical model with deliberate AI-safety redundancy. Names the three tiers, the canonical scope of each, what's deduplicated vs what's deliberately duplicated, and the rationale (including the historical context that drove the original triple-source layout). Frozen. Test is manual until C4 linter ships.
+
+### Next
+
+- **v1.18.1 or v1.19.0 (`feat gogogo!`):** Build the C4 consistency linter (`scripts/check-rule-consistency.sh`). Checks verb table + gate clause + bare-gogogo prompt match across the three files. Wired into `.github/workflows/template-self-test.yml` as a second job.
+
 ## v1.17.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.17.0. **Codex Phase 1 #3 — first item of the doc-architecture refactor.**

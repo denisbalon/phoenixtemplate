@@ -2,6 +2,8 @@
 
 Binding process document. Read once; revisit when conventions feel off.
 
+**Canonical scope (per B-021 in `docs/spec.md`):** this file is the canonical source for the **per-project operational workflow** — exact commands, sequences, project-specific paths, deploy specifics, version markers per stack. The **core workflow rules + rationale** (the *why* behind the gate, the verbs, the 5-step structure) live canonically in `PROJECT_STARTER.md §2` — this file references them rather than re-deriving them. The **session-facing AI summary** is `CLAUDE.md`. Rule statements (verb table, gate clause, bare-gogogo prompt, allowed-without-gate list, refuse-list) are deliberately duplicated here, in `CLAUDE.md`, and in `PROJECT_STARTER.md §2` — that's defensive AI-safety redundancy, not debt. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (Codex plan Phase 3 #3, pending) catches drift automatically once shipped.
+
 ## Quick rules cheat-sheet
 
 | Situation | Action |

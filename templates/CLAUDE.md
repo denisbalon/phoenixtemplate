@@ -1,5 +1,7 @@
 # Claude Code session guidance
 
+**Canonical scope (per B-021 in `docs/spec.md`):** this file is the **session-facing summary the AI loads every session**. The rule statements below (gate clause, verb table, bare-gogogo handling) are **inline and verbatim** — not pointers — because the AI needs them in working context to apply them. Stripping these to pointers was observed historically to make the AI miss the rules. The full rationale (*why* the gate is `gogogo!`, *why* verbs are required, alternatives considered) lives canonically in `PROJECT_STARTER.md §2`. The per-project operational doc with project-specific commands and sequences is `CONTRIBUTING.md`. All three tiers carry the rule statements as deliberate AI-safety redundancy — the C4 consistency linter (Codex plan Phase 3 #3, pending) keeps them mechanically in sync once shipped. **Editing any rule here means editing it in `CONTRIBUTING.md` + `PROJECT_STARTER.md §2` too, in the same commit.**
+
 ## `gogogo!` passphrase — read this first (HARD GATE)
 
 **Never take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.** Reading files, grepping, planning in chat, clarifying questions, and writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
