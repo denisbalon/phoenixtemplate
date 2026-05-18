@@ -13,12 +13,13 @@
 | `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy) |
 | `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) |
 | `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request |
-| `review gogogo!` | Run `/ultrareview` (or manual) |
 | `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
 | `deploy gogogo!` | Run the project's deploy command |
 | `revert gogogo!` | Revert last commit + redeploy |
 
-**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / review / revert?"* and STOP.
+**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP.
+
+**Review is out-of-band.** No `review gogogo!` verb, no skill, no Makefile target — review happens in a separate session with whatever reviewer the user prefers, pointed at `docs/pr_review_instructions.md` and the open PR. Claude does not dispatch or prepare reviewers.
 **Verb without `gogogo!` does not authorize** → `merge` alone, `PR` alone, etc. never trigger anything. Plan-text + "Send `<verb> gogogo!`".
 **`<verb-A> gogogo!` doesn't authorize action B** → one verb, one action.
 
