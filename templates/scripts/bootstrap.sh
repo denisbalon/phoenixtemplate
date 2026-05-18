@@ -38,16 +38,6 @@ if [ -f "$ENV_FILE" ]; then
   done < "$ENV_FILE"
 fi
 
-# --- Project-specific validators sidecar (deprecated; v1.15.0 removes) -------
-# Until v1.15.0 kills validators.sh, source it if present so consumers in the
-# transitional period don't lose their existing project-specific validators.
-# New projects should declare validators via @validator: directives in
-# .env.example (see B-020).
-if [ -f "$ROOT/scripts/validators.sh" ]; then
-  # shellcheck source=/dev/null
-  source "$ROOT/scripts/validators.sh"
-fi
-
 # Normalize input: trim whitespace + strip surrounding quotes + drop common
 # paste artifacts (control chars, box-drawing). Returns cleaned value via stdout.
 normalize() {
