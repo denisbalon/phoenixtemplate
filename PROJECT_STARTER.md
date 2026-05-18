@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.9.1
+**Template version:** v1.10.0
 **Last updated:** 2026-05-18
 
 A reusable bootstrap kit for new software projects worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
@@ -1061,6 +1061,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.10.0 | 2026-05-18 | Ship `scripts/export-starter.sh` at repo root (Codex Phase 1.1 + open item #4 — both resolved). Reads VERSION; writes `~/Downloads/project-starter-v<VERSION>-<DATE>.tar.gz` (always) and `.zip` (only if `zip` is installed). Archive top-level dir matches the archive name so `tar -xzf ... --strip-components=1` per §1.3 works. Closes the "quick path doc lies" gap that's existed since v1.1.1. Spec: B-013 added. |
 | 1.9.1 | 2026-05-18 | Patch — fix `templates/scripts/deploy.sh` cleanliness check (Codex Phase 1.3). Previous `git diff --quiet` only caught unstaged changes; now also blocks on staged-but-uncommitted edits (`git diff --cached --quiet`) and untracked files (`git ls-files --others --exclude-standard`, respecting `.gitignore`). Each scenario is reported separately on failure. `--dirty` override unchanged. Script header documents the policy. |
 | 1.9.0 | 2026-05-18 | Ship the minimal runnable Python/uv/FastAPI preset (Codex Phase 1.2 + existing open item #6 — both resolved). New files in `templates/`: `pyproject.toml` (FastAPI + uvicorn runtime; pytest/httpx/ruff/mypy dev via PEP 735 `[dependency-groups]` so the existing `uv sync --frozen` CI step picks them up without flags; hatchling build-backend; tool config for ruff/mypy/pytest), `src/<package_name>/{__init__.py,app.py}` (FastAPI app exposing `/healthz` — matches `scripts/deploy.sh`'s post-deploy curl), `tests/{__init__.py,test_smoke.py}` (`TestClient` smoke test for `/healthz`), `LICENSE` (MIT with `<COPYRIGHT_HOLDER>` + `<YEAR>` placeholders). Single `<package_name>` placeholder convention across everything (including the `src/<package_name>/` directory name); bootstrap substitution is one mv + one sed (documented in the v1.9.0 CHANGELOG entry; auto-substitution in `scripts/bootstrap.sh` is a follow-up open item). Spec: B-012 added; open item #6 closed. |
 | 1.8.0 | 2026-05-18 | Declare product identity (D-009): this template is a **Python/uv/FastAPI/VPS starter today**; multi-preset is roadmap, not current fact. Drops the "this document is project-agnostic" claim from §0 and replaces it with an honest paragraph naming current shipped scope; adds `§0.1 Current scope` making the stack-agnostic vs. Python-only boundary explicit. No templates change; no code change; only framing. Spec: D-009 added; "Open project-level decisions" tags stack-agnostic-restructure as "roadmap per D-009". Triggered by Codex's `codex improvement plan.md` (Phase 2 + Phase 12). |

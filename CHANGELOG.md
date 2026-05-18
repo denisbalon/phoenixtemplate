@@ -6,6 +6,25 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.10.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.10.0.
+
+### Ship `scripts/export-starter.sh`
+
+Codex's improvement-plan Phase 1.1 (and existing open item #4 / inventory item B4) — `PROJECT_STARTER.md §1.3` has recommended `./scripts/export-starter.sh` as "the quick path" since v1.1.1 (May 4), but the script never shipped. Running the recommended command produced "No such file or directory." The doc lied for two weeks.
+
+This commit ships the script:
+
+- **`scripts/export-starter.sh`** (new, repo root — meta-script, not a consumer template). Reads `VERSION`. Writes `~/Downloads/project-starter-v<VERSION>-<YYYY-MM-DD>.tar.gz` (always) and `~/Downloads/project-starter-v<VERSION>-<YYYY-MM-DD>.zip` (only when `zip` is installed — graceful skip with a message otherwise, matching the v1.1.3 caveat already documented in the template-changelog table). Archive contains a top-level `project-starter-v<VERSION>-<YYYY-MM-DD>/` directory with `PROJECT_STARTER.md` + the full `templates/` tree, so consumers can `tar -xzf ... --strip-components=1` directly into a new project per §1.3. Output dir overridable via `OUT_DIR` env var (default `~/Downloads`, auto-created). Fails loud if source artifacts are missing; cleans up tempdir on exit via `trap`.
+
+Verified by running the script during this commit cycle: produced a 25KB tar.gz containing the expected file tree.
+
+### Spec
+
+- **B-013** added: names the script's contract (output path, archive layout, optional zip, OUT_DIR override, failure semantics). Frozen. No D entry — the script's existence was always planned; this just makes the doc honest.
+- **Open project-level decisions** — item #4 (the missing export script) **resolved** by this commit.
+
 ## v1.9.1 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.9.1. Patch — fixes the deploy cleanliness check Codex flagged at improvement-plan Phase 1.3.
