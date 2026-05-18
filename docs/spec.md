@@ -109,6 +109,25 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Status:** frozen
 **Decision:** D-008
 
+### Block B-020: `.env.example` schema is declared via `@directive` comments
+
+**Rule:** Each environment variable in `templates/.env.example` (and the resulting `.env.example` in consumer projects) carries machine-readable metadata via `# @directive: value` lines preceding the var declaration. Recognized directives:
+
+| Directive | Type | Default | Purpose |
+|---|---|---|---|
+| `# @description: <text>` | string | (var name) | Human-readable purpose; bootstrap.sh shows it in prompts. |
+| `# @required` | flag | (this is the default if neither @required nor @optional given) | Var must be set for check-env.sh to pass. |
+| `# @optional` | flag | — | Var may be empty/unset. Mutually exclusive with @required. |
+| `# @default: <value>` | string | empty | Default value bootstrap.sh suggests. |
+| `# @validator: <ERE>` | regex | none | bootstrap.sh checks input against pattern; warns + offers override on mismatch. |
+| `# @sensitive` | flag | auto-detected by var-name substring (TOKEN/SECRET/KEY/DSN/PASSWORD) | bootstrap.sh masks the value in display. |
+
+Free-text comments (lines starting with `#` but without `@` prefix) preceding a var are displayed in bootstrap.sh prompts but not parsed as metadata. Per-var directives apply only to the immediately-following var declaration; section headers (e.g. `# === Service ===`) and file-level header comments can contain free-text without affecting metadata of subsequent vars. The file-header comment MUST NOT contain the literal word "optional" (case-insensitive) until the parser is upgraded to directive-only mode (v1.14.1) — until then, the legacy parser's grep would false-match.
+**Rationale:** Codex Phase 3.1/3.2/3.3. Previously `bootstrap.sh` + `check-env.sh` inferred required/optional from prose (case-insensitive grep for "Optional" in any preceding comment line). Fragile — rewording the prose silently broke the gate. Directives make the schema explicit, parser-friendly, and self-documenting. The same machine-readable layer drives required-checking AND validator-enforcement AND sensitive-masking. `.env.example` remains the single source of truth (Phase 3.3 answered by the format choice — no separate schema artifact, no rendering layer). Inline-annotation chosen over a separate TOML/YAML schema because it keeps the schema next to the var declaration (one file to edit per change), and the directive vocabulary is flat enough to not need a structured config format.
+**Test:** manual at v1.14.0 (draft) — `grep -E '^# @(description|required|optional|default|validator|sensitive)' templates/.env.example` returns at least one match per shipped var. At v1.14.1 (frozen) — parser also enforces; `bash -n templates/scripts/bootstrap.sh templates/scripts/check-env.sh` clean; bootstrap.sh prompt for SENTRY_DSN labels it `(optional)`; bootstrap.sh prompt for LOG_LEVEL applies the validator regex on input.
+**Status:** draft (v1.14.0 — format defined + data migrated; parser still reads legacy "Optional" prose-grep). Will promote to frozen in v1.14.1 when parser is rewritten directive-only.
+**Decision:** —
+
 ### Block B-019: active docs are vendor-neutral by default; vendor-specific guidance is labeled
 
 **Rule:** Active documentation surfaces (`PROJECT_STARTER.md`, `templates/README.md`, `templates/CONTRIBUTING.md`, `templates/CLAUDE.md`, `templates/docs/*.md`) describe generic concepts with generic examples by default. When concrete examples make a point clearer, vendor-neutral choices are preferred (`api-handler` branch name beats `click-receiver`; `auth 401 retry` commit message beats `CAPI 401 retry`; `<GITHUB_USER>/$PROJECT_SLUG` placeholder beats a literal username). When a vendor-specific detail is genuinely instructive (e.g. Telegram's webhook `allowed_updates` default omits `chat_join_request` — an exact behavior that catches real bugs), it MUST be explicitly labeled as a vendor example (`**Example (Telegram bots):**`) rather than presented as universal truth. Shipped script env var names follow the same rule: `SERVICE_URL` beats `WEBHOOK_BASE_URL` because the latter assumes the service is a webhook receiver. Historical/audit-trail mentions of the source project's vendors in `CHANGELOG.md` and superseded spec blocks remain intentional provenance.
