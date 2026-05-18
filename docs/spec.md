@@ -12,7 +12,7 @@ The kit is currently Python+uv+FastAPI+VPS-shaped; making it stack-agnostic is a
 
 ## Process & versioning
 
-This repo follows its own published workflow. The `gogogo!` passphrase gate + 5-step atomic workflow (spec → bump+CHANGELOG → code → commit → deploy) is binding here too. Process rules live in `templates/CONTRIBUTING.md`. Current version: `1.2.0` (see `VERSION`). Per-version diary: [`CHANGELOG.md`](../CHANGELOG.md). The template version inside `PROJECT_STARTER.md` mirrors `VERSION` — they bump together.
+This repo follows its own published workflow. The `gogogo!` passphrase gate + 5-step atomic workflow (spec → bump+CHANGELOG → code → commit → deploy) is binding here too. Process rules live in `templates/CONTRIBUTING.md`. Current version lives in [`VERSION`](../VERSION) — single source of truth, never duplicated in prose. Per-version diary: [`CHANGELOG.md`](../CHANGELOG.md). The template version inside `PROJECT_STARTER.md` mirrors `VERSION` — they bump together.
 
 ## Frozen behavior
 
@@ -22,7 +22,7 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 
 **Rule:** No state-mutating action (Edit / Write / NotebookEdit, git commit/push, gh pr create/merge/comment, deploy) proceeds unless the user's current message contains the literal substring `gogogo!`.
 **Rationale:** Universal authorization token, stack-agnostic, distinctive. Replaces the prior `code!` (too narrow — implied code-only). Renamed in v1.2.0.
-**Test:** manual — verified by `grep -r 'code!' .` returning 0 hits on `main`.
+**Test:** manual — read §2.1 of `PROJECT_STARTER.md`, the gate section at the top of `templates/CLAUDE.md`, and the gate sections of `templates/CONTRIBUTING.md` (cheat-sheet, TL;DR, hard-gate). All three name `gogogo!` as the active passphrase. Historical references to the prior `code!` passphrase in `CHANGELOG.md`, the Decision log, and template-changelog tables are intentional audit trail and do not violate the rule.
 **Status:** frozen
 **Decision:** —
 
