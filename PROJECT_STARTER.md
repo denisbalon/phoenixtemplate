@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.5.1
+**Template version:** v1.6.0
 **Last updated:** 2026-05-18
 
 A reusable bootstrap kit for any new software project worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
@@ -344,32 +344,35 @@ PR review is **reviewer-agnostic** — the rubric and output contract in `docs/p
 
 | Reviewer | Independence | Cost | When |
 |---|---|---|---|
-| **Codex** (`@codex review` PR comment) | High — different model family, fresh context | Cheap | **Default.** Routine PRs. |
+| **Codex** (`codex review --base main` local CLI) | High — different model family, fresh context | Cheap | **Default.** Routine PRs. |
 | **`/ultrareview <PR#>`** | Low — same model family as the author | Billed | Optional second opinion on high-stakes (security, infra, money-path) changes. Known bug as of 2026-05-04 (issue #53648) breaking GitHub access checks for some accounts — fall back to Codex or manual. |
 | **Another LLM** (Cursor, Gemini CLI, GPT-5 via CI runner, etc.) | High — different model | Varies | When Codex is down or you want a third opinion. |
 | **Manual** (you reading the diff against `docs/pr_review_instructions.md`) | Highest — human judgment | Time | Architectural changes, pre-v1.0.0 gates. |
 
 Reviewers run **serially**, not in parallel. The branch owner picks one per PR.
 
-#### Codex invocation
+#### Codex invocation (local CLI — the default since v1.6.0)
 
-1. Install the **Codex GitHub App** on the repo (one-time): GitHub → Settings → Integrations → Codex.
-2. On the open PR, leave a comment that explicitly names the rubric file:
+1. Install the **`codex` CLI** locally (one-time): `npm install -g @openai/codex` (or see https://github.com/openai/codex).
+2. Log in once: `codex login` (credentials persist in `~/.codex/`).
+3. From the project root, run:
 
+   ```sh
+   codex review --base main
    ```
-   @codex review — follow docs/pr_review_instructions.md
-   (Block / Strong / Nit, per-commit comments, "no findings on <sha>" on clean commits, summary at end).
-   ```
 
-3. Codex posts inline + summary comments matching the output contract below.
-4. Address findings via more `<verb> gogogo!`s on the same branch. The PR auto-updates.
+   Codex reads the diff between the current branch and `main`, looks around the repo as needed, and produces a review with `[P1] / [P2] / [P3]` priority-tagged findings. Synchronous — output streams to the terminal. (`--base` and a custom prompt are mutually exclusive in the CLI; the built-in review prompt is used.)
 
-**One-command shortcut.** Instead of typing the comment manually each time, use:
+4. Address findings via more `<verb> gogogo!`s on the same branch.
 
-- **Skill:** `/request-codex-review` (invokes `templates/.claude/skills/request-codex-review/SKILL.md`) — detects the current PR, composes the canonical comment, posts it, confirms.
-- **Makefile target:** `make request-codex-review` — same canonical body, terminal use outside Claude sessions.
+**One-command shortcut.** Instead of typing the CLI invocation each time:
 
-Both name `docs/pr_review_instructions.md` in the comment body explicitly (the part that's easy to forget but load-bearing for Codex behavior).
+- **Skill:** `/request-codex-review` (invokes `templates/.claude/skills/request-codex-review/SKILL.md`) — verifies prereqs (CLI installed, branch ahead of `main`), runs `codex review --base main`, surfaces the final review block to the user, stops.
+- **Makefile target:** `make request-codex-review` — same checks + invocation, terminal use outside Claude sessions.
+
+**Output format:** Codex's local-CLI review uses `[P1] / [P2] / [P3]` priorities, not the project's `Block / Strong / Nit` rubric (the CLI doesn't accept custom prompts when scoped with `--base`). Treat P1 ≈ Block, P2 ≈ Strong, P3 ≈ Nit when triaging. For strict rubric compliance, use `codex exec` with a prompt that pipes in `docs/pr_review_instructions.md`.
+
+**Deprecated GitHub App path.** Prior to v1.6.0, the skill posted `@codex review` PR comments to trigger a Codex GitHub App. That path required an App that most accounts don't have. The CLI path is now canonical. If you ever do install a Codex/ChatGPT GitHub App, posting `@codex review — follow docs/pr_review_instructions.md` as a PR comment remains a valid alternative — but it's not the default.
 
 #### Output contract (universal, all reviewers)
 
@@ -1071,6 +1074,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.6.0 | 2026-05-18 | Pivot `request-codex-review` skill + Makefile target from GitHub-App PR-comment (`gh pr comment @codex`) to **local CLI** (`codex review --base main`). Original design assumed a Codex GitHub App that doesn't exist on the user's account; the CLI has a purpose-built `review` subcommand that works synchronously and found three real bugs on its first dry run. §2.7 in this doc and §4 in `templates/CONTRIBUTING.md` updated with the new invocation flow and an output-format note (`[P1]/[P2]/[P3]`, not `Block/Strong/Nit` — `--base` is mutually exclusive with custom prompts in the CLI). GitHub App path documented as a fallback for accounts that have one. Spec: B-008 superseded by B-009; D-006 superseded by D-007 (with an honest "why it was wrong" note). |
 | 1.5.1 | 2026-05-18 | Patch fixing three bugs surfaced by the first Codex CLI review (`codex review --base main`): (a) `docs/spec.md` prose hardcoded a version number that drifted past VERSION bumps — replaced with a pure VERSION reference; (b) `make request-codex-review` posted to closed/merged PRs without checking `.state` — now requires `state == OPEN`; (c) B-001's test pointer used a too-broad `grep -r 'code!' .` that would false-fail because CHANGELOG and Decision log retain historical mentions — narrowed to active gate-doc files only. |
 | 1.5.0 | 2026-05-18 | §2.7 Codex invocation gains a **one-command shortcut**: the `request-codex-review` skill (`templates/.claude/skills/request-codex-review/SKILL.md`) and the matching `make request-codex-review` Makefile target. Both post the canonical PR-comment body that names `docs/pr_review_instructions.md` explicitly (load-bearing for Codex to use the project's rubric). Skill is async-and-done: posts one comment, confirms, stops; does not poll for results. Implements D-006 (this repo's `docs/spec.md`). |
 | 1.4.0 | 2026-05-18 | §2.7 PR review reframed as **reviewer-agnostic**: same rubric + output contract for Codex / `/ultrareview` / other LLMs / manual. **Default reviewer: Codex** (cheap, independent, different model family). Adds reviewer matrix (cost / independence / when-to-use), Codex invocation steps (GitHub App install + PR-comment naming the rubric explicitly), and the "reviewers run serially, not in parallel" rule. `templates/docs/pr_review_instructions.md` gains a reviewer-agnostic preamble. `templates/CONTRIBUTING.md` §4 rewritten to match. The `review gogogo!` verb mapping intentionally unchanged — branch-owner triggers review out-of-session when the branch is finished. Implements D-005 (this repo's `docs/spec.md`). |

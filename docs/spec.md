@@ -58,13 +58,21 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Status:** frozen
 **Decision:** —
 
+### Block B-009: `request-codex-review` skill runs `codex review --base main` locally
+
+**Rule:** When the user asks Claude to send the current branch to Codex for review (or invokes `/request-codex-review`), Claude runs the `request-codex-review` skill at `templates/.claude/skills/request-codex-review/SKILL.md`. The skill verifies prereqs (`codex` CLI installed, current branch is not `main`, branch has commits ahead of `main`), runs `codex review --base main` synchronously, captures and surfaces the final review block to the user, and stops. Does NOT post to GitHub, does NOT auto-fix, does NOT mutate any state beyond the local CLI invocation. A `make request-codex-review` Makefile target wraps the same checks + invocation for terminal use outside Claude sessions.
+**Rationale:** Codex is the project's default reviewer. The local CLI path matches the user's actual setup (codex installed locally; no GitHub App) and matches their established habit of running codex from the project folder. Synchronous output lets findings be triaged in the same session that ran the review. Supersedes B-008 (`gh pr comment @codex` → GitHub App), which targeted a path the user's account doesn't have.
+**Test:** manual — `codex review --help` shows the `--base` flag; `make -C templates -n request-codex-review` dry-runs the new invocation cleanly (no `gh pr comment`).
+**Status:** frozen
+**Decision:** D-007
+
 ### Block B-008: `request-codex-review` skill is the one-command Codex trigger
 
 **Rule:** When the user asks Claude to send the current branch to Codex for review (or invokes `/request-codex-review`), Claude runs the `request-codex-review` skill at `templates/.claude/skills/request-codex-review/SKILL.md`. The skill posts a single PR comment via `gh pr comment` that explicitly names the rubric file (`docs/pr_review_instructions.md`), then stops. It does NOT poll for Codex's response, does NOT take any state-mutating action beyond the comment, and does NOT run mid-branch — only when the branch is finished and has an open PR. A `make request-codex-review` Makefile target wraps the same canonical body for terminal use outside Claude sessions.
 **Rationale:** The user's manual ritual is open-Codex-locally → ask-it-to-look-around → ask-it-to-read-the-rubric → ask-it-to-review-the-PR. The skill collapses (b)+(c)+(d) into a single PR comment that Codex's GitHub App picks up. Naming the rubric file in the comment is load-bearing — the user's habit, and the way Codex reliably uses the project's conventions. Async-and-done (no polling) keeps the Claude session free to do other work; the user reads results on the PR page.
 **Test:** manual — `ls templates/.claude/skills/request-codex-review/SKILL.md` exists; `grep -E '^request-codex-review:' templates/Makefile` finds the target.
-**Status:** frozen
-**Decision:** D-006
+**Status:** superseded by B-009 (v1.6.0). Reason: assumed a Codex GitHub App that doesn't exist on the user's account; pivoted to local CLI.
+**Decision:** D-006 (superseded by D-007)
 
 ### Block B-007: PR review is reviewer-agnostic; Codex is the default
 
@@ -118,12 +126,24 @@ One entry per architectural decision. Decisions live forever; chat history that 
 **Why:** Doc-only loses because docs only apply when someone reads them. Rules-only loses the audit trail and the why. Both gets the auto-load benefit (rules apply every session) AND the reference (full text + attribution + how-it-fits when needed).
 **Implemented in:** v1.2.0.
 
-### D-006 (2026-05-18) One-command Codex trigger via PR-comment skill (not local CLI)
+### D-007 (2026-05-18) Pivot `request-codex-review` from GitHub App to local CLI
+
+**Chose:** Reimplement the `request-codex-review` skill + Makefile target around `codex review --base main` (local CLI). Drop the GitHub-App-comment path as the default; document it as a fallback that only applies if the user installs a Codex App later.
+**Considered:** (a) keep the GitHub App skill (B-008) and add a parallel CLI skill, (b) supersede B-008 entirely with the CLI path, (c) build a `codex exec` wrapper instead of `codex review` so we can pass our exact rubric.
+**Why:** (a) leaves an inert skill that can't fire on this user's account — confusing for future readers. (b) is honest: the user doesn't have an App, codex IS installed locally, and the CLI has a purpose-built `review` subcommand that found three real bugs on its first run (the v1.5.0 → v1.5.1 patch). (c) is a real option for strict rubric compliance but adds complexity; `codex review`'s built-in `P1/P2/P3` format maps cleanly to our `Block/Strong/Nit` and is good enough for the default path. (c) stays documented as the escape hatch when rubric compliance matters.
+**Implemented in:** v1.6.0. Triggered by discovering (via a read-only `gh api` probe) that no Codex GitHub App is installed on the user's account, plus the v1.5.0-branch dry run that proved `codex review --base main` works and finds real issues.
+
+### D-006 (2026-05-18) One-command Codex trigger via PR-comment skill (not local CLI) — SUPERSEDED
+
+**Status:** Superseded by D-007 on 2026-05-18 (same day). The premise — that a Codex GitHub App existed on the user's account to pick up `@codex` PR comments — turned out to be wrong; no App is installed. The local CLI has a purpose-built `codex review` subcommand the original analysis missed. D-007 captures the corrected design.
 
 **Chose:** Build a `request-codex-review` skill + `make request-codex-review` Makefile target that post a canonical PR comment via `gh pr comment` (Path 1 + Path 3 from the design discussion). The GitHub App picks up the comment and Codex posts findings back to the PR.
 **Considered:** (a) just use `gh pr comment` manually each time (status quo), (b) wrap the local Codex CLI (`codex --prompt "review PR #N ..."`) so reviews run synchronously in the same terminal, (c) skill + Makefile wrapper around `gh pr comment` (this option), (d) full background-agent dispatch with polling.
 **Why:** (a) loses the canonical comment body — easy to forget naming the rubric file, which is load-bearing for Codex behavior. (b) duplicates the GitHub App for no added value: same Codex, but burns the user's OpenAI quota, serializes work in the local terminal, and adds setup overhead. (d) over-engineers an async workflow the user has explicitly said they prefer fire-and-check. (c) is minimal: zero new deps, matches the user's existing habit of triggering Codex out-of-session, makes the rubric reference mechanically guaranteed.
-**Implemented in:** v1.5.0.
+
+**Why it was wrong:** my framing of option (b) was incorrect — I called it "duplicates the GitHub App for no added value" without checking whether the App actually existed on the user's account (it doesn't) or what the local CLI's capabilities were (it has `codex review --base <branch>` purpose-built for exactly this). Both were knowable from a 30-second probe. See D-007.
+
+**Implemented in:** v1.5.0. Reverted in v1.6.0 per D-007.
 
 ### D-005 (2026-05-18) Codex as default PR reviewer; rubric is reviewer-agnostic
 

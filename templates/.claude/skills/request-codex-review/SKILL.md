@@ -1,92 +1,72 @@
 ---
 name: request-codex-review
-description: Post a PR comment that triggers Codex (via its GitHub App) to review the current PR using the project's docs/pr_review_instructions.md rubric. Use when the user says "ask Codex to review", "send to Codex", "codex review this", or invokes /request-codex-review. The skill detects the current branch's open PR, composes a canonical invocation comment naming the rubric file explicitly, posts it via `gh pr comment`, and confirms. Does NOT poll for results — Codex posts back to the PR async; the user reads it there.
+description: Run a local Codex CLI review of the current branch against main using `codex review --base main`. Use when the user says "ask Codex to review", "send to Codex", "codex review this", or invokes /request-codex-review. Synchronous, runs locally, uses the user's local Codex auth and OpenAI quota. Surfaces the final review findings inline. Does NOT post to GitHub, does NOT auto-fix.
 ---
 
-# request-codex-review — trigger Codex review of the current PR
+# request-codex-review — local Codex CLI review of the current branch
 
-This skill is the one-command path to the project's default reviewer (Codex). It exists because the user's habit is to open Codex locally and (a) ask it to look around, (b) ask it to read `docs/pr_review_instructions.md`, (c) ask it to review the latest PR. This skill collapses that ritual into a single PR comment that names the rubric file explicitly — Codex picks it up via its GitHub App and posts findings back to the PR.
+Runs `codex review --base main` from inside the project directory. Codex reads the diff between the current branch and `main`, looks around the repo as it sees fit, and produces a review with priority-tagged findings. Output is synchronous: the review streams to the terminal (or to a persisted-output file in long-running Claude sessions), and the final findings appear at the end of a verbose exec trace.
 
-## When to use
+## Why local CLI (not GitHub App)
 
-- User says "ask Codex to review", "send to Codex", "request Codex review", "codex review this PR", "codex this"
-- User invokes `/request-codex-review`
+The project's default reviewer is Codex. Two paths exist to reach it:
+
+- **Local CLI (this skill, default since v1.6.0):** `codex review --base main`. Requires only that the user has the `codex` CLI installed and logged in. No GitHub App. Synchronous output.
+- **GitHub App (deprecated):** `@codex review` PR comment triggering a Codex GitHub App. Only works if such an App is installed on the repo. Most accounts don't have one — confirming this on the user's account was what motivated the v1.6.0 pivot.
+
+The CLI path is the default because (a) `codex` is already installed locally, (b) no third-party App or webhook dance is required, (c) output streams here in the session so the next step (which findings to fix) is immediate.
 
 ## Prerequisites
 
-- Codex GitHub App is installed on the repo (one-time setup; see `CONTRIBUTING.md` §4 "Codex invocation")
-- The current branch has an open PR
+- `codex` CLI installed and on `PATH` (`command -v codex` returns a path)
+- User logged into Codex (`codex login` once; credentials persist in `~/.codex/`)
+- Current branch is **not** `main` (nothing to review against itself)
+- Current branch has commits ahead of `main` (`git log main..HEAD --oneline` is non-empty)
 
 ## Procedure
 
-1. **Detect the current PR number:**
+1. **Verify prerequisites.** Run each check and stop with a specific message if any fails:
 
    ```sh
-   gh pr view --json number,url,headRefName,state
+   command -v codex >/dev/null 2>&1 || { echo "✗ codex CLI not in PATH. Install per https://github.com/openai/codex."; exit 1; }
+   BR=$(git branch --show-current)
+   [ "$BR" != "main" ] || { echo "✗ On main; nothing to review."; exit 1; }
+   [ -n "$(git log main..HEAD --oneline 2>/dev/null)" ] || { echo "✗ No commits ahead of main on $BR."; exit 1; }
    ```
 
-   - No open PR for current branch → say: *"No open PR for this branch. Open one first (`PR gogogo!`)."* Stop.
-   - PR is `CLOSED` or `MERGED` → say so; do not post on a closed PR. Stop.
-
-2. **Compose the canonical comment body.** The rubric file is named explicitly — this is the project's habit and ensures Codex reads it:
-
-   ```
-   @codex review
-
-   Please follow the PR review rubric in `docs/pr_review_instructions.md`:
-   - Severity: Block / Strong / Nit
-   - Per-commit comments — walk every commit `main..HEAD` in order
-   - On clean commits, post an explicit "no findings on <sha> — <subject>" comment
-   - One overall summary review at the end, rolled up by severity
-
-   Look around the repo (spec, architecture, recent changes) before diving into the diff if useful.
-   ```
-
-3. **Post the comment via `gh`:**
+2. **Run the review:**
 
    ```sh
-   gh pr comment <PR#> --body "$(cat <<'BODY'
-   @codex review
-
-   Please follow the PR review rubric in `docs/pr_review_instructions.md`:
-   - Severity: Block / Strong / Nit
-   - Per-commit comments — walk every commit `main..HEAD` in order
-   - On clean commits, post an explicit "no findings on <sha> — <subject>" comment
-   - One overall summary review at the end, rolled up by severity
-
-   Look around the repo (spec, architecture, recent changes) before diving into the diff if useful.
-   BODY
-   )"
+   codex review --base main
    ```
 
-   HEREDOC keeps formatting intact. The `Makefile` target `make request-codex-review` wraps this same command for one-shot invocation from a terminal.
+   Note: `--base <BRANCH>` and the optional `[PROMPT]` argument are mutually exclusive in the codex CLI. The review uses Codex's built-in review prompt; we don't customize it here. For strict rubric compliance with custom prompts, use `codex exec` instead.
 
-4. **Confirm to the user:**
+3. **Surface findings.** Output is verbose (the exec trace, including diff dumps, often runs to 100KB+). The actual review starts after the last `exec` line in the trace, prefixed with `codex`. Show the user the final review block (~last 50 lines of output is usually enough). If a persisted-output file path is returned by the harness, point at it so the user can `tail` for context.
 
-   ```
-   ✓ Codex notified on PR #<N> — check the PR in a few minutes. Codex posts comments async; this session does not poll.
-   ```
+4. **Stop.** Do NOT auto-fix. The user reads the findings and decides which to act on. Each fix is a separate `fix gogogo!` cycle.
 
-5. **Stop.** Do NOT poll for results. Do NOT open the PR page. Do NOT propose follow-up work in the same turn. The user will check the PR and come back with feedback when ready.
+## Output format Codex uses
 
-## When NOT to use this skill
+The local-CLI review uses Codex's built-in format: **`[P1] / [P2] / [P3]` priority tags** with line/file references. This is not the project's `Block / Strong / Nit` rubric — the CLI can't accept a custom rubric while scoped with `--base`. Treat priorities as equivalent severities (P1 ≈ Block, P2 ≈ Strong, P3 ≈ Nit) when triaging.
 
-- **Mid-branch.** The user reviews at the end of a branch, not mid-stream. If invoked during active development, ask: *"Open the PR first (`PR gogogo!`) before sending to Codex?"*
-- **Other reviewers.** For `/ultrareview`, use the canonical `/ultrareview <PR#>` slash command directly. For manual review, walk `docs/pr_review_instructions.md` yourself and post via `gh api`.
-- **State-mutating actions beyond the comment.** This skill posts ONE comment. It does not merge, close, label, or modify the PR.
+If the project requires strict `Block / Strong / Nit` output, use `codex exec` with a prompt that pipes in `docs/pr_review_instructions.md`. That path trades CLI ergonomics for rubric compliance.
 
-## Re-review after addressing feedback
+## Makefile target
 
-Same skill, different body. After the user pushes fixes addressing prior Codex findings:
+`make request-codex-review` wraps the same invocation for terminal use outside Claude sessions. Identical prereq checks; identical output.
 
-```
-@codex re-review — addressed prior findings, N new commits since last review.
+## When NOT to use
 
-Same rubric (`docs/pr_review_instructions.md`).
-```
+- **Mid-branch (no commits yet ahead of main):** nothing to review. Say so, stop.
+- **On `main`:** branch off first.
+- **For non-Claude review:** a human reading the diff with `docs/pr_review_instructions.md` open is always valid.
+- **State-mutating actions beyond running the CLI:** this skill runs `codex review`, captures output, surfaces it. It does NOT commit, push, comment, or modify anything.
 
-## Edge cases
+## Cost note
 
-- **Multiple open PRs from the same branch:** `gh pr view` returns the most recent — that's the one to target. Surface the PR number/URL in the confirmation so the user can correct if it's the wrong one.
-- **Repo doesn't have Codex installed:** Codex won't respond. The comment still posts cleanly. If no response in ~5 minutes, tell the user to install the GitHub App per `CONTRIBUTING.md` §4.
-- **Gate interaction:** posting a PR comment IS a state-mutating action via `gh`. This skill should only run when the user's CURRENT message contains `<verb> gogogo!` (typically `review gogogo!`). The skill itself is just instructions — the gate check happens at the harness level before any `gh pr comment` call.
+`codex review` makes paid OpenAI API calls billed to the user's account. Cost scales with diff size — typical branches (≤ a few hundred lines) cost cents.
+
+## Re-review after fixes
+
+Same skill, run again. Codex sees the updated diff against `main`. No special handling needed.
