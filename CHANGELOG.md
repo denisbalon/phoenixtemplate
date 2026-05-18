@@ -6,6 +6,39 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.9.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.9.0.
+
+### Ship the minimal runnable Python/uv/FastAPI preset
+
+Codex's improvement-plan Phase 1.2 (and existing open item #6) flagged that `templates/Makefile` references `<package_name>.app:app`, CI runs `mypy src`, and `scripts/deploy.sh` rsyncs `src/` + curls `/healthz` — but none of those files ship in `templates/`. The template claimed to be runnable; in practice the consumer had to invent the scaffolding themselves. This release closes that gap.
+
+Files added under `templates/`:
+
+- **`pyproject.toml`** — FastAPI + uvicorn runtime; pytest + httpx + ruff + mypy dev via PEP 735 `[dependency-groups]` so default `uv sync --frozen` picks them up (matches the existing CI workflow as-is); hatchling build-backend; tool config for ruff (`E,F,W,I,B,UP,RUF`, line 100, py312), mypy (`strict`, `files = ["src"]`), pytest (`testpaths = ["tests"]`).
+- **`src/<package_name>/__init__.py`** — package init with `__version__ = "0.1.0"`.
+- **`src/<package_name>/app.py`** — minimal FastAPI app exposing `/healthz` (the endpoint `scripts/deploy.sh` already curls for its post-deploy healthcheck).
+- **`tests/__init__.py`** — empty package marker.
+- **`tests/test_smoke.py`** — FastAPI `TestClient` smoke test asserting `/healthz` returns 200 / `{"status": "ok"}`.
+- **`LICENSE`** — MIT with `<COPYRIGHT_HOLDER>` + `<YEAR>` placeholders.
+
+### Placeholder convention
+
+Single `<package_name>` literal everywhere — including the `src/<package_name>/` directory name itself. Bootstrap substitution is one mv + one sed:
+
+```sh
+mv templates/src/<package_name> templates/src/<actual_name>
+find templates -type f \( -name '*.py' -o -name '*.toml' -o -name 'Makefile' -o -name '*.yml' -o -name '*.sh' -o -name '*.example' \) -exec sed -i 's/<package_name>/<actual_name>/g' {} +
+```
+
+(Today this is manual; automating it in `scripts/bootstrap.sh` is a follow-up open item that pairs with B1/B2 of the Codex plan.)
+
+### Spec
+
+- **B-012** added: `templates/` ships a minimal runnable Python/uv/FastAPI preset. Names the shipped files + the substitution convention + the healthcheck/import-path alignment with Makefile/CI/deploy.sh. Frozen. Decision: D-009.
+- **Open project-level decisions** — item 6 ("Add language-preset skeletons. Missing pyproject.toml, src/<package>/, tests/, LICENSE. CI assumes they exist.") is now **resolved** by this commit; removing from the open list and noting in CHANGELOG.
+
 ## v1.8.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.8.0.
