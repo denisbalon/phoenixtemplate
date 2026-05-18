@@ -6,6 +6,28 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.16.0 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.16.0. **First commit on new branch `improvements-2` after merging `improvements-1` (PR #1, v1.2.0–v1.15.0).**
+
+### Add a repo-root README — first-contact quickstart (Codex Phase 5 #1)
+
+Until now the repo had no `README.md` at root — GitHub's landing page showed an empty README slot and visitors had to open `PROJECT_STARTER.md` (~1000 lines) to figure out what the project even was. Per the refactored Codex improvement plan's Phase 5 #1: "New users do not need to reverse-engineer the repo from long docs."
+
+Ships a ~250-word README covering:
+
+- **What it is** (reusable bootstrap kit for Claude Code projects) + **who it's for**.
+- **Current shipped scope** — explicitly Python/uv/FastAPI/VPS today per D-009; multi-preset is roadmap, not shipped.
+- **What you get** — two-layer table separating the stack-agnostic process layer (gate, workflow, spec format, Karpathy rules, review rubric) from the Python preset (FastAPI app, tests, Makefile, CI, deploy script, env-bootstrap with `@directive` schema).
+- **Quickstart commands** — `./scripts/export-starter.sh` + `tar -xzf --strip-components=1` + `chmod +x scripts/*.sh`, pointing at `PROJECT_STARTER.md §1` for the rest (placeholder substitution, `uv lock`, GitHub repo creation, etc.).
+- **Docs table** linking PROJECT_STARTER, `docs/spec.md`, CHANGELOG, `docs/pr_review_instructions.md`.
+
+Does NOT prominently feature `codex improvement plan.md` — the committed version in git is the v1.8.0 snapshot, which is now stale (Codex has refactored it twice locally; the latest 9.7KB / 300-line version lives in stash@{0} per the user's "no snapshot" decision). The plan file is internal working state, not a consumer-facing artifact.
+
+### Next on Phase 5
+
+- **v1.16.1 (`docs gogogo!`):** Phase 5 #2 — Known Limitations (section in README, or separate `LIMITATIONS.md` — small decision).
+
 ## v1.15.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.15.0. **Third and final commit implementing Codex Phase 3 (env metadata explicit). Phase 3 complete.**
