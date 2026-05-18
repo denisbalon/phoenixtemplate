@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.17.0
+**Template version:** v1.18.0
 **Last updated:** 2026-05-18
 
 A reusable bootstrap kit for new software projects worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
@@ -188,7 +188,9 @@ Bootstrap complete. From here on, all work follows §2.
 
 ## 2. The process (workflow + gate)
 
-This section is **binding** for every change. The same text is mirrored verbatim into each project's `CONTRIBUTING.md` so it travels with the repo.
+**Canonical scope (per B-021):** this section is the canonical source for the **core workflow + rationale** — gate semantics, action verbs, 5-step structure, version-bump rule, branching, PR/merge/review flow, plus the *why* behind each. `templates/CONTRIBUTING.md` carries the per-project operational concretization (commands, sequences, project-specific bits) and references this section for rationale. `templates/CLAUDE.md` carries the session-facing summary the AI needs in working context (rule statements inline, not pointers). **Rule statements** (verb table, gate clause, bare-gogogo prompt, allowed-without-gate list, refuse-list) are **deliberately duplicated** across all three tiers — defensive AI-safety redundancy that earned its keep historically. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (Codex Phase 3 #3, pending) catches drift automatically once shipped.
+
+This section is **binding** for every change.
 
 ### 2.1 The `gogogo!` passphrase — hard gate
 
@@ -1070,6 +1072,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.18.0 | 2026-05-18 | Codex Phase 1 #1 — three-tier doc-canonical model with deliberate AI-safety redundancy. Refined from "one canonical source" framing per user pushback: the historical triple-source layout was defensive redundancy added after observed AI failures (missed gate, wrong verb, ignored bare-gogogo) — not architecture debt. New framing: canonical per concern, rule statements deliberately duplicated. **PROJECT_STARTER §2** canonical for core workflow rules + rationale; **templates/CONTRIBUTING.md** canonical for per-project ops; **templates/CLAUDE.md** session-facing summary with mandatory inline rule duplication. Each file has a `**Canonical scope:**` header marker; duplicated rule sections annotated as deliberate redundancy. Plus thin root `CONTRIBUTING.md` for the meta repo (~30 lines, pointer + meta-specific overrides). Spec: B-021 added (three-tier model + redundancy rationale). Next: C4 consistency linter (mechanical sync for the deliberate duplication). |
 | 1.17.0 | 2026-05-18 | Codex Phase 1 #3 — split `docs/spec.md` into active + historical-superseded sections. 14 active blocks (B-001/002/003/004/005/010/011/012/014/015/016/017/019/020) live in `## Frozen behavior` in numerical order; 6 superseded blocks (B-006/007/008/009/013/018) moved to new `## Historical blocks (superseded)` appendix at end of file. Decision log + Open project-level decisions unchanged. Zero content removed — pure reorganization. `templates/docs/spec.md` skeleton gains a third editing rule documenting the convention so consumer projects follow it. No new B block. Next on Phase 1: #1 canonical-source design discussion, then #2 PROJECT_STARTER split + #4 duplication reduction. |
 | 1.16.1 | 2026-05-18 | Add Known Limitations section to README (Codex Phase 5 #2). Five concrete limitations with one-paragraph explanations each: (1) placeholder substitution still manual — `bootstrap.sh` only handles `.env` creds; (2) single language preset (Python/uv/FastAPI/VPS only); (3) `PROJECT_STARTER.md` still a 1000-line monolith; (4) no automated drift detection (no linters yet); (5) Windows requires WSL. Each links to the relevant open item / roadmap phase. Section sits between Quickstart and Docs; points at `docs/spec.md` "Open project-level decisions" for full roadmap. No spec block (doc-only). |
 | 1.16.0 | 2026-05-18 | Add repo-root `README.md` — first-contact quickstart (Codex Phase 5 #1, first commit on `improvements-2`). ~250-word README covering what-it-is + current shipped scope (Python/uv/FastAPI/VPS per D-009; multi-preset roadmap, not shipped) + two-layer table (process / preset) + quickstart commands pointing at PROJECT_STARTER §1 for the deep bootstrap + docs table. Until now the GitHub landing page had no README; visitors had to open PROJECT_STARTER.md to learn what the project is. `codex improvement plan.md` intentionally not linked in docs table — the committed v1.8.0 version is stale; Codex's latest refactor lives in stash@{0} per the user's no-snapshot decision. No spec block (doc deliverable, not behavior). |

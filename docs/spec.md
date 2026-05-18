@@ -124,6 +124,23 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 **Status:** frozen
 **Decision:** —
 
+### Block B-021: three-tier doc-canonical model with deliberate AI-safety redundancy
+
+**Rule:** Workflow rules live across three doc tiers, each with an explicit canonical scope:
+
+| Tier | File | Canonical for | What it carries |
+|---|---|---|---|
+| Meta / rationale | `PROJECT_STARTER.md` §2 (post-split: `WORKFLOW.md`) | Core workflow rules + rationale + alternatives considered + design philosophy. | Full explanations, history, "why this and not that," edge-case discussion. |
+| Per-project operational | `templates/CONTRIBUTING.md` | Per-project operational concretization — commands, sequences, project-specific bits, version markers per stack, deploy specifics. | Operational how-to. References the meta tier for *why*; carries rule statements inline as defensive redundancy. |
+| Session-facing | `templates/CLAUDE.md` | The minimum set of rules the AI needs in working context every session. | Gate clause, verb table, bare-gogogo prompt, allowed-without-gate list, refuse-list. Inline rule statements (not pointers) because the AI needs them in context to apply them. |
+
+Each file has an explicit `**Canonical scope:**` header marker declaring what it owns and pointing at the canonical sources for other tiers. **Rule statements** (the verb table, the gate clause, the bare-gogogo clarification list, the refuse-list, the allowed-without-gate list) are **deliberately duplicated** across all three files — this is defensive AI-safety redundancy, not architecture debt. Stripping any of those rule statements from CLAUDE.md (the session-facing tier) was observed historically to make the AI miss the rules. Each duplicated section is annotated `<!-- defensive redundancy: this is a copy of canonical X; keep in sync (manual until C4 linter ships) -->` so editors know it's intentional. **Rationale and "why" content** lives canonically in the meta tier and is NOT duplicated — slimmer files in the operational + session tiers.
+
+**Rationale:** Earlier in this repo's history, single-source rule layouts caused observed AI failures (missing gate, wrong verb mapping, ignoring bare-gogogo handling). The original triple-source layout was defensive redundancy added empirically after each failure. The risk of a clean-architecture refactor was reintroducing the same failures by removing the protective duplication. This three-tier model splits the problem: rationale + design context are duplication-prone debt (clean to dedupe to one canonical source), but rule statements are load-bearing safety equipment (deliberately duplicated, enforced by mechanical sync once the C4 linter ships). Codex Phase 1 #1 framing was "one canonical source"; the refined framing (per user feedback: "we had 3 places to hold the rules, just because you were constantly missing them") is "one canonical source per concern, with deliberate redundancy for AI safety."
+**Test:** manual until C4 linter ships — (a) `PROJECT_STARTER.md` §2 starts with a `**Canonical scope:**` marker; `templates/CONTRIBUTING.md` and `templates/CLAUDE.md` start with `**Canonical scope:**` markers naming their tier; (b) the verb table (rows mapping `<verb> gogogo!` → action) appears identically in all three files; (c) the gate clause "Never take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`" (or its canonical wording) appears in all three; (d) the bare-gogogo clarification "Which action? code / commit / PR / merge / deploy / revert?" appears in all three. Future C4 linter (Codex Phase 3 #3) automates b/c/d.
+**Status:** frozen
+**Decision:** —
+
 ### Block B-020: `.env.example` schema is declared via `@directive` comments
 
 **Rule:** Each environment variable in `templates/.env.example` (and the resulting `.env.example` in consumer projects) carries machine-readable metadata via `# @directive: value` lines preceding the var declaration. Recognized directives:
