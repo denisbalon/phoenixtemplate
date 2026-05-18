@@ -6,6 +6,35 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.11.1 — 2026-05-18
+
+Mirrors `PROJECT_STARTER.md` template v1.11.1. Patch — A5 audit (Codex Phase 1.4) of every command / file path / filename mentioned across `PROJECT_STARTER.md`, `templates/README.md`, `templates/CONTRIBUTING.md`, `templates/CLAUDE.md`, `templates/docs/*.md` against the shipped tree.
+
+### Audit findings
+
+Surprisingly thin — most drift had already been caught by v1.7.1 (rubric-path fix), v1.9.0–v1.11.0 (shipping the missing preset + export-starter + smoke test which catches runtime breakage automatically). The systematic sweep surfaced **one real gap**, plus two items that belong to other packages.
+
+### Real gap fixed
+
+- **Missing `uv lock` step in PROJECT_STARTER §1 bootstrap.** CI (`templates/.github/workflows/ci.yml`, three jobs) and deploy (`templates/scripts/deploy.sh`) both use `uv sync --frozen`, which requires `uv.lock` to exist in the consumer's repo. But §1 never told the consumer to generate one. First push to a fresh repo → CI failure with "no lockfile" error. Fix: added a final sub-step to PROJECT_STARTER §1.3 (immediately after the placeholder-substitution paragraph): `uv lock && git add uv.lock` so the first commit includes a real lockfile. Placement matters — must happen AFTER substitution (otherwise the lockfile bakes in `<package_name>`) and BEFORE the first commit (so CI's `--frozen` succeeds on the very first push).
+
+### Not gaps (verified intentional)
+
+- All `request-codex-review` mentions are in the PROJECT_STARTER template-changelog table for v1.5.0/v1.5.1/v1.6.0 — historical audit trail per the supersede pattern, intentional.
+- `docs/SPEC` in two rationalization tables (`templates/CONTRIBUTING.md`, `PROJECT_STARTER.md`) is informal English ("It's just a docs/SPEC tweak"), not a path.
+- Memory-seed filenames (`architecture_decisions.md`, `gogogo_gate_workflow.md`, etc.) are prescriptive recommendations for the user's local `.claude/memory/` dir, not paths to shipped files.
+- `findings.txt`, `review.md`, `Cargo.toml`, `package.json` are explicit illustrative examples (negative-example list / non-Python stack pointers).
+- All `templates/scripts/*`, `templates/docs/*`, `templates/.claude/skills/spec-block/SKILL.md` paths resolve to shipped files.
+
+### Deferred to other packages
+
+- **`denisbalon/$PROJECT_SLUG` hardcoded** in PROJECT_STARTER §1.5 + §1.6 (3 places). Real personalization gap; belongs to Package B (Codex Phase 3 / open item #1 de-personalize).
+- **`<package_name>` requires manual `mv` + `sed` substitution** until `scripts/bootstrap.sh` automates it. Belongs to Package B (bootstrap-substitution piece that pairs with B1/B2).
+
+### Spec
+
+- **B-016** added: invariant — every live doc reference resolves to a shipped file or is an explicit example. Frozen. Test is manual today; the future C2 doc-reference linter (Codex Phase 8.2) automates it. Smoke test (B-014) already catches the runtime subset of this invariant.
+
 ## v1.11.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.11.0.
