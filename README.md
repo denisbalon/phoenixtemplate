@@ -34,6 +34,16 @@ chmod +x scripts/*.sh
 
 Then follow [`PROJECT_STARTER.md §1` "Bootstrap checklist"](PROJECT_STARTER.md#1-bootstrap-checklist-zero--first-commit) for the rest: placeholder substitution (`<package_name>`, `<PROJECT_NAME>`, `<GITHUB_USER>`, `<HOST>`, `<DOMAIN>`), `uv lock && git add uv.lock`, `gh repo create`, branch protection, first commit.
 
+## Known limitations
+
+What's missing or manual today vs. the polished end state. For the active roadmap see [`docs/spec.md` "Open project-level decisions"](docs/spec.md).
+
+- **Placeholder substitution is manual.** After unpacking the kit, you need to run one `mv` (rename `src/<package_name>/` to your actual package name) plus one `sed` across `.py` / `.toml` / `Makefile` / `.yml` / `.sh` / `.example` files for `<package_name>`, plus similar manual edits for `<PROJECT_NAME>`, `<GITHUB_USER>`, `<HOST>`, `<DOMAIN>`, `<PROJECT_DESCRIPTION>`, `<COPYRIGHT_HOLDER>`, `<YEAR>`. `bootstrap.sh` only handles `.env` credential prompting today — it does **not** do placeholder substitution. Open item #3 (`scripts/new-project.sh`) automates this.
+- **Single language preset.** Only Python/uv/FastAPI/VPS ships today. Multi-preset (Node/pnpm, Go, no-runtime) is roadmap per D-009 — not shipped.
+- **`PROJECT_STARTER.md` is a 1000+ line monolith.** Split into focused docs (`BOOTSTRAP.md` / `WORKFLOW.md` / `TEMPLATE_INVENTORY.md` / `DEPLOY_BASELINE.md` / `HARNESS_QUIRKS.md`) is on the roadmap (open item #7 + Codex plan Phase 1 #2).
+- **No automated drift detection.** Doc references, placeholders, and workflow-wording consistency are manually audited today. Linter automation (doc-reference linter, placeholder linter, workflow-consistency linter) is on the Codex plan as Phase 3. Until then, the smoke test (B-014) catches the runtime subset and manual audits catch the rest.
+- **Windows requires WSL.** The shipped `src/<package_name>/` directory has angle-bracket characters that aren't valid Windows filenames; bash scripts everywhere assume POSIX shell. Per D-009 the target deployment is Linux/VPS — Windows isn't a first-class target.
+
 ## Docs
 
 | Topic | Doc |
