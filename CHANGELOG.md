@@ -6,6 +6,57 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.33.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.33.0. **First feature on `improvements-4` branch — web-search-before-iterate rule for external surfaces (B-036 + D-018).** Standing-rule addition extending Karpathy Pitfall #1 with the explicit `WebSearch`-first tactic for APIs / SDKs / 3rd-party services / library versions. Minor bump per WORKFLOW.md (notable behavior change to standing rules).
+
+### Motivating incident
+
+Real bug on one of the user's other projects, fought code-side for **half a day**, turned out to be a known upstream issue that everyone works around. A `WebSearch` of the symptom early in that session would have surfaced the workaround in seconds. The Karpathy Pitfall #1 ("verify load-bearing facts before depending on them") covered this in spirit but didn't name `WebSearch` as the concrete tactic; in practice the agent reached for "let me try a different code change" instead of "let me check what the docs/community actually say." B-036 closes that gap.
+
+### What shipped
+
+**`templates/CLAUDE.md` Pitfall #1 extension** — the session-facing summary now reads:
+
+> "**Think before coding.** State assumptions explicitly; surface alternatives when ambiguous; verify load-bearing facts (file, signature, schema) before depending on them. **For external surfaces specifically** (APIs, SDKs, 3rd-party services, library versions): propose a `WebSearch` *first* — before writing integration code against an unfamiliar surface, before attempting a code-side fix for any external error/exception, after 2 failed iterations of the same external-behavior fix (the N=2 trip-wire), and any time you notice you're guessing about external behavior. "Maybe one more code change" past N=2 is forbidden. Half a day fighting a "bug" that turns out to be a known upstream issue with a community workaround is the canonical failure mode this prevents (B-036)."
+
+**`templates/docs/karpathy-claude-rules.md` §1** — new `### Web-search before iterate on external surfaces (B-036)` subsection with full rationale (training-cutoff drift; the iterate-then-search trap), the four triggers enumerated with examples, the `[info]`-class classification of `WebSearch` proposals per B-028 (bare `N` proceeds, no `gogogo!` — one keystroke between "we should check this" and "the answer is on screen"), the motivating incident, and the in-training-data caveat (rule applies even when the code looks familiar — library minor versions ship breaking changes routinely).
+
+### Four triggers
+
+| # | Trigger | Action |
+|---|---|---|
+| 1 | New external surface (unfamiliar API/SDK/service/library) | `WebSearch` before writing integration code |
+| 2 | External error / exception | `WebSearch` of the exact error string before attempting any code-side fix |
+| 3 | N=2 failed iterations of the same external-behavior fix | STOP iterating; `WebSearch` for the specific symptom |
+| 4 | Self-noticed guessing about external behavior | STOP and `WebSearch` |
+
+### Scope decision
+
+Not a C4 region — Karpathy standing rules are not gate-related per B-021's three-tier model. The C4-anchored regions (gate-clause / proposal-format / bare-gogogo / env-metadata-contract) stay limited to gate semantics; standing coding rules live in `templates/CLAUDE.md` + the dedicated reference doc at `templates/docs/karpathy-claude-rules.md` (no duplication to WORKFLOW.md or templates/CONTRIBUTING.md needed).
+
+### Spec
+
+- **B-036 added** (frozen) — four triggers; `[info]`-class gate classification per B-028; in-training-data applicability caveat; scope explicitly named (external surfaces only, not internal reasoning); test recipe.
+- **D-018 added** — Considered / Why / Failure-mode analysis covering placement (Karpathy-extension chosen over new-5th-rule + Coding-Conventions-entry), trigger shape (all-four chosen over any single trigger), N=2 threshold (chosen over N=1 + N=3+), gate classification (`[info]` chosen over `[change]`). Failure modes analyzed: offer-fatigue (mitigation: triggers deliberately narrow); search results wrong/stale (not the rule's job; agent + user assess downstream); no linter coverage possible (agent-behavior runtime rule; structural prevention deferred to follow-up if rule gets ignored in practice); rule expansion creep (mitigation: scope strictly to external surfaces).
+
+### What didn't change
+
+- No C4 region edits — Karpathy section is outside the four anchored regions; C4 linter remains green.
+- No `WORKFLOW.md` or `templates/CONTRIBUTING.md` edits — those tiers don't carry Karpathy rules per B-021.
+- No linter changes — agent-behavior rule has no static-analysis surface. Structural prevention (a "code-side fix to external-error symptom without preceding `WebSearch` in the same session" linter) is flagged as a possible follow-up if the rule gets ignored in practice; not built in this commit.
+- No script changes; no manifest changes (templates/CLAUDE.md and karpathy-claude-rules.md are already manifest entries).
+
+### Verified
+
+- All 5 linters green (C4 + C2 doc-ref + C3 placeholders + C5 spec-consistency + manifest).
+- `grep -nE "WebSearch.*first|search-then-iterate|N=2 trip-wire" templates/CLAUDE.md templates/docs/karpathy-claude-rules.md docs/spec.md` shows the rule landed in all three files.
+- B-036 + D-018 inserted in `docs/spec.md` in their correct slots (B-036 right after B-035; D-018 right after D-017).
+
+### Next
+
+First commit on `improvements-4` complete. Future commits on this branch will be sequenced as `gogogo!`-authorized proposals.
+
 ## v1.32.5 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.32.5. **Rewrite `codex improvement plan.md` as closed-status archive doc.** Post-merge follow-up: now that PR #3 closed the entire Codex improvement plan (Phases 1-5 resolved across v1.9.0 → v1.32.4), the plan document itself was rewritten from a live "active priorities + phases + acceptance criteria" doc into a compact "Status: Closed" archive that preserves the audit trail of what shipped + names the source-of-truth docs to consult for future work. Patch bump per WORKFLOW.md (typical doc rewrite).

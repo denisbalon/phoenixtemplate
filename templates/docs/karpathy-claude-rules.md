@@ -15,6 +15,23 @@ LLMs (Claude included) consistently fail in four shapes. Each rule below pairs t
 - When the request is ambiguous, surface 2–3 plausible interpretations and ask which one — don't pick silently.
 - Verify load-bearing facts (file exists, function signature, schema column) before depending on them.
 
+### Web-search before iterate on external surfaces (B-036)
+
+External surfaces — APIs, SDKs, 3rd-party services, library/framework versions — are the highest-risk subset of "load-bearing facts." Claude's training data has a cutoff and those surfaces drift constantly between minor versions; what was true at training time can be wrong now, and code-side iteration on external-behavior issues compounds the cost of an assumption error.
+
+**Order of operations is search-then-iterate, not iterate-then-search.** Four concrete triggers:
+
+1. **New external surface.** Before writing integration code against an unfamiliar API / SDK / service / library, propose a `WebSearch` for current docs, version-specific behavior, breaking changes vs. the training-data version.
+2. **External error or exception.** Before attempting a code-side fix for any error/exception/unexpected behavior originating from an external surface, propose a `WebSearch` of the exact error string or symptom.
+3. **N=2 trip-wire.** After 2 failed iterations of the same external-behavior fix, STOP iterating. Propose a `WebSearch` for the specific symptom. "Maybe one more code change" past N=2 is a forbidden pattern — that's the path to half-a-day-on-a-known-issue.
+4. **Self-noticed guessing.** Any time Claude notices it's reasoning about external behavior without concrete documentation or test backing, STOP and propose a `WebSearch`.
+
+`WebSearch` proposals are `[info]`-class (read-only) — the user picks bare `N` to proceed; no `gogogo!` needed. The lowest-friction path possible: one keystroke between "we should check this" and "the answer is on screen."
+
+**Motivating incident (today):** real bug on another project, fought code-side for half a day, turned out to be a known upstream issue everyone works around. A `WebSearch` of the symptom early in that session would have surfaced the workaround in seconds. This rule exists so that failure mode doesn't repeat — across this project and every project that adopts the kit.
+
+The rule applies **even when the relevant code looks in-training-data**. Library minor versions ship breaking changes routinely; the training snapshot is one point in time. Treat external-surface verification as a continuous obligation, not a one-time-at-training-cutoff check.
+
 ## 2. Overengineered solutions → Simplicity first
 
 **Failure:** unnecessary abstractions, speculative configuration, dead code left behind, three-layer factories where a function would do.
