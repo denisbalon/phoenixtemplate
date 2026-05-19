@@ -4,12 +4,17 @@
 
 ## `gogogo!` passphrase — read this first (HARD GATE)
 
-**Never take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.** Reading files, grepping, planning in chat, clarifying questions, and writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
+<!-- C4:gate-clause:start -->
+**Do NOT take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.**
+<!-- C4:gate-clause:end -->
+
+Reading files, grepping, planning in chat, clarifying questions, and writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
 
 `gogogo!` is the **execute trigger**. It must be preceded by an **action verb** in the same message — the verb specifies *what* to execute.
 
 ### Verb → action
 
+<!-- C4:verb-table:start -->
 | Phrase | Action |
 |---|---|
 | `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy) |
@@ -18,8 +23,11 @@
 | `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
 | `deploy gogogo!` | Run the project's deploy command |
 | `revert gogogo!` | Revert last commit + redeploy |
+<!-- C4:verb-table:end -->
 
-**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP.
+<!-- C4:bare-gogogo:start -->
+**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. Review is out-of-band — no verb for it.
+<!-- C4:bare-gogogo:end -->
 
 **Review is out-of-band.** No `review gogogo!` verb, no skill, no Makefile target — review happens in a separate session with whatever reviewer the user prefers, pointed at `docs/pr_review_instructions.md` and the open PR. Claude does not dispatch or prepare reviewers.
 **Verb without `gogogo!` does not authorize** → `merge` alone, `PR` alone, etc. never trigger anything. Plan-text + "Send `<verb> gogogo!`".

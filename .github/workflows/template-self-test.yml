@@ -12,4 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
-      - run: ./scripts/smoke-test.sh
+      - name: check rule consistency (B-022)
+        run: ./scripts/check-rule-consistency.sh
+      - name: template smoke test (B-014)
+        run: ./scripts/smoke-test.sh

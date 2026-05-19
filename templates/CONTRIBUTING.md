@@ -194,12 +194,15 @@ gh pr view <PR#> --json state    # MERGED
 
 ## The hard gate
 
+<!-- C4:gate-clause:start -->
 **Do NOT take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.**
+<!-- C4:gate-clause:end -->
 
 `gogogo!` is the **execute trigger**. It must be preceded by an **action verb** in the same message — the verb specifies *what* to execute.
 
 ### Verb → action
 
+<!-- C4:verb-table:start -->
 | Phrase | Action |
 |---|---|
 | `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy) |
@@ -208,6 +211,11 @@ gh pr view <PR#> --json state    # MERGED
 | `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
 | `deploy gogogo!` | Run the project's deploy command |
 | `revert gogogo!` | Revert last commit + redeploy |
+<!-- C4:verb-table:end -->
+
+<!-- C4:bare-gogogo:start -->
+**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. Review is out-of-band — no verb for it.
+<!-- C4:bare-gogogo:end -->
 
 Self-check before any state-mutating tool call:
 
@@ -216,7 +224,7 @@ Self-check before any state-mutating tool call:
 3. Does that verb match the action I'm about to take?
 
 - No `gogogo!` → reply with the plan + "Send `<verb> gogogo!` and I'll do it." STOP.
-- Bare `gogogo!` (no verb) → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. (Review is out-of-band — no verb for it.)
+- Bare `gogogo!` (no verb) → see the canonical prompt above.
 - `<verb> gogogo!` but I was about to do a *different* action → STOP, surface the mismatch.
 - `<verb> gogogo!` matching the action → execute.
 
