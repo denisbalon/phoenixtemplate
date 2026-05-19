@@ -297,3 +297,9 @@ ANY change → bump. Never overwrite a version with different content under it.
 2. Offer to revert (`git revert <sha>` + redeploy + push).
 3. Do NOT propose follow-up code work in the same turn.
 4. Save the new failure-mode phrasing to project auto-memory.
+
+## Env-metadata contract
+
+<!-- C4:env-metadata-contract:start -->
+**`.env.example` env-metadata contract (per B-020):** Each var's metadata is declared via `@directive` comments — `@description` · `@required` · `@optional` · `@default` · `@validator` · `@sensitive`. Both `bootstrap.sh` and `check-env.sh` read the same shared parser (`templates/scripts/_env-schema-parse.sh`); the directives are the contract, not the prose. Free-text comments without `@` are shown in bootstrap prompts but not parsed as metadata. Default-if-neither-given is `@required`. Full vocabulary + parsing rules in B-020.
+<!-- C4:env-metadata-contract:end -->
