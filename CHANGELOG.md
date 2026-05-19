@@ -6,6 +6,55 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.27.1 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.27.1. **Phase 2.3 of the Codex improvement plan — D-012 settling PROJECT_STARTER.md's long-term role.** Decision-doc only; no file restructure required. Patch bump (spec-only addition).
+
+### The open question (per the Codex plan, Phase 2.3)
+
+> Should PROJECT_STARTER.md remain a snapshot index that ships with every export? Or should it become even thinner, with more of the durable content living in the companion docs only?
+
+After v1.26.0 the file is already a 75-line thin index — but spec didn't formally pin that as the end state. D-012 resolves the open question.
+
+### The decision (D-012)
+
+**Chose:** PROJECT_STARTER.md remains a **permanent** thin-index entry-point. The post-v1.26.0 structure (title + Template version + intro + docs table + Template changelog tail) is the target end state, not a transitional one. No further reductions or restructures planned.
+
+**Considered + rejected:**
+
+- **(b)** Merge into BOOTSTRAP.md, drop the file entirely — would require rewriting B-002 (which binds Template version + Template changelog to PROJECT_STARTER.md). The Template changelog is per-doc state; it belongs in the file it describes, not in BOOTSTRAP.md. Concern-mixing not worth the "one fewer root file" win.
+- **(c)** Drop in favor of README.md — different purposes. README.md is GitHub-rendered for visitors at github.com/owner/repo; PROJECT_STARTER.md is the in-repo navigation hub for consumers who've cloned/exported the kit. Collapsing them loses the distinction.
+
+### Why (a) wins
+
+- PROJECT_STARTER.md has been the entry point throughout the project's history; name is established.
+- The current content (title + Template version + intro + docs table + changelog tail) is genuinely the minimum viable index — no further reduction would add value.
+- Template changelog has nowhere natural to live other than the file it describes.
+- The thin-index serves a real navigation purpose without bloat.
+
+### Spec updates
+
+- **D-012 added** to the decision log (before "Open project-level decisions" section).
+- **B-025 Rule field** updated in place: "As of v1.26.0 (long-term role settled per D-012), the meta-repo root ships `PROJECT_STARTER.md` (a permanent thin ~40-line index) plus five companion docs..." (was "As of v1.26.0 ... a thin ~40-line index").
+- No new B blocks. No file restructure — v1.26.0's structure already matches the chosen permanent state.
+
+### Verified
+
+- All three linters green: C4 (4 regions byte-exact across the trio), C2 (75 link targets, 24 files), C3 (11 files clean).
+- Smoke test irrelevant (no shipped-file changes).
+
+### Branch state after this commit
+
+`improvements-3` holds 3 commits stacked on top of `main` (v1.26.2 + v1.27.0 + v1.27.1). Ready for a PR-open proposal whenever you'd like to surface them. The three commits cover:
+
+- Phase 1.2 (v1.26.2) — post-split active-doc consistency sweep; fixed broken §-anchor in WORKFLOW.md.
+- Phase 3.1 (v1.27.0) — new C4 region `env-metadata-contract`; structural prevention of v1.26.1's regression class.
+- Phase 2.3 (v1.27.1) — D-012 settling PROJECT_STARTER.md's long-term role.
+
+### Next
+
+- Remaining Codex plan items (Phase 2.1 canonical-vs-duplicated cleanup, Phase 2.2 duplication trim, Phase 3.2 active-doc-vs-spec checks + URL fragment validation, Phase 4 manifest + preset boundaries, Phase 5 adoption UX) — wait for user direction.
+
 ## v1.27.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.27.0. **Phase 3.1 of the Codex improvement plan — extend C4 rule-consistency coverage to env-metadata.** Closes the regression class v1.26.1 surfaced (WORKFLOW.md's `.env.example` description drifted from B-020). Minor bump per WORKFLOW.md version-bump rule (new C4 region is a notable feature).
