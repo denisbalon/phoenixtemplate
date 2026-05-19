@@ -6,6 +6,64 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.24.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.24.0. **Gate refinements (D-011): keep `gogogo!`, always-propose, multi-select.** Three changes to the v1.23.0 propose-and-confirm model, driven by user feedback after living with it for a day.
+
+### What changed
+
+**1. `gogogo!` stays.** Renaming to `go!` (3 chars) was considered and rejected — D-001's original analysis (false-positive risk on natural English: "let's go!", "ready, set, go!", "don't go!") still applies, and is in some ways more important under propose-and-confirm because the false-positive window is exactly "after a proposal, when the user types a negation containing the substring". The 4-char `gogo!` compromise was rejected too; the ergonomics gain (3 chars) wasn't worth the safety margin.
+
+**2. Every assistant message ends with a concrete proposal.** Formalized as new **B-027**. The asymmetry that v1.23.0 introduced — user `gogogo!`s a single token, Claude does the work of articulating what — was being undermined whenever Claude ended a turn with a question ("what would you like next?"). User had to re-elicit a proposal, then `gogogo!`. Extra round-trip every time. Now: clarification turns end with "continue with [next queued item], or describe a different direction"; design-discussion turns end with "discuss further, or summarize this into a spec change"; the trailing proposal is always there, even if the proposal is "decide what to do next." The user can always `gogogo!` forward motion in one keystroke-worth.
+
+**3. Multi-select syntax: `N1 N2 ... gogogo!`.** Numbered proposals now come in two flavors, distinguished by header:
+
+- **`**Choose one:**`** — mutually exclusive alternatives. Only `N gogogo!` works. Multi-digit `N M gogogo!` is invalid → re-prompt.
+- **`**Choose any (in order):**`** — independent options that can batch. `N gogogo!` picks one; `N1 N2 ... gogogo!` authorizes multiple in the typed order. Skipping is fine (`1 2 4 5 gogogo!` runs 1/2/4/5, skips 3).
+
+User's insight that drove this design: **each authorized item was a concrete proposal Claude already surfaced and the user inspected.** That's the key difference from `gogogo!N` / autopilot pre-auth shapes (which were considered and rejected) — pre-auth weakens the v1.23.0 safety property by authorizing UNKNOWN future proposals; multi-select-of-already-surfaced-items doesn't. Multi-select is a strict extension of single-pick.
+
+### Doc trio changes (byte-exact across PROJECT_STARTER.md §2.1 + templates/CONTRIBUTING.md + templates/CLAUDE.md)
+
+- **`gate-clause` region** updated: condition (b) now allows whitespace-separated multi-digit selection; condition (a) requires the proposal to end with one of the canonical invitation lines.
+- **`proposal-format` region** rewritten: grew from two invitation forms to three (Single suggestion / Choose one / Choose any (in order)); added the explicit "every assistant message ends with a concrete proposal" requirement.
+- **`bare-gogogo` region** unchanged.
+
+C4 linter `REGIONS` array unchanged (same three names; content differs). The linter passed byte-exact across all three files immediately after the edits.
+
+### Supporting prose changes (each file's own)
+
+- Self-check list extended from 4 steps to 5 — new step 4 catches multi-select-against-Choose-one. Decision-tree gains two new branches (multi-select against valid vs invalid form).
+- Refuse-list table gains 2 new rows: "user multi-selected against my Choose-one list — close enough" and "I should answer this clarifying question without proposing anything" (both are wrong).
+- Supporting paragraph after gate-clause mentions the safety property: multi-select is a STRICT extension because each item was already surfaced; doesn't pre-auth unknown proposals.
+
+### Spec
+
+- **B-026** content updated in place — rule condition (b) updated for multi-digit; proposal-format described as three forms; rationale gains v1.24.0 refinement note; test field adds three new manual checks (multi-select against "Choose any" works, multi-select against "Choose one" re-prompts, every assistant message ends with one of three canonical invitation lines).
+- **B-027** added (frozen) — the always-end-with-proposal requirement. References D-011.
+- **D-011** added — three-refinement decision with full Considered / Why / Failure-mode analysis. Includes the explicit rejection rationale for `go!`, `gogo!`, `gogogo!N`, and autopilot-mode shapes that were considered.
+
+### What didn't change
+
+- C4 linter REGIONS array (`gate-clause`, `proposal-format`, `bare-gogogo`) — same three regions, just different content.
+- B-001 + B-011 + D-004 stay in historical-superseded (still superseded by B-026, not by B-027/D-011).
+- The 5-step workflow shape, all carve-outs (memory + local-only settings), the refuse-list framing, the Karpathy standing rules, and every other invariant that's not directly about how proposals are surfaced.
+
+### Failure modes
+
+- **User multi-selects against a "Choose one:" proposal.** Mitigation: my proposal explicitly labels the form; multi-select against "Choose one:" is invalid → re-prompt.
+- **I forget to label the form** and the list is ambiguous. Caught at user-inspection time; user can reject. Future improvement noted in B-022 for the linter: extend C4 to verify "Choose..." headers use one of the two canonical forms.
+- **I end a turn without a proposal.** Caught at session review. The C4 linter only enforces the canonical region text, not at-message-end usage. Automating the at-message-end check via transcript scanning is possible but not currently shipped.
+
+### Verified
+
+- All three linters green: C4 rule-consistency (3 regions byte-exact), C2 doc-references, C3 placeholders.
+- No shipped-file changes; smoke test irrelevant for this commit.
+
+### Next
+
+- **v1.22.1 (a future `gogogo!`-authorized proposal):** Extract `WORKFLOW.md` from `PROJECT_STARTER.md` §2 + §9 + §10 + §11. Coordinates with the C4 linter's `FILES` array (target shifts from `PROJECT_STARTER.md` to `WORKFLOW.md`). Updates B-021's tier table to drop the `(post-split: WORKFLOW.md)` parenthetical. Adds `WORKFLOW.md` to `ROOT_DOCS` + `VIRTUAL_TEMPLATES_FILES`. This is the queued 2 of 3 from the PROJECT_STARTER.md split sequence.
+
 ## v1.23.1 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.23.1. **Sweep stale verb references left over from v1.23.0.** Pure doc cleanup — no rule changes, no spec changes. The v1.23.0 CHANGELOG entry explicitly announced this as the v1.23.1 follow-up.
