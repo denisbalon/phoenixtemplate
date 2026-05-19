@@ -39,6 +39,7 @@ REGIONS=(
   "gate-clause"
   "proposal-format"
   "bare-gogogo"
+  "env-metadata-contract"
 )
 
 TMPDIR="$(mktemp -d)"

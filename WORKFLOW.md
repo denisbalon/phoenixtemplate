@@ -300,7 +300,11 @@ Deploy runs on every commit to `main` (i.e., immediately after the rebase-merge 
 
 ### Environment variables (`.env.example` format)
 
-Each var has a comment block declaring its metadata via `@directive` comments (B-020 in `docs/spec.md`) and explaining where to find or generate the value. Both `bootstrap.sh` and `check-env.sh` read the same shared parser (`templates/scripts/_env-schema-parse.sh`) — the directives are the contract, not the prose.
+<!-- C4:env-metadata-contract:start -->
+**`.env.example` env-metadata contract (per B-020):** Each var's metadata is declared via `@directive` comments — `@description` · `@required` · `@optional` · `@default` · `@validator` · `@sensitive`. Both `bootstrap.sh` and `check-env.sh` read the same shared parser (`templates/scripts/_env-schema-parse.sh`); the directives are the contract, not the prose. Free-text comments without `@` are shown in bootstrap prompts but not parsed as metadata. Default-if-neither-given is `@required`. Full vocabulary + parsing rules in B-020.
+<!-- C4:env-metadata-contract:end -->
+
+Example:
 
 ```sh
 # === Section ===
@@ -316,8 +320,6 @@ VAR_NAME=
 # @validator: ^[a-z0-9-]+$
 OPTIONAL_VAR=
 ```
-
-Recognized directives: `@description` · `@required` · `@optional` · `@default` · `@validator` · `@sensitive`. Free-text comments (lines starting with `#` without `@`) are shown in bootstrap prompts but not parsed as metadata. Default-if-neither-given is `@required`. Full directive vocabulary + parsing rules in B-020.
 
 ### Sensitive value handling
 

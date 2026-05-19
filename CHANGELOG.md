@@ -6,6 +6,58 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.27.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.27.0. **Phase 3.1 of the Codex improvement plan — extend C4 rule-consistency coverage to env-metadata.** Closes the regression class v1.26.1 surfaced (WORKFLOW.md's `.env.example` description drifted from B-020). Minor bump per WORKFLOW.md version-bump rule (new C4 region is a notable feature).
+
+### The mid-execution design decision
+
+My original Phase 3.1 proposal flagged that env-metadata might not fit C4 cleanly: C4 was designed for AI-safety-critical rule statements deliberately duplicated across the doc trio (gate-clause / proposal-format / bare-gogogo — the trio that `templates/CLAUDE.md` auto-loads every session), while env-metadata is more like single-source documentation. I surfaced four sub-options:
+
+1. Force-fit C4 — add env-metadata to all 3 trio files (over-duplication).
+2. Refactor linter for per-region file scopes (over-engineering).
+3. Re-scope Phase 3.1 to genuinely-duplicated content like the refuse-list.
+4. Skip Phase 3.1 entirely.
+
+User picked **Option 1** — accept the over-duplication trade-off. Env-metadata wording joins the trio.
+
+### What shipped
+
+- **New C4 region `env-metadata-contract`** added byte-exact across the trio. Region content:
+
+  > **`.env.example` env-metadata contract (per B-020):** Each var's metadata is declared via `@directive` comments — `@description` · `@required` · `@optional` · `@default` · `@validator` · `@sensitive`. Both `bootstrap.sh` and `check-env.sh` read the same shared parser (`templates/scripts/_env-schema-parse.sh`); the directives are the contract, not the prose. Free-text comments without `@` are shown in bootstrap prompts but not parsed as metadata. Default-if-neither-given is `@required`. Full vocabulary + parsing rules in B-020.
+
+- **`WORKFLOW.md`** — existing "Environment variables (`.env.example` format)" section restructured. The descriptive paragraph (one sentence) and the recognized-directives sentence (one sentence) consolidate into the canonical C4 region at the top of the section. The code-block example stays below the region under a new "Example:" intro line. Net effect: the rule statement is anchored; the example is illustrative supporting documentation that stays only in WORKFLOW.md.
+
+- **`templates/CONTRIBUTING.md`** — new section `## Env-metadata contract` appended after `## After a violation`. Contains only the C4 region (no code-block example).
+
+- **`templates/CLAUDE.md`** — new section `## Env-metadata contract` inserted before `## When the user asks a question that's already documented`. Contains only the C4 region.
+
+- **`scripts/check-rule-consistency.sh`** — `REGIONS` array grows from 3 to 4 entries (adds `"env-metadata-contract"`). The script's logic is region-name-agnostic; no other changes needed.
+
+### Spec updates
+
+- **B-022 Rule field** — extended to name the new region (region (iv)) with rationale: "added v1.27.0 to close the regression class v1.26.1 surfaced: a doc-trio-canonical rule statement that drifted from frozen B-020 because no mechanical check existed; now duplicated byte-exact across the trio and enforced."
+- **B-021 tier table** — the Session-facing row (templates/CLAUDE.md) gains "env-metadata contract (per B-020)" in its "What it carries" column, since templates/CLAUDE.md now carries that rule statement inline as part of the deliberate trio duplication.
+- No new B blocks. No new D entries.
+
+### The trade-off accepted
+
+The new region adds env-metadata wording to two files where it's not strictly AI-session-relevant (templates/CONTRIBUTING.md = per-project operational doc; templates/CLAUDE.md = session-facing AI summary — env-metadata isn't a gate concern). The trade is: byte-exact mechanical prevention of the v1.26.1 regression class, at the cost of carrying ~80 words of duplicated rule text into those two files. User accepted explicitly. If this duplication proves burdensome in practice, Option 2 (linter refactor for per-region file scopes) remains a future path that would let env-metadata-contract be narrowed back to WORKFLOW.md-only.
+
+### Verified
+
+- All three linters green: C4 (now 4 regions byte-exact across 3 files), C2 (75 link targets across 24 files), C3 (11 files clean).
+- Smoke test irrelevant (no shipped-file changes — `templates/.env.example` already uses `@directive` per v1.14.0).
+
+### What this prevents structurally
+
+A future regression where any single trio file's env-metadata description drifts (e.g., someone edits WORKFLOW.md's region to add a new directive without updating templates/CONTRIBUTING.md or templates/CLAUDE.md) → C4 linter fails the build immediately with a unified diff. The class of bug v1.26.1 caught (pre-`@directive` "Optional prose" wording surviving into an active surface) cannot recur without a CI failure now.
+
+### Next
+
+- Commit 3 of 3 in this `improvements-3` sequence: **Phase 2.3 — D-012 settling PROJECT_STARTER.md's long-term role** (v1.27.1).
+
 ## v1.26.2 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.26.2. **Phase 1.2 of the Codex improvement plan — post-split active-doc consistency sweep.** Patch bump; one Block finding identified and fixed in the same commit.
