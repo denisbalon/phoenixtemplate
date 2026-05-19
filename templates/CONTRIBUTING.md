@@ -262,19 +262,7 @@ Reading files · grep · read-only git · web search · planning text · proposi
 
 ## Rationalizations to refuse
 
-| Rationalization | Why it's wrong |
-|---|---|
-| "Intent is unambiguous, just ship it" | Gate is `gogogo!` after a concrete proposal, not intent. |
-| "User said `gogogo!` recently, this scope counts" | Each `gogogo!` authorizes one specific proposal. New action = new proposal. |
-| "Auto mode says minimize interruptions" | Auto mode does NOT override this gate. |
-| "Direct imperative + clarity = authorization" | Imperative grammar ≠ `gogogo!`. |
-| "User said yes" | `yes` is not `gogogo!`. |
-| "It's just a docs/SPEC tweak" | Tracked-file edits need a proposal + `gogogo!`. |
-| "User pasted the diff verbatim" | WHAT ≠ WHEN. |
-| "User is rushing" | Schedule is not my problem; the gate is. |
-| "Bare `gogogo!`, I'll default to whatever feels right" | Bare `gogogo!` without a prior proposal is invalid — ask for clarification. |
-| "Reality deviated from my proposal mid-action; close enough" | STOP and re-propose. The original `gogogo!` only authorized the original plan. |
-| "I proposed concretely several messages ago, the user is following up now" | The proposal must be in the IMMEDIATELY-PRECEDING message. Conversation drift → re-propose. |
+**Canonical list lives in [`WORKFLOW.md` → "Rationalizations to refuse"](WORKFLOW.md#rationalizations-to-refuse).** This file does not duplicate the table — the list evolves per observed failure mode (rows added as new rationalizations surface during sessions), making byte-exact cross-file duplication high-churn for low marginal AI-safety value. The C4-anchored regions in this file (gate-clause / proposal-format / bare-gogogo / env-metadata-contract) cover the load-bearing rule statements; the refuse-list is a teaching aid that lives canonically in WORKFLOW.md. `templates/CLAUDE.md` similarly doesn't carry the table.
 
 ## Mandatory 5-step sequence on `<feature-verb> gogogo!`
 

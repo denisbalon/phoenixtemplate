@@ -6,6 +6,60 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.29.2 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.29.2. **Phase 2.2 of the Codex improvement plan — conservative trim of duplication outside C4 regions** (commit 3 of 5 in the `improvements-3` sequence). Patch bump.
+
+### Audit findings
+
+| Section | `WORKFLOW.md` | `templates/CONTRIBUTING.md` | `templates/CLAUDE.md` |
+|---|---|---|---|
+| Refuse-list (rationalizations) | 15 content rows | 11 rows (**drifted by 4**) | 0 (none) |
+| Self-check list | full | full (drifted) | none |
+| "Phrases that LOOK like authorization" | present | present | none |
+| "Allowed without `gogogo!`" | present | present | none |
+
+The trio's non-C4 duplication is asymmetric — `WORKFLOW.md` and `templates/CONTRIBUTING.md` both carry the lists; `templates/CLAUDE.md` (the AI-session-loaded surface) stays minimal with just the C4 regions. The four-row refuse-list drift represented real maintenance debt: rows added to WORKFLOW.md in v1.24.0 + v1.28.0 (after introducing always-propose + per-option [change]/[info] markers + multi-select rejection rationalizations) never propagated to CONTRIBUTING.md.
+
+### The trim
+
+Per the mid-execution sub-proposal (user picked Option 1: conservative-trim refuse-list only):
+
+- **`templates/CONTRIBUTING.md` "Rationalizations to refuse"** table replaced with a one-line pointer to `WORKFLOW.md` → "Rationalizations to refuse". Pointer text includes the rationale (list evolves per observed failure mode → too high-churn for byte-exact cross-file duplication → C4 regions cover the load-bearing rules → templates/CLAUDE.md was already pointer-style).
+- The new B-029 URL-fragment validation verified `#rationalizations-to-refuse` resolves to a real heading in `WORKFLOW.md` (fragment count: 4 → 5).
+- **Kept intact:** self-check list, "Phrases that LOOK like authorization", "Allowed without `gogogo!`" — those serve human contributors reading CONTRIBUTING.md without WORKFLOW.md and have less drift risk.
+
+Net code change: ~13 lines removed from `templates/CONTRIBUTING.md`. No other files touched.
+
+### Stale-heading finding (NOT fixed in this commit)
+
+While auditing the area around the refuse-list, found that `templates/CONTRIBUTING.md` line 279 has a section heading:
+
+> `## Mandatory 5-step sequence on \`<feature-verb> gogogo!\``
+
+This uses pre-v1.23 verb-prefix language — the heading says `<feature-verb> gogogo!` which is the OLD verb-prefix gate model (B-001 + B-011, superseded v1.23.0 by B-026). The v1.23.1 sweep that swept verb references through active docs missed this heading because:
+
+1. Its grep pattern was `\b(feat|commit|PR|ready|...) gogogo!` — looking for specific verb-names with `gogogo!`. Not the meta-syntax `<feature-verb> gogogo!`.
+2. The new Invariant C in spec-consistency-checker (v1.29.1) catches `verb-prefix gate` / `verb table (per|in|of)` / `action verb (per|in|of)` but not section headings using the meta-syntax `<verb> gogogo!`.
+
+**Surfaced but deliberately NOT fixed in this commit** — out of scope for the authorized refuse-list trim. Flagged here for a follow-up; could be addressed in:
+
+- A "Phase 2.1 cleanup-residual" commit next (small targeted edit).
+- An extension to Invariant C in `check-spec-consistency.sh` adding the `<feature-verb>` meta-syntax pattern (would catch the heading on next CI run; structural prevention).
+
+### Spec
+
+- No new B blocks. No new D entries. B-021's three-tier model already accommodates pointer-style non-anchored duplication (it specifies what's deliberately duplicated for AI safety — the C4 regions — but doesn't mandate that ALL safety-related content be duplicated; non-C4 lists are pointer-OK).
+
+### Verified
+
+- All 4 linters green: C4 (3 regions) + C2 doc-ref (75 link targets, 5 URL fragments validated, up from 4) + C3 placeholders (11 files) + C5 spec-consistency (10 invariant patterns).
+- Anchor `#rationalizations-to-refuse` in `WORKFLOW.md` resolves correctly per B-029 URL-fragment check.
+
+### Next in 5-commit sequence
+
+Commit 4 of 5 (v1.29.3) — Phase 3.3: focused smoke-coverage additions. Two narrow checks (`.env.example` parses cleanly via `_env-schema-parse.sh`; C4 regions non-empty in each trio file).
+
 ## v1.29.1 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.29.1. **Phase 2.1 reframed as structural prevention** (commit 2 of 5 in the `improvements-3` sequence). Patch bump.
