@@ -122,6 +122,12 @@ files:
     placeholders: []
     exported_by_starter: true
 
+  - path: templates/manifest.yaml
+    purpose: self-referential — this file (machine-readable inventory)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
   # ----- templates/.claude/ --------------------------------------------
 
   - path: templates/.claude/settings.json
@@ -274,6 +280,12 @@ files:
 
   - path: scripts/check-spec-consistency.sh
     purpose: C5 linter — forbidden-phrase semantic-drift checker (B-029)
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false
+
+  - path: scripts/check-manifest.sh
+    purpose: manifest linter — orphans / stale / placeholder-mismatch (B-033)
     tier: meta-only
     placeholders: []
     exported_by_starter: false

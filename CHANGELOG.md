@@ -6,6 +6,58 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.31.1 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.31.1. **Phase 4.1 + 4.2 of Codex improvement plan — manifest linter (B-033).** Commit 2 of 3 closing Codex Phase 4. Patch bump per WORKFLOW.md (typical linter extension; no behavior change).
+
+### What shipped
+
+`scripts/check-manifest.sh` (executable) enforces three invariants on `templates/manifest.yaml`:
+
+- **Invariant 1 — no orphans:** every regular file under `templates/` has a manifest entry. Scope intentionally limited to `templates/`; `scripts/*.sh` meta-only entries listed in the manifest for completeness but not enforced as orphans (avoids forcing manifest edits on every new linter).
+- **Invariant 2 — no stale entries:** every `path` in the manifest resolves to an existing file. Covers all three tiers.
+- **Invariant 3 — placeholders match:** for each manifest entry under `templates/` (except the self-referential `manifest.yaml`), the declared `placeholders` list equals the B-024 canonical placeholders that actually appear in the file's content. Root-exported docs and meta-only scripts excluded from this invariant — they mention placeholder strings as references TO the substitution targets, not as substitution targets themselves.
+
+### Manifest gap fix (caught by the new linter)
+
+Adding the linter exposed two manifest gaps from v1.31.0 (orphan check):
+- `templates/manifest.yaml` itself wasn't listed → added as `common` / `[]` / exported.
+- `scripts/check-manifest.sh` (this commit's new linter) added as `meta-only` / `[]` / not exported.
+
+Total entries now 42 (was 40).
+
+### CI / smoke-test wiring
+
+- New step in `.github/workflows/template-self-test.yml` (between `check-spec-consistency` and the smoke test).
+- New pre-flight check 0c in `scripts/smoke-test.sh` (after B-031's 0a parse-check and 0b C4-content check). Belt-and-suspenders for local-dev runs that invoke smoke-test directly without running the linters separately.
+
+### Implementation notes
+
+- Manifest parsing uses awk field-by-field extraction; no YAML library dependency.
+- Placeholder-set comparison uses `LC_ALL=C sort -u` for locale-stable ordering.
+- Pipefail-safe: `grep` calls that may return exit 1 on no-match are wrapped `(grep ... || true)` so empty cases produce empty output instead of killing the script. (Initial run without these wrappers exposed the issue immediately — the linter died silently on the first file with no canonical placeholders.)
+
+### Spec
+
+- **B-033 added** (frozen) — three invariants + scope rules + the `templates/*` placeholder-check restriction + the manifest.yaml self-exclusion + pipefail-safe parsing notes.
+
+### Verified
+
+- Clean run: `OK: manifest valid — 42 entries, no orphans under templates/, no stale paths, placeholders match content.`
+- Planted-violation tests: invariant 1 fires on `touch templates/test_orphan.tmp`; invariant 2 fires on appending `templates/this-does-not-exist.txt` to the manifest; invariant 3 fires when adding `HOST` to `templates/Makefile`'s declared list while the file doesn't contain `<HOST>`.
+- All 5 linters green (4 existing + new): C4 + C2 doc-ref + C3 placeholders + C5 spec-consistency + manifest.
+- Smoke test pre-flight phase 0 now reports 3 checks; phase 1–7 unchanged.
+
+### What didn't change
+
+- No edits to the manifest data itself beyond the two missing-entry fixes.
+- No changes to the other 4 linter scripts.
+- No changes to gate semantics, C4 regions, version-bump rules, or any consumer-facing behavior.
+
+### Next
+
+Commit 3 of 3: D-016 bootstrap-mode deferral decision (v1.31.2). Phase 4 of the Codex improvement plan closes after that.
+
 ## v1.31.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.31.0. **Phase 4.1 + 4.2 of the Codex improvement plan — machine-readable template manifest (B-032).** First commit of three closing Codex Phase 4 (4.3 already shipped v1.30.0 as design; this trio handles 4.1 manifest, 4.2 tier classification, 4.4 bootstrap-mode deferral). Minor bump per WORKFLOW.md (new artifact + new spec block).

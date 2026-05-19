@@ -20,5 +20,7 @@ jobs:
         run: ./scripts/check-placeholders.sh
       - name: check spec consistency (B-029)
         run: ./scripts/check-spec-consistency.sh
+      - name: check manifest (B-033)
+        run: ./scripts/check-manifest.sh
       - name: template smoke test (B-014)
         run: ./scripts/smoke-test.sh

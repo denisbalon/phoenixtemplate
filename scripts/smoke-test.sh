@@ -72,6 +72,10 @@ if [ "$C4_FAIL" -ne 0 ]; then
 fi
 echo "      ✓ all ${#C4_REGIONS[@]} C4 regions ≥ $MIN_CHARS non-blank chars across ${#C4_FILES[@]} trio files"
 
+echo "   0c: manifest valid (orphans / stale / placeholder-match per B-033)"
+( cd "$ROOT" && ./scripts/check-manifest.sh > /dev/null )
+echo "      ✓ templates/manifest.yaml passes check-manifest.sh"
+
 echo
 
 echo "-- 1. Export starter --"
