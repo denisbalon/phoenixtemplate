@@ -6,6 +6,60 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.29.1 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.29.1. **Phase 2.1 reframed as structural prevention** (commit 2 of 5 in the `improvements-3` sequence). Patch bump.
+
+### Why "reframed"
+
+Original Phase 2.1 was scoped as a doc-cleanup audit for stale canonical-source claims. The audit (greps for `PROJECT_STARTER.md is canonical for workflow`, pre-v1.23 verb-gogogo patterns, pre-v1.28 strict B-027 wording, stale reviewer-wiring) came up **clean** — prior sweeps (v1.23.1, v1.26.2) plus natural cleanup during v1.25.0/v1.26.0/v1.27.0/v1.28.0 commits had already covered the original scope. Per the proposal's mid-execution-deviation rule, stopped + re-proposed; user picked Option 2 (convert cleanup commit into structural-prevention).
+
+### What shipped
+
+Two new invariants in `scripts/check-spec-consistency.sh`:
+
+**Invariant B — canonical-source for workflow lives in `WORKFLOW.md`, not `PROJECT_STARTER.md`.** Four forbidden POSIX-ERE patterns, case-sensitive:
+
+- `PROJECT_STARTER\.md is the canonical`
+- `PROJECT_STARTER\.md is canonical for`
+- `PROJECT_STARTER\.md §2.{0,30}canonical`
+- `canonical source.{0,30}PROJECT_STARTER\.md`
+
+Catches any drift back toward the pre-v1.25.0 framing where PROJECT_STARTER.md §2 was the canonical workflow source. The audit-trail form (`was \`PROJECT_STARTER.md §2\` before v1.25.0`) doesn't match because "canonical" doesn't appear within 30 chars of `PROJECT_STARTER.md`.
+
+**Invariant C — verb-prefix gate model is superseded.** Three patterns:
+
+- `verb-prefix gate`
+- `verb table (per|in|of) (the )?(active|current)`
+- `action verb (per|in|of) (the )?(active|current)`
+
+Locks in the v1.23.0 propose-and-confirm transition. Historical mentions in `docs/spec.md` decision-log + historical-superseded section remain valid (those files are intentionally out of the active-doc scope).
+
+### How this differs from Invariant A's bar
+
+D-014's original rationale for spec-consistency invariants: "bar for new invariants is we've shipped this exact bug already." Invariant A (env-metadata) followed that bar — it was added BECAUSE v1.26.1 shipped a regression in that class. Invariants B and C are **structural prevention** — no actual regression has been shipped in either class. The user explicitly authorized this exception during the mid-execution re-propose; the rationale is that a regression-class boundary settled by a B block / D entry (B-025 + D-012 for PROJECT_STARTER.md role; B-026 + D-010 for propose-and-confirm gate) is itself sufficient evidence to add structural prevention without waiting for a literal regression to ship. B-029 Rule field updated to reflect this nuance.
+
+### Verified
+
+- All 4 linters green: C4 (3 regions) + C2 doc-ref (74 link targets, 4 fragments) + C3 placeholders (11 files) + C5 spec consistency (10 invariant patterns, 5 docs).
+- Planted-violation tests for both new invariants caught their patterns and restored clean.
+- Zero false positives against current active doc set (pre-checked via raw greps before adding to linter).
+
+### Spec
+
+- **B-029 Rule field** extended to describe Invariants B + C with rationale ("structural prevention vs shipped-bug bar — minor exception when a regression-class boundary is settled by a B block/D entry").
+- No new B blocks. No new D entries.
+
+### What didn't change
+
+- C4 regions (gate-clause / proposal-format / bare-gogogo / env-metadata-contract) — unchanged.
+- Other linter scripts — unchanged.
+- Active doc prose — unchanged. This is pure linter-extension; no doc edits.
+
+### Next in 5-commit sequence
+
+Commit 3 of 5 (v1.29.2) — Phase 2.2: trim low-value duplication outside C4 regions. Conservative audit; collapse explanatory repetition where safety doesn't require duplication.
+
 ## v1.29.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.29.0. **Phase 3.2 of the Codex improvement plan (B-029 + D-014): close v1.26.1 + v1.26.2 regression classes via two new automation surfaces — URL-fragment validation + narrow forbidden-phrase spec-consistency checker.** Minor bump (notable new automation).
