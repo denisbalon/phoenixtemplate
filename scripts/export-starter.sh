@@ -40,6 +40,7 @@ ROOT_DOCS=(
   "DEPLOY_BASELINE.md"
   "HARNESS_QUIRKS.md"
   "WORKFLOW.md"
+  "BOOTSTRAP.md"
 )
 
 for doc in "${ROOT_DOCS[@]}"; do

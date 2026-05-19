@@ -6,6 +6,85 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.26.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.26.0. **Final commit of the PROJECT_STARTER.md split sequence (3 of 3).** Extracts `BOOTSTRAP.md` and reduces PROJECT_STARTER.md to a thin index. The split sequence that started at v1.22.0 is complete: from a single 1121-line monolith to a thin 75-line index pointing at 5 focused companion files.
+
+### What shipped
+
+A new `BOOTSTRAP.md` (~250 lines) at meta-repo root containing:
+
+- The "About this kit" scope statement (was `§0.1 Current scope`).
+- A "Reading order" guide (was `§0.2`, now adapted to point at BOOTSTRAP.md itself as the starting point).
+- The complete Bootstrap checklist (was `§1.1`–`§1.10`): pick names, init git, copy templates, initial VERSION, GitHub repo, branch protection, repo merge settings, auto-memory seed, first commit, verify.
+- The "Decisions to answer before writing feature code" Q&A list (was `§5.1`–`§5.10`): stack, process model, database, hosting, backups, module layout, CI strategy, secrets store, observability, deploy frequency.
+
+Section numbers inside BOOTSTRAP.md are dropped — top-level concepts get `##` headings, subsections get `###`. Section-anchored internal cross-references updated: `§2 Process` references retargeted to `WORKFLOW.md`; `§10 auto-memory seed` reference retargeted to "WORKFLOW.md → Recommended auto-memory seed"; `§1.6 branch protection` cross-reference within BOOTSTRAP.md changed to "Branch protection on `main`" by-name reference (same file).
+
+### PROJECT_STARTER.md changes
+
+Drops from 436 lines to 75 lines. All stub-pointer sections from earlier split commits (`## 2.` through `## 14.`) are gone — they were intermediate state. The new structure is purely:
+
+- Title + Template version + Last updated metadata
+- One-paragraph intro explaining what the kit is + thin-index purpose
+- A 5-row Docs table linking the companion files (BOOTSTRAP / WORKFLOW / TEMPLATE_INVENTORY / DEPLOY_BASELINE / HARNESS_QUIRKS) with one-line "read when" guidance per row
+- A short pointer paragraph naming `docs/spec.md`, `CHANGELOG.md`, and `templates/`
+- A reference to the export script's `ROOT_DOCS` array (the coordination mechanism)
+- The Template changelog table at the tail (the per-version diary of THIS doc per B-002; gains the v1.26.0 row)
+
+§8 Audit trail is removed entirely. Its content was either redundant (Decision log already lives in `docs/spec.md`, CHANGELOG already documents version diary, auto-memory conventions already in WORKFLOW.md's "Recommended auto-memory seed" section) or recoverable from git history (specifically the `gh pr list --search <sha>` commit-to-PR mapping tip from pre-v1.26.0 §8.1, retained in this CHANGELOG entry for findability).
+
+### Linter + tooling coordination
+
+- **`scripts/export-starter.sh`** — `ROOT_DOCS` array grows from 5 entries to 6 (adds `"BOOTSTRAP.md"`). Archive now ships 6 root docs alongside flattened templates contents.
+- **`scripts/check-doc-references.sh`** — `VIRTUAL_TEMPLATES_FILES` mirrors the addition (6 entries). Keeps the two arrays in sync per B-025's coordination requirement.
+- **`scripts/check-rule-consistency.sh`** — unchanged (`FILES` array still targets `WORKFLOW.md` first; C4 regions don't move in this commit).
+
+### Cross-reference updates
+
+- **`README.md`** — three sites retargeted from `PROJECT_STARTER.md` section anchors to `BOOTSTRAP.md`:
+  - Top of file: "Current shipped scope" link → `BOOTSTRAP.md` (was `PROJECT_STARTER.md §0.1`).
+  - Quickstart paragraph: "Then follow [...]" → `BOOTSTRAP.md` (was `PROJECT_STARTER.md §1` "Bootstrap checklist").
+  - Docs table: gains a `BOOTSTRAP.md` row between PROJECT_STARTER.md and WORKFLOW.md.
+  - Known Limitations: the "PROJECT_STARTER.md split is in progress" bullet is removed entirely — split sequence complete, no longer a limitation.
+- **All `PROJECT_STARTER.md §X` URL anchors in the docs are now non-functional** (the §-numbered sections don't exist anymore). The doc-reference linter doesn't flag this because it only checks file existence, not anchor presence — file targets all still resolve. Section-anchored deep links from outside the repo (if any) would 404 to that anchor but render the thin index page; the page's docs table provides the redirect.
+
+### Spec updates
+
+- **B-025 Rule** rewritten to "v1.26.0, the meta-repo root ships PROJECT_STARTER.md (now a thin ~40-line index) plus five companion docs" and adds BOOTSTRAP.md as the final entry. The "PROJECT_STARTER.md retains §0 / §1 / §5 / §8 / Template changelog" sentence updates to "PROJECT_STARTER.md retains only the entry-point index + Template changelog tail" with an audit-trail note explaining §8's removal.
+- **B-025 rationale** stub-pointer convention prose updated to "earlier intermediate-state stubs ... served their purpose during the split but are gone as of v1.26.0 — PROJECT_STARTER.md is now a clean thin index with a docs table replacing the §-numbered navigation." Version-number renumber note retained.
+- **B-025 Rationale's "Stage in three commits"** bullet updates v1.26.0 description to past tense and notes the split sequence is complete.
+- **B-025 Test field** tar-grep extended from 5-file to 6-file match (adds `BOOTSTRAP`); `wc -l PROJECT_STARTER.md` expected value updates from ~435 to ~75.
+- **B-025 Status** updates to "frozen (v1.26.0 — all five planned companion files shipped: TEMPLATE_INVENTORY, DEPLOY_BASELINE, HARNESS_QUIRKS, WORKFLOW, BOOTSTRAP). The PROJECT_STARTER.md split sequence is complete."
+- No new B blocks. No new D entries.
+
+### What stays unchanged
+
+- C4 linter REGIONS array (`gate-clause`, `proposal-format`, `bare-gogogo`) and its first FILES entry (`WORKFLOW.md`). The gate-rule machinery is untouched.
+- B-001 / B-002 / B-027 / etc. — all unchanged. PROJECT_STARTER.md still has the template version line per B-002.
+- The 5-step workflow, gate carve-outs, refuse-list, every other invariant.
+
+### Verified
+
+- All three linters green: C4 rule-consistency (3 regions byte-exact), C2 doc-references (74 links across 24 files), C3 placeholders (11 files clean — BOOTSTRAP.md adds a new file to the scope).
+- Archive `tar -tzf` confirms BOOTSTRAP.md at the staged top level alongside the 5 existing root docs.
+- Smoke test (template instantiates end-to-end) passes.
+
+### Result of the split sequence (v1.22.0 → v1.26.0)
+
+| Pre-split (PROJECT_STARTER.md monolith) | Post-split (5 companions + thin index) |
+|---|---|
+| 1 file, 1121 lines | 6 files, ~75 + 250 + 530 + ~115 + ~155 + ~70 = ~1195 lines total |
+| All concerns in one place — navigation by `Ctrl-F` on section number | One file per concern — navigation by docs table at PROJECT_STARTER.md |
+| Section numbers binding (§2 / §10 / etc.) | Concept names binding (`WORKFLOW.md` / "Recommended auto-memory seed") |
+| Single-file source of truth for AI rule regions (C4 linter) | First C4 tier = `WORKFLOW.md` (retargeted v1.25.0) |
+
+Total lines went up slightly (≈74 net) due to per-file preambles + duplicated metadata; that's the cost of focused docs. The payoff is each file fits the concern; updates touch only the relevant doc; reviewers can hold the whole thing in their head.
+
+### Next
+
+- No imminent roadmap commit. Possible follow-ups: bootstrap.sh placeholder substitution (the "Placeholder substitution is manual" item from README's earlier Known Limitations — removed in this release but the underlying gap remains); multi-preset architecture (D-009 roadmap item: Node/Go/no-runtime); product boundary statement (`docs/spec.md` open items). Wait for user direction.
+
 ## v1.25.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.25.0. **Extract `WORKFLOW.md` from PROJECT_STARTER.md** — the 2-of-3 commit of the original split sequence (third one is the BOOTSTRAP.md extraction queued as v1.26.0). The risky one: this is the commit that moves the C4-anchored rule regions, so the linter retarget had to land in the same commit.
