@@ -409,6 +409,35 @@ The change is in-spec (the C4 region carries the emoji) rather than presentation
 
 **Decision:** D-019
 
+### Block B-038: forbid null-action options in proposals
+
+**Rule:** Every numbered option in a `Choose one:` or `Choose any (in order):` proposal must represent a real action — code change, information lookup, navigation, or continued discussion. Null-action options are forbidden. Concrete forbidden phrasings include (non-exhaustive):
+
+- "Stop here"
+- "Wait"
+- "Pick up later"
+- "Wrap up"
+- "Do nothing"
+- "Decide later"
+- "Skip / handle later"
+- Any option whose action is "the user takes no further action" or "the conversation ends"
+
+If the user wants to do nothing, they can simply not respond — they don't need a numbered option for it. Null options dilute the gate signal (each option carries equal visual weight; null options claim weight without surfacing real choice) and add visual clutter.
+
+**Carve-out:** options to continue discussion, surface more information, ask clarifying questions, or refine the plan before action ARE real actions (they're `[info]`-class — read-only, no `gogogo!` needed) and stay. The distinction is: a real action moves the conversation forward concretely; a null action just terminates without progressing. "Discuss the blast-radius question more — give me a recent example" is a real `[info]` action (continues discussion productively); "stop here for now" is a null action (terminates without producing anything).
+
+This rule refines B-027 (every assistant message ends with a concrete proposal when there's a path to surface) and B-028 (per-option `[change]` / `[info]` classification). B-027 says proposals SHOULD end every message when there's a path; B-028 classifies the options. B-038 adds: every option in those proposals must itself be a real path, not a null filler.
+
+**Rationale:** Observed pattern across the session ending v1.34.0: many proposals included a trailing "stop here" / "pick up later" / "leave it open" / "wrap for now" option. User flagged it as "silly and redundant" — and they're right. The option adds zero choice: the user already has the implicit option to not respond, close the terminal, or steer in a completely different direction. Making "do nothing" a numbered choice doubles the action surface for no benefit, trains the user to ignore a third of every list, and dilutes the corrective swing back to clear authorization scope that B-028 was designed to restore.
+
+The forbidden-phrasings list is non-exhaustive deliberately — the test isn't "does the phrasing match the list" but "does this option move the conversation forward concretely or just terminate." Wording variants of "do nothing" remain forbidden whether or not they appear in the literal list.
+
+**Test:** manual — across the next N proposals after v1.35.0 ships, no proposal contains an option whose action is "do nothing" / "wait" / "stop here" / etc. Planted-violation test (subjective): if a proposal lists 3 options and one of them is essentially "the user takes no further action," the rule fires and the option is dropped before the proposal goes out.
+
+**Status:** frozen
+
+**Decision:** D-020
+
 ### Block B-030: preset architecture — `_common/` shared layer + `presets/<preset>/` specific layer
 
 **Rule:** When multi-preset support actually ships (not as of v1.30.0 — design only), the meta-repo's currently-flat `templates/` directory will be reorganized into two layers: `_common/` (stack-agnostic content shared across all presets — workflow docs, gate trio with C4 anchored regions, spec-block format, review rubric, env-bootstrap core, Karpathy rules, changelog conventions, meta scaffolding) and `presets/<preset-name>/` (stack-specific content — Makefile, CI workflow, deploy script, runtime pin, project metadata file, sample source tree, sample smoke test, setup-doc prereqs). A bootstrapped project = `_common/` contents flattened with one chosen `presets/<chosen>/` contents at the project root. Constraints: (1) single preset per project — mixed-preset out of scope; (2) no file conflicts between layers — each file has exactly one owner; (3) uniform placeholders — the B-024 canonical placeholder set works the same way across all presets; (4) C4 regions live in `_common/` — the byte-exact rule statements are stack-agnostic and don't get re-declared per preset. Design doc: `presets/PRESET_ARCHITECTURE.md`. **No implementation as of v1.30.0** — `_common/` and `presets/python-uv/` directories don't exist; `templates/` is unchanged; the design is the deliverable. Future implementation commits will create the directories, move files appropriately, update `scripts/export-starter.sh` to compose by preset, and update `scripts/smoke-test.sh` to test per-preset.
@@ -825,6 +854,33 @@ Refines / extends B-016 (live doc references resolve to shipped files or are exp
 - **Binary-vocabulary lock-in.** Shipping the binary-with-emojis sets a UX precedent that may make expanding to `[risky]` harder later (would need new emoji + harmonizing visual system). Mitigation: explicit option to revisit binary in future B-NNN; D-019 records that the expansion question was considered + deferred, so the future-revisit has documented starting points.
 
 **Implemented in:** v1.34.0. Touches: the C4 `proposal-format` region across WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md (byte-exact; B-022 linter verified green after the edit); `docs/spec.md` (B-037 added — frozen; this D-019 entry added). No script changes; no manifest changes; no behavior changes beyond visual marker presentation. C5 spec-consistency linter green — emoji prefix doesn't trigger any forbidden-phrase pattern. Smoke test pre-flight green — C4-region content still well above 100 non-blank-char threshold.
+
+### D-020 (2026-05-19) Forbid null-action options in proposals (B-038)
+
+**Chose:** (a) **forbid entirely** at the spec level (C4 region edit + B-038 freezes the rule); (b) **kit-scope** (matches B-036 / B-037 precedent on `improvements-4`); (c) **non-exhaustive forbidden-phrasings list** (lists the common offenders but the test is intent — "does this option move the conversation forward concretely or just terminate" — not literal phrase match).
+
+**Considered:**
+- **(a) Forbid entirely** (chosen) — null-action options are forbidden by the spec; the C4 region carries the rule; the C4 linter (B-022) keeps the rule synced across the trio.
+- **(b) Allow but discourage in prose** — keep the option open with a "prefer not to include" note in CLAUDE.md. Pro: less restrictive. Con: the rule wouldn't fire reliably; the entire point of the spec change is to make "no null options" an enforced norm, not a vibe.
+- **(c) Add a third option type `[pass]` or `[skip]`** — formalize the "do nothing" semantics with its own marker. Pro: makes the null choice explicit and uniform when it does appear. Con: contradicts D-019's stay-binary decision (which explicitly kept the vocabulary at `[change]` / `[info]` to preserve B-028's corrective swing back to clear authorization scope); makes the dilution problem worse, not better.
+
+**Why (a) wins:** the user observation that motivated this block — "silly and redundant" — was specifically about the null options taking up visual weight without surfacing choice. The fix must be a real prohibition, not a soft preference. Forbid-entirely is the only shape that delivers the no-null-options outcome reliably. Codifying the rule in the C4 region ties it to the byte-exact-enforced trio so it can't drift across the doc tiers.
+
+**Why kit-scope:** matches B-036 (v1.33.0) + B-037 (v1.34.0) precedent on `improvements-4`. Every project that adopts the kit benefits; the cost is one-time C4-region edit + spec block.
+
+**Why non-exhaustive forbidden list:** the failure mode is "options that just terminate without progressing the conversation" — any phrasing variant of "do nothing" is forbidden, not just the literal list. Closed list would invite bypass-by-rewording ("hold off for now" / "park this" / etc. would technically not match a closed list but would clearly violate the spirit). The intent-test ("does this move the conversation forward?") is what the rule actually checks; the listed phrasings are anchors for common cases.
+
+**Failure-mode analysis:**
+
+- **Over-restriction on legitimate "no action" guidance.** Sometimes the right answer IS "nothing here needs to happen now." Mitigation: if the right answer is no-op, the assistant message can simply not include a proposal at all (per B-027's refinement — pure discussion turns where no list-of-paths fits naturally can end without a trailing proposal). The rule forbids the null option, not the null situation. The agent's job is to recognize "there's nothing concrete to propose" and either say so plainly or surface a continued-discussion option, not to pad with a fake "stop here" option.
+
+- **Carve-out wording confusion.** "Continue discussion" vs "stop here" can blur — both sound like "no further state change happens now." Mitigation: the test is "does this option move the conversation forward concretely?" Continue-discussion does (it produces more substantive content next turn); stop-here doesn't (it's just an exit). If an option's action is "the user gets nothing new and the conversation ends," it's forbidden. If its action is "the user gets more information / a refinement / a clarification," it's fine.
+
+- **The rule applies to the agent, not the user.** The user remains free to type "stop" / "wait" / "let's leave it" / etc. at any time — those are user-side directives, not agent-proposed options. The rule constrains what the agent surfaces, not what the user can request.
+
+- **No linter coverage.** Like B-036 (web-search-before-iterate), this is an agent-behavior runtime rule with no static-analysis surface. Mitigation: spec-consistency linter could grow an Invariant that flags forbidden phrasings in active docs that describe the proposal format (e.g., catch a regression that re-adds "stop here for now" as an example to the C4 region). Deferred — D-014 bar ("we've shipped this exact bug already") would need to be met first by a regression that actually shipped.
+
+**Implemented in:** v1.35.0. Touches: C4 `proposal-format` region across WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md (byte-exact; B-022 linter verified green); `docs/spec.md` (B-038 added — frozen; this D-020 entry added). No script changes; no linter changes; no manifest changes. Refines B-027 (proposal-when-path-to-surface) + B-028 (per-option classification).
 
 ## Open project-level decisions
 
