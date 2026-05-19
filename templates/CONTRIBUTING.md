@@ -2,7 +2,7 @@
 
 Binding process document. Read once; revisit when conventions feel off.
 
-**Canonical scope (per B-021 in `docs/spec.md`):** this file is the canonical source for the **per-project operational workflow** — exact commands, sequences, project-specific paths, deploy specifics, version markers per stack. The **core workflow rules + rationale** (the *why* behind the gate, the verbs, the 5-step structure) live canonically in `PROJECT_STARTER.md §2` — this file references them rather than re-deriving them. The **session-facing AI summary** is `CLAUDE.md`. Rule statements (verb table, gate clause, bare-gogogo prompt, allowed-without-gate list, refuse-list) are deliberately duplicated here, in `CLAUDE.md`, and in `PROJECT_STARTER.md §2` — that's defensive AI-safety redundancy, not debt. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (Codex plan Phase 3 #3, pending) catches drift automatically once shipped.
+**Canonical scope (per B-021 in `docs/spec.md`):** this file is the canonical source for the **per-project operational workflow** — exact commands, sequences, project-specific paths, deploy specifics, version markers per stack. The **core workflow rules + rationale** (the *why* behind the gate, the propose-and-confirm semantics, the 5-step structure) live canonically in `PROJECT_STARTER.md §2` — this file references them rather than re-deriving them. The **session-facing AI summary** is `CLAUDE.md`. Rule statements (gate clause, proposal format, bare-gogogo prompt, allowed-without-gate list, refuse-list) are deliberately duplicated here, in `CLAUDE.md`, and in `PROJECT_STARTER.md §2` — that's defensive AI-safety redundancy, not debt. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (`scripts/check-rule-consistency.sh`) catches drift automatically.
 
 ## Quick rules cheat-sheet
 
@@ -11,8 +11,8 @@ Binding process document. Read once; revisit when conventions feel off.
 | Need to start work | New branch off `main`, push branch immediately |
 | Made a commit | Push to origin same turn — no exceptions |
 | Touched any tracked `.md` | Commit it AND push (machine-swap survival) |
-| User says `PR gogogo!` / `ready gogogo!` | `gh pr create` with HEREDOC body |
-| User says `merge gogogo!` | `gh pr merge <PR#> --rebase --delete-branch` |
+| User `gogogo!`s a PR-open proposal | `gh pr create` with HEREDOC body |
+| User `gogogo!`s a merge proposal | `gh pr merge <PR#> --rebase --delete-branch` |
 | `--rebase` refuses | Rebase the feature branch with `--force-with-lease`, retry merge |
 | Anything ambiguous | Ask. Never `--force` without explicit OK. |
 
@@ -41,14 +41,14 @@ Binding process document. Read once; revisit when conventions feel off.
 
 ## TL;DR
 
-1. Topic branch from `main`. Push branch immediately on `git checkout -b`. Branch persists across many `<verb> gogogo!`s.
-2. **No state-mutating action without `<verb> gogogo!` in the current user message.** Verb specifies *what*, `gogogo!` is the trigger. Bare `gogogo!` (no verb) is ambiguous — ask for the verb.
-3. On `code gogogo!` (or any feature-commit verb: `feat/fix/chore/docs/refactor/test/perf/ship`), atomic 5-step: **spec → bump+CHANGELOG → code → commit → deploy**. Push after every commit.
+1. Topic branch from `main`. Push branch immediately on `git checkout -b`. Branch persists across many `gogogo!`s.
+2. **No state-mutating action unless Claude's immediately preceding message contained a concrete proposal AND the user's current message contains `gogogo!` (or `N gogogo!` for a numbered choice).** The proposal IS the contract — specific files, specific commands, specific commits. Bare `gogogo!` without a preceding proposal is invalid — Claude must ask for clarification.
+3. When the user `gogogo!`s a 5-step feature proposal, the atomic sequence is: **spec → bump+CHANGELOG → code → commit → deploy**. Push after every commit. The proposal enumerates each step upfront so one `gogogo!` authorizes the whole sequence.
 4. Every change bumps `VERSION`. ANY change.
-5. PR opens only on `PR gogogo!` / `ready gogogo!` / `open PR gogogo!`. Body uses `## Summary` + `## Test plan`.
-6. Review happens **out-of-band** in a separate session — user runs any reviewer (Codex, `/ultrareview`, another LLM, manual) against `docs/pr_review_instructions.md` and the open PR. Claude does not dispatch reviewers. Address feedback with more `<verb> gogogo!`s on the same branch.
-7. On `merge gogogo!`: `gh pr merge --rebase --delete-branch`.
-8. Deploy on every commit to `main` (or explicitly via `deploy gogogo!`).
+5. PR opens only when the user `gogogo!`s a PR-open proposal. Body uses `## Summary` + `## Test plan`.
+6. Review happens **out-of-band** in a separate session — user runs any reviewer (Codex, `/ultrareview`, another LLM, manual) against `docs/pr_review_instructions.md` and the open PR. Claude does not dispatch reviewers. Address feedback with more `gogogo!`-authorized commits on the same branch.
+7. When the user `gogogo!`s a merge proposal: `gh pr merge --rebase --delete-branch`.
+8. Deploy on every commit to `main` (or as part of a deploy proposal the user explicitly `gogogo!`s).
 
 ---
 
@@ -126,14 +126,14 @@ BODY
 
 ## 4. Review
 
-**PR review is out-of-band.** Claude opens the PR on `PR gogogo!`; everything after that happens in a separate session with whatever reviewer the user picks. The project ships no reviewer-specific wiring — no skill, no Makefile target, no `review gogogo!` verb. The rubric and output contract in [`docs/pr_review_instructions.md`](docs/pr_review_instructions.md) are **reviewer-agnostic**: same rubric whether the reviewer is Codex CLI, `/ultrareview`, another LLM, or a human reading the diff.
+**PR review is out-of-band.** Claude opens the PR after a `gogogo!`-authorized PR-open proposal; everything after that happens in a separate session with whatever reviewer the user picks. The project ships no reviewer-specific wiring — no skill, no Makefile target, no review proposal flow. The rubric and output contract in [`docs/pr_review_instructions.md`](docs/pr_review_instructions.md) are **reviewer-agnostic**: same rubric whether the reviewer is Codex CLI, `/ultrareview`, another LLM, or a human reading the diff.
 
-Workflow after `PR gogogo!`:
+Workflow after the PR is opened:
 
 1. Open whichever reviewer you prefer in a separate terminal/session.
 2. Point it at `docs/pr_review_instructions.md` and the open PR.
 3. Reviewer posts per-commit comments via `gh` (or its native PR-comment integration). You approve each shell call if the reviewer asks (interactive reviewers like Codex CLI do; CI-driven ones don't).
-4. Return to Claude. Address feedback with more `<verb> gogogo!`s on the same branch.
+4. Return to Claude. Address feedback with more `gogogo!`-authorized commits on the same branch.
 
 **Independence beats deepening.** A reviewer with fresh context and ideally a different model family catches what the original missed. Pick reviewers accordingly; run them serially, not in parallel.
 

@@ -6,6 +6,45 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.23.1 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.23.1. **Sweep stale verb references left over from v1.23.0.** Pure doc cleanup — no rule changes, no spec changes. The v1.23.0 CHANGELOG entry explicitly announced this as the v1.23.1 follow-up.
+
+### What was swept (6 files)
+
+- **`templates/CONTRIBUTING.md`**:
+  - Cheat-sheet table rows 14-15: `User says \`PR gogogo!\` / \`ready gogogo!\`` → `User \`gogogo!\`s a PR-open proposal`; `User says \`merge gogogo!\`` → `User \`gogogo!\`s a merge proposal`.
+  - TL;DR sequence (lines 44-51): each item references verbs (`<verb> gogogo!`, `code gogogo!` + `feat/fix/chore/...`, `PR gogogo!`, `merge gogogo!`, `deploy gogogo!`); rewritten to propose-and-confirm phrasing. Item 2 now reads "No state-mutating action unless Claude's immediately preceding message contained a concrete proposal AND the user's current message contains `gogogo!` (or `N gogogo!` for a numbered choice). The proposal IS the contract — specific files, specific commands, specific commits. Bare `gogogo!` without a preceding proposal is invalid — Claude must ask for clarification."
+  - Review section (lines 129, 131, 136): "Claude opens the PR on `PR gogogo!`" → "Claude opens the PR after a `gogogo!`-authorized PR-open proposal"; "Workflow after `PR gogogo!`" → "Workflow after the PR is opened"; "no `review gogogo!` verb" → "no review proposal flow"; "more `<verb> gogogo!`s" → "more `gogogo!`-authorized commits".
+  - Canonical-scope marker (line 5): "the *why* behind the gate, the verbs, the 5-step structure" → "the *why* behind the gate, the propose-and-confirm semantics, the 5-step structure"; rule-statement list "(verb table, gate clause, bare-gogogo prompt, allowed-without-gate list, refuse-list)" → "(gate clause, proposal format, bare-gogogo prompt, allowed-without-gate list, refuse-list)"; C4 linter note "Codex plan Phase 3 #3, pending" → "`scripts/check-rule-consistency.sh`" (the linter has shipped since v1.19.0).
+- **`templates/docs/pr_review_instructions.md`** line 5: "Claude opens the PR (`PR gogogo!`)" → "Claude opens the PR after a `gogogo!`-authorized PR-open proposal".
+- **`PROJECT_STARTER.md`** §2 canonical-scope marker (line 193, the line just BEFORE the rewritten §2.1 — the gate region itself was rewritten in v1.23.0, but the preceding scope marker still carried verb-era prose): "gate semantics, action verbs, 5-step structure" → "gate semantics, propose-and-confirm contract, 5-step structure"; "(verb table, gate clause, ...)" → "(gate clause, proposal format, ...)"; "C4 consistency linter (Codex Phase 3 #3, pending)" → "C4 consistency linter (`scripts/check-rule-consistency.sh`)".
+- **`CONTRIBUTING.md`** (meta root): line 7 "(gate, action verbs, 5-step, ...)" → "(the propose-and-confirm `gogogo!` gate, 5-step, ...)"; line 25 "C4 consistency linter (Codex plan Phase 3 #3, pending)" → "C4 consistency linter (`scripts/check-rule-consistency.sh`)".
+- **`README.md`** two-layer table (line 13): "`gogogo!` passphrase gate + action-verb workflow, 5-step atomic..." → "`gogogo!` passphrase gate with propose-and-confirm semantics (Claude proposes concretely, user `gogogo!`s the proposal), 5-step atomic...".
+- **`docs/spec.md`** B-010 Rule field (line 57): "no skill, no Makefile target, no verb, no reminder" → "no skill, no Makefile target, no review-specific proposal flow, no reminder"; "After `PR gogogo!`, the user opens whichever reviewer..." → "After Claude opens the PR (per a `gogogo!`-authorized PR-open proposal), the user opens whichever reviewer...". B-010's rule itself (PR review is out-of-band and reviewer-agnostic) is unchanged — only the prose mentions of a now-defunct verb concept.
+
+### What stays untouched (intentional audit trail)
+
+- **`CHANGELOG.md`** rows for v1.0 through v1.22.0 — all historical changelog entries describing how the project evolved through the verb era. Past-tense by construction.
+- **Template-changelog rows in `PROJECT_STARTER.md`** for past versions — same.
+- **`docs/spec.md` historical-superseded section** (B-001, B-006, B-007, B-008, B-009, B-011, B-013, B-018) — each block is preserved as the rule that WAS in force at some prior version, with a supersession status note. Modifying their content would corrupt the audit trail.
+- **`docs/spec.md` decision-log Chose/Considered/Why fields** for D-001 through D-009 — past decisions are preserved verbatim (per the decision-log convention at the top of the section: "Decisions live forever in the repo"). D-004's status note at the top points at D-010; the original Chose/Considered/Why stays as the historical record.
+- **Active block content in B-021 / B-022 / B-026 / D-010** that legitimately describes the v1.23.0 transition (e.g. "The `verb-table` region was retired in v1.23.0 when B-026 replaced the verb-prefix gate model") — this is current-state context, not stale prose. The references to "verbs" / "verb table" / "action verb" in these blocks are about the model being SUPERSEDED, not the current one.
+
+### What's NOT in this commit (deliberately)
+
+- No spec changes — no new B blocks, no decision-log entries. The rules from v1.23.0 are unchanged; only prose that hadn't caught up gets the update.
+- No changes to the linter scripts or CI wiring.
+- No structural reorganization (the `PROJECT_STARTER.md` split sequence continues separately at v1.22.1 / v1.22.2 for WORKFLOW.md and BOOTSTRAP.md).
+
+### Verified locally
+
+- All three linters green: C4 rule-consistency (3 regions byte-exact across the doc trio — unchanged from v1.23.0), C2 doc-references (links still resolve), C3 placeholders (no canonical placeholders leaked into prose).
+
+### Next
+
+- **v1.22.1 (`refactor gogogo!`):** Extract `WORKFLOW.md` from `PROJECT_STARTER.md` §2 + §9 + §10 + §11. Coordinates with the C4 linter's `FILES` array (target shifts from `PROJECT_STARTER.md` to `WORKFLOW.md`). Updates B-021's tier table to drop the `(post-split: WORKFLOW.md)` parenthetical. Adds `WORKFLOW.md` to `ROOT_DOCS` + `VIRTUAL_TEMPLATES_FILES`. This is the queued 2 of 3 from the PROJECT_STARTER.md split sequence.
+
 ## v1.23.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.23.0. **Gate model rewrite — most invasive change in this project's history.** The verb-prefix gate (`feat gogogo!`, `commit gogogo!`, `merge gogogo!`, etc.) is replaced by propose-and-confirm. Triggered by user feedback that the verb system put cognitive burden on the user (remember nine verbs, remember mapping) while only encoding action TYPE, not action SCOPE — a `commit gogogo!` could commit anything Claude had staged. The new model inverts that.
