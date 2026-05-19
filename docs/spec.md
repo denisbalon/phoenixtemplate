@@ -271,6 +271,28 @@ The bar set by B-014 + B-029 ("driven by known failure modes, not broad coverage
 
 **Decision:** — (no new D entry; B-031 is execution of Phase 3.3 under the framework set by B-014 + B-029)
 
+### Block B-032: machine-readable template manifest
+
+**Rule:** `templates/manifest.yaml` (repo root, ships in `templates/`) declares every file the kit either exports to a consumer project or maintains in the meta-repo. Each entry is a YAML map under the top-level `files:` sequence with these fields:
+
+| Field | Type | Required | Purpose |
+|---|---|---|---|
+| `path` | string | yes | Path relative to the meta-repo root. |
+| `purpose` | string | yes | One-line description of what the file is for. |
+| `tier` | enum | yes | One of `common` (stack-agnostic; lands in future `_common/` per B-030), `python-preset` (stack-specific to Python/uv/FastAPI/VPS; lands in future `presets/python-uv/`), or `meta-only` (lives only in the meta-repo — linters, smoke-test, export-starter — and never ships to a consumer project). |
+| `placeholders` | list[string] | yes | Canonical placeholder names (B-024 set: `package_name`, `PACKAGE_NAME`, `PROJECT_NAME`, `PROJECT_SLUG`, `GITHUB_USER`, `HOST`, `DOMAIN`, `PROJECT_DESCRIPTION`, `COPYRIGHT_HOLDER`, `YEAR`) that appear in the file as `<NAME>` and are substituted by consumers at bootstrap. Listed without angle brackets. Empty list if the file consumes none. Illustrative angle-bracket syntax in prose (`<METHOD>`, `<N>`, `<CMD>`, `<DEPLOY_CMD>`, etc. — anything outside the B-024 set) is intentionally NOT tracked; the placeholder-leak linter (B-024) already enforces that distinction. |
+| `exported_by_starter` | bool | yes | `true` if `scripts/export-starter.sh` includes the file in the portable archive (all `templates/` contents plus the `ROOT_DOCS` array); `false` for `meta-only` entries. |
+
+The manifest covers three categories: (a) the six root docs in `scripts/export-starter.sh`'s `ROOT_DOCS` array (PROJECT_STARTER.md, WORKFLOW.md, BOOTSTRAP.md, TEMPLATE_INVENTORY.md, DEPLOY_BASELINE.md, HARNESS_QUIRKS.md), (b) every file under `templates/`, and (c) every meta-only script under `scripts/` (the linter set + export-starter + smoke-test). Adding a new file in any of these locations requires appending an entry to the manifest in the same commit; the B-033 linter fails otherwise. The manifest format itself is intentionally simple — no nested structures beyond inline lists — so a bash `awk` parser is enough; no YAML library dependency.
+
+**Rationale:** Phase 4.1 + 4.2 of the Codex improvement plan. `TEMPLATE_INVENTORY.md`'s human-prose table is the existing source of truth for "what ships and why," but it has three gaps: it's not machine-checkable (CI can't diff the actual file tree against the documented inventory), it doesn't carry the per-file tier classification that the future `_common/` + `presets/python-uv/` move (B-030) will need to be mechanical, and it doesn't make the placeholder consumption per file explicit. A YAML manifest with `path` + `tier` + `placeholders` + `exported_by_starter` per entry closes all three gaps in one artifact. Tier vocabulary matches B-030's layer model directly so when the file move ships, the manifest IS the move plan — each `common` entry moves to `_common/`, each `python-preset` entry moves to `presets/python-uv/`, `meta-only` stays put. Placeholder tracking enables the B-033 linter to enforce that every canonical placeholder in a file is declared in its manifest entry (catches drift where a file gains a `<PROJECT_NAME>` without manifest update). The format is YAML so humans can read it, but the schema is flat enough that a bash awk parser works — keeps the dependency story zero in line with every other check-script.
+
+**Test:** manual (this commit) — `templates/manifest.yaml` exists and parses as YAML (round-trip via `python -c "import yaml; yaml.safe_load(open('templates/manifest.yaml'))"` succeeds); every entry has the five required fields; every `path` resolves to an existing file. Automated test ships in v1.31.1 with B-033's `scripts/check-manifest.sh`.
+
+**Status:** frozen
+
+**Decision:** —
+
 ### Block B-030: preset architecture — `_common/` shared layer + `presets/<preset>/` specific layer
 
 **Rule:** When multi-preset support actually ships (not as of v1.30.0 — design only), the meta-repo's currently-flat `templates/` directory will be reorganized into two layers: `_common/` (stack-agnostic content shared across all presets — workflow docs, gate trio with C4 anchored regions, spec-block format, review rubric, env-bootstrap core, Karpathy rules, changelog conventions, meta scaffolding) and `presets/<preset-name>/` (stack-specific content — Makefile, CI workflow, deploy script, runtime pin, project metadata file, sample source tree, sample smoke test, setup-doc prereqs). A bootstrapped project = `_common/` contents flattened with one chosen `presets/<chosen>/` contents at the project root. Constraints: (1) single preset per project — mixed-preset out of scope; (2) no file conflicts between layers — each file has exactly one owner; (3) uniform placeholders — the B-024 canonical placeholder set works the same way across all presets; (4) C4 regions live in `_common/` — the byte-exact rule statements are stack-agnostic and don't get re-declared per preset. Design doc: `presets/PRESET_ARCHITECTURE.md`. **No implementation as of v1.30.0** — `_common/` and `presets/python-uv/` directories don't exist; `templates/` is unchanged; the design is the deliverable. Future implementation commits will create the directories, move files appropriately, update `scripts/export-starter.sh` to compose by preset, and update `scripts/smoke-test.sh` to test per-preset.

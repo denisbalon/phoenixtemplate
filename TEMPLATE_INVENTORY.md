@@ -2,6 +2,8 @@
 
 What ships in `templates/` and the standard project file layout. Extracted from `PROJECT_STARTER.md` in v1.22.0 as part of the doc split (Codex Phase 4 #2). Read this when you're orienting on the template repo or copying skeleton files into a new project.
 
+**Machine-readable companion (v1.31.0+):** [`templates/manifest.yaml`](templates/manifest.yaml) is the authoritative inventory — every shipped file plus meta-only scripts, with per-entry `tier` (`common` / `python-preset` / `meta-only`), `placeholders` consumed, and `exported_by_starter` flag. Linted by `scripts/check-manifest.sh` (B-033) on every push/PR. This doc keeps the human-readable narrative + the templates-reference table below; the manifest is the source of truth for tooling.
+
 ---
 
 ## Structure (file/folder layout)

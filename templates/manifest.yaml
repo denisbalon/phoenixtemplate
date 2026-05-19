@@ -1,0 +1,279 @@
+# Template manifest — machine-readable inventory of every file the kit ships
+# or maintains, with its purpose, tier (per presets/PRESET_ARCHITECTURE.md),
+# canonical placeholders consumed (per B-024), and whether it lands in the
+# exported archive produced by scripts/export-starter.sh.
+#
+# Spec: B-032 in docs/spec.md (added v1.31.0).
+# Linter: scripts/check-manifest.sh (B-033, v1.31.1) enforces no-orphans,
+# no-stale-entries, and placeholders-match against this file.
+#
+# Tier vocabulary:
+#   common         — stack-agnostic; lands in future _common/ per B-030.
+#   python-preset  — stack-specific to Python/uv/FastAPI/VPS; lands in
+#                    future presets/python-uv/ per B-030.
+#   meta-only      — lives only in the meta-repo (linters, smoke-test,
+#                    export-starter); never ships to a consumer project.
+#
+# Placeholder names are listed without angle brackets. Only canonical
+# placeholders (the B-024 set scanned by scripts/check-placeholders.sh)
+# count — illustrative angle-bracket syntax in prose (`<METHOD>`, `<N>`,
+# `<CMD>`, `<DEPLOY_CMD>`, etc.) is intentionally not tracked.
+
+files:
+
+  # ----- Root-exported docs (live at meta-repo root; shipped to consumers
+  # via scripts/export-starter.sh ROOT_DOCS array) -------------------------
+
+  - path: PROJECT_STARTER.md
+    purpose: thin entry-point index pointing at companion docs (D-012)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: WORKFLOW.md
+    purpose: canonical workflow + gate rules + rationale (C4-anchored)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: BOOTSTRAP.md
+    purpose: zero-to-first-commit checklist + pre-feature-code decisions
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: TEMPLATE_INVENTORY.md
+    purpose: file/folder layout + copy-paste template reference table
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: DEPLOY_BASELINE.md
+    purpose: VPS deploy + CI/CD baseline + credential handling
+    tier: python-preset
+    placeholders: []
+    exported_by_starter: true
+
+  - path: HARNESS_QUIRKS.md
+    purpose: Claude Code harness gotchas + bootstrap.sh design internals
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  # ----- templates/ root files ------------------------------------------
+
+  - path: templates/README.md
+    purpose: project entry-point pitch + doc-table skeleton
+    tier: common
+    placeholders: [PROJECT_NAME]
+    exported_by_starter: true
+
+  - path: templates/CLAUDE.md
+    purpose: per-project Claude Code session conventions (C4-anchored AI tier)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/CONTRIBUTING.md
+    purpose: per-project process rules (C4-anchored operational tier)
+    tier: common
+    placeholders: [PROJECT_NAME]
+    exported_by_starter: true
+
+  - path: templates/CHANGELOG.md
+    purpose: per-version diary skeleton
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/LICENSE
+    purpose: MIT license template
+    tier: common
+    placeholders: [COPYRIGHT_HOLDER, YEAR]
+    exported_by_starter: true
+
+  - path: templates/Makefile
+    purpose: dev/test/lint/deploy targets (uv run uvicorn / pytest / ruff / mypy)
+    tier: python-preset
+    placeholders: [PROJECT_NAME, package_name]
+    exported_by_starter: true
+
+  - path: templates/pyproject.toml
+    purpose: FastAPI runtime + dev-deps + tool config (ruff/mypy/pytest)
+    tier: python-preset
+    placeholders: [PROJECT_DESCRIPTION, package_name]
+    exported_by_starter: true
+
+  - path: templates/.python-version
+    purpose: Python runtime pin (3.12)
+    tier: python-preset
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/.env.example
+    purpose: env-var schema declared via @directive metadata (B-020)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/.gitignore
+    purpose: default ignores (.env, build artifacts, virtualenvs, OS junk)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  # ----- templates/.claude/ --------------------------------------------
+
+  - path: templates/.claude/settings.json
+    purpose: gate permissions + SessionStart hook running check-env.sh
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/.claude/skills/spec-block/SKILL.md
+    purpose: spec-block authoring skill (B-NNN format per B-004)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  # ----- templates/.github/ --------------------------------------------
+
+  - path: templates/.github/workflows/ci.yml
+    purpose: per-project CI (uv sync + ruff + mypy + pytest)
+    tier: python-preset
+    placeholders: []
+    exported_by_starter: true
+
+  # ----- templates/scripts/ ---------------------------------------------
+
+  - path: templates/scripts/_env-schema-parse.sh
+    purpose: shared @directive parser (sourced by bootstrap.sh + check-env.sh)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/scripts/bootstrap.sh
+    purpose: interactive .env populator with masking + per-var validators
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/scripts/check-env.sh
+    purpose: verifies .env against .env.example via @directive parser
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/scripts/deploy.sh
+    purpose: rsync src + restart systemd unit on remote VPS + healthz curl
+    tier: python-preset
+    placeholders: [DOMAIN, HOST, PROJECT_NAME]
+    exported_by_starter: true
+
+  # ----- templates/docs/ ------------------------------------------------
+
+  - path: templates/docs/setup.md
+    purpose: first-time setup procedure (uv install + .env bootstrap)
+    tier: python-preset
+    placeholders: [PROJECT_NAME]
+    exported_by_starter: true
+
+  - path: templates/docs/spec.md
+    purpose: product-spec skeleton with Process & versioning section
+    tier: common
+    placeholders: [PROJECT_NAME]
+    exported_by_starter: true
+
+  - path: templates/docs/architecture.md
+    purpose: data flow + components + DB schema skeleton
+    tier: common
+    placeholders: [PROJECT_NAME]
+    exported_by_starter: true
+
+  - path: templates/docs/integration.md
+    purpose: external system contracts (APIs, webhooks) skeleton
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/docs/runbook.md
+    purpose: day-2 ops skeleton (deploy, logs, incidents)
+    tier: common
+    placeholders: [HOST]
+    exported_by_starter: true
+
+  - path: templates/docs/pr_review_instructions.md
+    purpose: reviewer-agnostic PR review rubric (B-010)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/docs/karpathy-claude-rules.md
+    purpose: full reference for the four standing rules in CLAUDE.md (B-003)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
+  # ----- templates/src/ + templates/tests/ ------------------------------
+
+  - path: templates/src/<package_name>/__init__.py
+    purpose: package init (FastAPI app package marker)
+    tier: python-preset
+    placeholders: [PROJECT_NAME]
+    exported_by_starter: true
+
+  - path: templates/src/<package_name>/app.py
+    purpose: minimal FastAPI app exposing /healthz endpoint
+    tier: python-preset
+    placeholders: [PROJECT_NAME]
+    exported_by_starter: true
+
+  - path: templates/tests/__init__.py
+    purpose: tests package init
+    tier: python-preset
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/tests/test_smoke.py
+    purpose: TestClient smoke asserting /healthz returns 200
+    tier: python-preset
+    placeholders: [package_name]
+    exported_by_starter: true
+
+  # ----- Meta-only tooling (lives in meta-repo only; never exported) ----
+
+  - path: scripts/export-starter.sh
+    purpose: bundles ROOT_DOCS + templates/ contents into portable archive
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false
+
+  - path: scripts/smoke-test.sh
+    purpose: instantiates template end-to-end + runs uv sync / pytest / ruff / mypy
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false
+
+  - path: scripts/check-rule-consistency.sh
+    purpose: C4 linter — byte-exact regions across the doc trio (B-022)
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false
+
+  - path: scripts/check-doc-references.sh
+    purpose: C2 linter — Markdown link targets + URL fragments (B-023, B-029)
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false
+
+  - path: scripts/check-placeholders.sh
+    purpose: C3 linter — canonical placeholder leaks in plain prose (B-024)
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false
+
+  - path: scripts/check-spec-consistency.sh
+    purpose: C5 linter — forbidden-phrase semantic-drift checker (B-029)
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false
