@@ -6,6 +6,56 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.32.4 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.32.4. **Fix Strong finding from Codex review of PR #3** — `TEMPLATE_INVENTORY.md:71` carried pre-split language describing `templates/CONTRIBUTING.md` as a "verbatim copy of `PROJECT_STARTER.md` §2 with project specifics filled in," which has been stale since v1.25.0 (`WORKFLOW.md` became canonical for the workflow) and v1.27.1 (D-012 settled `PROJECT_STARTER.md` as a permanent thin index). Reviewer flagged this as Strong on commit `06c34ea` (B-032, v1.31.0) because the newly-blessed human-readable companion to `templates/manifest.yaml` carried an inconsistent ownership claim — exactly the kind of finding B-032's tier classification was meant to prevent going forward. Commit 2 of 2 of the review-fix sequence. Patch bump per WORKFLOW.md (typical doc fix, no spec change).
+
+### What it was
+
+`TEMPLATE_INVENTORY.md:71` row for `templates/CONTRIBUTING.md`:
+
+> | `templates/CONTRIBUTING.md` | Process rules — **verbatim copy of `PROJECT_STARTER.md` §2** with project specifics filled in | `<PROJECT_NAME>`, version-marker list |
+
+Pre-v1.25.0 the workflow rules lived in `PROJECT_STARTER.md` §2 and `templates/CONTRIBUTING.md` was indeed a verbatim copy with project specifics filled in. The v1.25.0 extract (`WORKFLOW.md`) made `WORKFLOW.md` the canonical workflow doc; v1.27.1 (D-012) settled `PROJECT_STARTER.md` as a permanent thin entry-point index. B-021's three-tier model (v1.18.0) defined the relationship: WORKFLOW.md is canonical for the workflow; templates/CONTRIBUTING.md is the per-project operational tier; templates/CLAUDE.md is the session-facing AI tier. The four C4-anchored regions (gate-clause, proposal-format, bare-gogogo, env-metadata-contract) appear byte-exact in all three tiers as deliberate AI-safety redundancy; the C4 linter (B-022) enforces the byte-exactness.
+
+The TEMPLATE_INVENTORY.md row never got updated in that sequence of changes — it's been carrying pre-split language across v1.18.0 / v1.25.0 / v1.27.1 / v1.31.0 (when the manifest committed it as the human-readable companion).
+
+### The fix
+
+Row rewritten to:
+
+> | `templates/CONTRIBUTING.md` | Per-project operational process doc — carries the four C4-anchored rule statements (`gate-clause`, `proposal-format`, `bare-gogogo`, `env-metadata-contract`) as deliberate AI-safety redundancy per B-021's three-tier model. Canonical source for the workflow is [`WORKFLOW.md`](WORKFLOW.md) since v1.25.0; this per-project tier holds the same rule text byte-exact for per-project enforcement (the C4 linter — B-022 — keeps the three tiers in sync mechanically). | `<PROJECT_NAME>`, version-marker list |
+
+Changes:
+- Dropped "verbatim copy of `PROJECT_STARTER.md` §2 with project specifics filled in" (pre-split language).
+- Added explicit tier role: "Per-project operational process doc."
+- Named the four C4-anchored regions explicitly.
+- Pointed at WORKFLOW.md as the canonical source (with the "since v1.25.0" temporal marker for audit-trail clarity).
+- Referenced B-021 (three-tier model) and B-022 (C4 linter) so readers can navigate to the binding rules.
+- Used "byte-exact for per-project enforcement" to make the deliberate-redundancy framing explicit.
+
+### What didn't change
+
+- No changes to `templates/CONTRIBUTING.md` itself — the file is fine; only the inventory's description of it was stale.
+- No changes to `templates/manifest.yaml` — the machine-readable companion already has `templates/CONTRIBUTING.md` tier-classified as `common` (correct per B-030 layer model).
+- No spec changes — the rule (B-021) and the file's role were already correct; this commit fixes documentation about them.
+- No new spec block, no new linter invariant, no behavioral change.
+
+### Verified
+
+- `grep -nE "verbatim copy" TEMPLATE_INVENTORY.md` returns nothing — pre-split phrase fully removed.
+- Spec-consistency linter (Invariant B) still green — the new text positively asserts `WORKFLOW.md is canonical for the workflow`, not the forbidden form `PROJECT_STARTER.md is canonical for...`. (Active-doc scope doesn't include TEMPLATE_INVENTORY.md anyway, so the invariant doesn't scan it — but the new wording is conservative either way.)
+- C4 link target resolves: `WORKFLOW.md` is in `VIRTUAL_TEMPLATES_FILES` of `scripts/check-doc-references.sh`, so the in-table link resolves both in the meta-repo and in the exported archive layout.
+- All 5 linters green.
+
+### Codex review on PR #3 closure
+
+This commit closes both findings from the Codex review:
+- **Block** (commit `1653ad6`) — fixed in v1.32.3.
+- **Strong** (commit `06c34ea`) — fixed in this commit.
+
+After push, both review findings will appear addressed. The PR is ready for re-review or merge.
+
 ## v1.32.3 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.32.3. **Fix Block finding from Codex review of PR #3** — `templates/CLAUDE.md:13` carried an unconditional "Every assistant message ends with a concrete proposal" sentence that contradicted the qualified C4-anchored form 5 lines below it (and the canonical form in `WORKFLOW.md` + `templates/CONTRIBUTING.md`). Reviewer flagged this as a Block on commit `1653ad6` (B-028, v1.28.0). Patch bump per WORKFLOW.md (typical doc fix, no spec change).
