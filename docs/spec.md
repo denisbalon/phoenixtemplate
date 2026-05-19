@@ -663,6 +663,34 @@ Refines / extends B-016 (live doc references resolve to shipped files or are exp
 
 **Implemented in:** v1.31.2 (decision only — no infrastructure change). Touches: this D-016 entry; `presets/PRESET_ARCHITECTURE.md` "What's deferred" §updated to reference D-016 instead of inline prose; `codex improvement plan.md` Phase 4 §4 updated to record the decision. No spec block; no linter; no behavior change.
 
+### D-017 (2026-05-19) Defer `scripts/new-project.sh`; manual bootstrap path acceptable
+
+**Chose:** Do not ship the candidate `scripts/new-project.sh <slug> <package>` one-shot bootstrap helper named in Phase 5.3 of the Codex improvement plan. The manual bootstrap path documented in `BOOTSTRAP.md`, combined with `scripts/render-example.sh` (v1.32.1, B-035) for substitution-result inspection and `MIGRATION.md` (v1.32.0, B-034) for selective-import adoption, is the v1 bootstrap surface. Phase 5.3's acceptance is "either a clear helper is shipped, OR the repo explicitly decides the manual path is acceptable for now" — this is the second branch, explicitly chosen.
+
+**Considered:** (a) defer the helper entirely; manual path stays (this option); (b) ship a thin helper that ONLY does placeholder substitution (calls `render-example.sh`'s substitution core with consumer-supplied values; no `gh` interactions); (c) ship a full helper covering `gh repo create` + branch-protection via `gh api` + merge-settings via `gh api` + placeholder substitution + first-commit; (d) ship the full helper but gated behind a flag so consumers opt in to the `gh`-side effects.
+
+**Why:**
+
+- **(a) chosen.** The friction that originally motivated the helper has been substantially reduced by adjacent work: (1) `scripts/render-example.sh` (B-035, this trio's commit 2) gives consumers a working fully-substituted example in one command, so the "what does the substitution map look like" question — previously answerable only by reading multiple docs and running `sed` manually — now has a one-line answer; (2) `MIGRATION.md` (B-034, this trio's commit 1) gives consumers a non-bootstrap path entirely, eliminating the helper's need for the selective-import use cases; (3) `templates/manifest.yaml` (B-032) makes the placeholder-set-per-file explicit and machine-readable, so consumers who want to script their own substitution have a data source; (4) `BOOTSTRAP.md` already documents the manual procedure clearly. The remaining friction — typing the `mv` and `sed` once per new project — is small relative to the cost of building, testing, and maintaining a helper that handles the various `gh` edge cases reliably.
+
+- **(b) deferred-but-not-rejected.** A thin substitution-only helper is the smallest useful version of the script. The substitution logic already exists (in `render-example.sh`); a `new-project.sh` thin shape would just parameterize the substitution map from CLI args or interactive prompts. This is genuinely small (~30 lines), but the value-vs-cost ratio is dominated by Phase 5.2 already shipping: someone who can run `render-example.sh` to see the rendered output can copy that as a starting point and run `sed` themselves. The marginal automation is small. If a real adopter surfaces this as actual friction, this option remains the cheapest path forward — re-prioritize then.
+
+- **(c) rejected.** The full helper's hard parts are not the substitution logic — those are easy and already in `render-example.sh`. The hard parts are the `gh repo create` + branch-protection + merge-settings flows, which are: (i) largely irreversible side effects (creating a remote repo is harder to undo than running `sed`); (ii) sensitive to the consumer's `gh` auth context, GitHub org permissions, and personal access scope; (iii) coupled to opinions about repo settings (default branch name; PR merge style; review-required count; status-check requirements) that vary per team. A generic helper that picks defaults will be wrong for many consumers and right for few. Bespoke per-team setup scripts handle this better than a generic one-size-fits-all.
+
+- **(d) rejected on principle.** Gating the `gh` work behind a flag amounts to shipping (b) and (c) together, with (c) opt-in. But (c) is the hard part — putting it behind a flag doesn't reduce maintenance cost; it adds optionality without removing complexity. If we wouldn't ship (c) unconditionally, we shouldn't ship it conditionally either.
+
+**Failure-mode analysis:**
+
+- **Adoption friction surfaces from the missing helper.** A consumer abandons adoption because manual substitution is too cumbersome. Mitigation: this would be observable through GitHub issues / direct feedback. If it surfaces, reopen with option (b) (the thin substitution-only helper) as the cheapest first step — implementation cost ~30 lines + spec block + smoke-test extension. The deferral isn't permanent; D-017 is the explicit "we revisited and chose to defer" record, which means a future revisit has a starting point.
+
+- **`render-example.sh` (B-035) becomes the de-facto bootstrap tool.** Consumers run `render-example.sh`, rename the output dir, edit a few values, and git-init. Risk: this isn't what B-035 was built for; the canonical substitution values are obviously-example and consumers would need to re-substitute. Mitigation: this is fine; if the workflow works for consumers, accept it. The fix would be exactly option (b) — a `new-project.sh` that takes the consumer's values instead of the canonical-example values. Same starting point.
+
+- **The decision rots.** Codex Phase 5 closes with this commit; the deferral could be forgotten over time. Mitigation: D-017 is a decision-log entry with explicit "defer until [trigger]" semantics. The trigger is "adoption friction observable in the wild." Without the trigger, defer remains correct.
+
+**Implemented in:** v1.32.2 (decision only — no infrastructure change). Touches: this D-017 entry; `codex improvement plan.md` Phase 5 §3 updated to record the decision; `codex improvement plan.md` Phase 5 header updated to reflect the phase is closed. No spec block; no script; no behavior change.
+
+**Closes:** Phase 5 of the Codex improvement plan. With Phase 5.1 (B-034, v1.32.0) + Phase 5.2 (B-035, v1.32.1) + Phase 5.3 (this D-017, v1.32.2), all five phases of the Codex improvement plan are resolved. Future roadmap work — actual `_common/` + `presets/python-uv/` file move (gated by B-030); second language preset; new failure modes that emerge in real-world adoption — is outside the Codex plan's scope.
+
 ## Open project-level decisions
 
 Resolve as they come up. Move resolved entries to the Decision log above.

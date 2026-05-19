@@ -6,6 +6,51 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.32.2 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.32.2. **Phase 5.3 of Codex improvement plan — defer `scripts/new-project.sh` (D-017). Closes the Codex improvement plan in full.** Commit 3 of 3 of the Phase-5 trio. Docs-only change; no infrastructure or behavior change. Patch bump per WORKFLOW.md.
+
+### What shipped
+
+D-017 in `docs/spec.md` Decision log records that the candidate `scripts/new-project.sh <slug> <package>` one-shot bootstrap helper named in Phase 5.3 is **deferred**. Manual bootstrap path documented in `BOOTSTRAP.md` is sufficient given adjacent work that shipped this trio.
+
+**Reasoning summary** (full Chose / Considered / Why / Failure-mode analysis in D-017):
+
+- Friction reduced by `scripts/render-example.sh` (B-035, v1.32.1) which shows consumers substituted output in one command.
+- Selective-import use cases covered by `MIGRATION.md` (B-034, v1.32.0) without needing a bootstrap helper at all.
+- `templates/manifest.yaml` (B-032, v1.31.0) gives consumers a machine-readable per-file placeholder set if they want to script their own substitution.
+- Remaining friction (typing `mv` + `sed` once per new project) is small vs. the cost of building / testing / maintaining a helper covering the hard parts — `gh repo create` + branch-protection + merge-settings via `gh api`. Those are largely irreversible side effects sensitive to `gh` auth context, GitHub org permissions, and per-team repo-settings opinions.
+- Four options considered: (a) defer chosen; (b) thin substitution-only helper deferred-but-not-rejected as cheapest revisit path; (c) full helper rejected on `gh`-side fragility; (d) gated-by-flag rejected on principle (gating the hard part doesn't reduce maintenance cost).
+- Trigger for revisit: adoption friction observable in the wild — option (b) is the cheapest first step at that point.
+
+### Codex improvement plan closes
+
+| Phase | Status | Resolution |
+|---|---|---|
+| Phase 1 — fix active doc regressions | done | v1.26.x |
+| Phase 2 — tighten documentation architecture | done | v1.18.0 / v1.27.1 / v1.29.2 |
+| Phase 3 — extend drift-detection automation | done | v1.27.0 / v1.29.x / v1.29.3 |
+| Phase 4 — formalize inventory + preset boundaries | done | v1.30.0 / v1.31.x (incl. D-016 for §4.4) |
+| Phase 5 — improve adoption UX | done | v1.32.0 / v1.32.1 / v1.32.2 (incl. D-017 for §5.3) |
+
+All five phases resolved. Future roadmap work — actual `_common/` + `presets/python-uv/` file move (gated by B-030); second language preset; new failure modes that emerge in real-world adoption — is outside the Codex plan's scope and tracked separately in `docs/spec.md` "Open project-level decisions."
+
+### Docs
+
+- **`codex improvement plan.md`** — Phase 5 header gains a "Resolved" line; Phase 5 §1/§2/§3 each gain a per-§ resolution paragraph; new "Plan status: closed" appendix below Recommendations summarizing all five phases.
+
+### What didn't change
+
+- No spec block — D-017 is a Decision-log entry, no new B-NNN.
+- No script changes; no template changes; no linter changes.
+- No changes to existing C4 regions, gate semantics, manifest contents, MIGRATION.md/render-example.sh from this trio's prior commits, or any consumer-facing behavior.
+
+### Verified
+
+- All 5 linters green (C4 + C2 doc-ref + C3 placeholders + C5 spec-consistency + manifest).
+- D-017 inserted between D-016 and "Open project-level decisions" section in `docs/spec.md`.
+- `codex improvement plan.md` Phase 5 §3 records the deferral; "Plan status: closed" table at the bottom enumerates all five phases.
+
 ## v1.32.1 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.32.1. **Phase 5.2 of Codex improvement plan — on-demand example rendering (B-035).** Commit 2 of 3 closing Codex Phase 5. Patch bump per WORKFLOW.md (new convenience script + narrow spec block; no behavioral surface change).
