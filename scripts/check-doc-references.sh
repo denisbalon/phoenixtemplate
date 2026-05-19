@@ -50,11 +50,15 @@ BROKEN_COUNT=0
 LINK_COUNT=0
 
 # Files copied from meta-repo root into the templates-flattened export stage
-# by scripts/export-starter.sh. Inside `templates/`, links targeting these
-# names resolve correctly in the archive even though the file lives one
-# directory up in the source tree.
+# by scripts/export-starter.sh (its ROOT_DOCS array). Inside `templates/`,
+# links targeting these names resolve correctly in the archive even though
+# the file lives one directory up in the source tree. Keep in sync with
+# ROOT_DOCS in scripts/export-starter.sh.
 VIRTUAL_TEMPLATES_FILES=(
   "PROJECT_STARTER.md"
+  "TEMPLATE_INVENTORY.md"
+  "DEPLOY_BASELINE.md"
+  "HARNESS_QUIRKS.md"
 )
 
 # All Markdown files except anything under .git/.

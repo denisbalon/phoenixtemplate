@@ -6,6 +6,48 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.22.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.22.0. **First of three commits splitting `PROJECT_STARTER.md` (Codex Phase 4 #2).** Three companion docs shipped at meta-repo root; the remaining two (`WORKFLOW.md`, `BOOTSTRAP.md`) ship in v1.22.1 and v1.22.2.
+
+### Why staged across three commits
+
+The linter trio (B-022 / B-023 / B-024) shipped in v1.19.0–v1.21.0 was the gating prerequisite for this refactor. Splitting an 1100-line file five ways in a single commit is hard to review and easy to silently drop content from. Staging across three commits lets each commit be independently green:
+
+- **v1.22.0 (this release):** extract three docs that don't touch any C4-linter anchored region (those live in §2). Lower coordination cost.
+- **v1.22.1:** extract WORKFLOW.md (§2 + §9 + §10 + §11). Same commit retargets `scripts/check-rule-consistency.sh` `FILES` array from `PROJECT_STARTER.md` to `WORKFLOW.md` so the C4 linter's three rule regions follow the canonical content.
+- **v1.22.2:** extract BOOTSTRAP.md (§0 + §1 + §5). Reduces PROJECT_STARTER.md to a thin ~50-line index.
+
+### What shipped
+
+- **`TEMPLATE_INVENTORY.md`** — extracted §3 (file/folder layout tree + folder ownership notes) and §4 (the `templates/` copy-paste reference table with placeholders per file). The table picked up a v1.14.1-era entry for `templates/scripts/_env-schema-parse.sh` (the shared `@directive` parser) that was missing pre-split, and the `.env.example` row gained a reference to B-020. Otherwise content is verbatim.
+- **`DEPLOY_BASELINE.md`** — extracted §6 (VPS deploy: DNS / TLS / reverse proxy / service user / systemd / firewall), §7 (CI/CD baseline YAML template + auto-deploy deferred), and §13 (credential handling: never paste in chat / leak-handling protocol / Read+Edit tool-path / masking pattern / no-asking-in-chat). Subsections renumbered to bare headings (no §6.1 → §6.6 ladder) since they're top-level inside the new file. The reverse-proxy section's "§6.2" internal cross-reference rewrote to "TLS section above."
+- **`HARNESS_QUIRKS.md`** — extracted §12 (harness quirks: permission gating / SSH gating / TTY-bound commands / `gh` CLI quirks / memory carve-out / branch protection vs. local merge / auto-mode-vs-gate) and §14 (`bootstrap.sh` design: five modes / migration via export+import / comment-block-per-var / optional-vs-required via `@directive` schema / sensitive-value masking / per-var `@validator` regex / input normalization / atomic save / no GUI). §14's "Optional vs required" and "Format validators" subsections were lightly updated in-line to reference B-020's `@directive` schema rather than the legacy prose-grep / hardcoded-regex behavior they superseded — the rest is verbatim.
+
+### What stays in `PROJECT_STARTER.md`
+
+§0 (How to use + scope), §1 (Bootstrap checklist), §2 (the workflow + gate — staying for v1.22.1), §5 (Decisions to answer — staying for v1.22.2), §8 (Audit trail + Decision log), §9 (Conventions — staying for v1.22.1), §10 (Memory seed — staying for v1.22.1), §11 (PR review heuristics — staying for v1.22.1), and the Template changelog tail. §0.2 Reading order rewritten to reference the three new files. Extracted sections retain their heading + a one-line `**Moved to [X.md](X.md) in v1.22.0.**` pointer so readers find the new location and section numbering stays stable across intermediate states.
+
+### Export script + linter coordination
+
+- **`scripts/export-starter.sh`** gained a `ROOT_DOCS` array (`PROJECT_STARTER.md`, `TEMPLATE_INVENTORY.md`, `DEPLOY_BASELINE.md`, `HARNESS_QUIRKS.md`). All four are copied into the archive stage alongside the flattened `templates/` contents, so PROJECT_STARTER.md's cross-links to its companion docs resolve in the consumer's extracted layout. Missing any of them is now a hard failure at export time.
+- **`scripts/check-doc-references.sh`** `VIRTUAL_TEMPLATES_FILES` was extended from `[PROJECT_STARTER.md]` to all four root docs, keeping it in sync with `ROOT_DOCS`. The two arrays must always match; both files name each other in their comments. (No template-side links to the new docs exist today, but future ones will resolve correctly.)
+- **`scripts/check-rule-consistency.sh`** unchanged in v1.22.0 — its `FILES` array still points at `PROJECT_STARTER.md` because §2 (the source of the three anchored rule regions) hasn't moved yet. v1.22.1 will retarget it to `WORKFLOW.md` in the same commit that moves the anchors.
+
+### Spec
+
+- **B-025** added (frozen) — captures the three-commit split rationale, stub-with-pointer convention, and the `ROOT_DOCS` / `VIRTUAL_TEMPLATES_FILES` coordination requirement.
+- **B-015** archive-layout rule updated in place: described archive contents change from "PROJECT_STARTER.md + templates contents" to "`ROOT_DOCS` array + templates contents", with a note that adding a new root doc requires appending to both `ROOT_DOCS` AND `VIRTUAL_TEMPLATES_FILES` in the same commit. Pre-v1.22.0 archive shape (PROJECT_STARTER.md only at root) noted for audit trail.
+- **B-023** doc-reference linter description updated to name all four entries currently in `VIRTUAL_TEMPLATES_FILES`.
+
+### README
+
+"Known limitations" section updated: the `PROJECT_STARTER.md` monolith bullet rewrites to describe split progress + remaining work; the drift-detection bullet rewrites to credit the now-shipped linter trio. Docs table gains rows for the three new files.
+
+### Next
+
+- **v1.22.1 (`refactor gogogo!`):** Extract `WORKFLOW.md` (from §2 + §9 + §10 + §11). Retarget B-022 C4 linter's `FILES` array. Update B-021's `(post-split: WORKFLOW.md)` parenthetical to past tense. Spec: update B-021 + B-022 in place.
+
 ## v1.21.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.21.0. **Codex Phase 8 #3 — placeholder linter.** Closes the third and final linter in the trio that gates the upcoming safe `PROJECT_STARTER.md` split.
