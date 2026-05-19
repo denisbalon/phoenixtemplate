@@ -264,9 +264,9 @@ Reading files · grep · read-only git · web search · planning text · proposi
 
 **Canonical list lives in [`WORKFLOW.md` → "Rationalizations to refuse"](WORKFLOW.md#rationalizations-to-refuse).** This file does not duplicate the table — the list evolves per observed failure mode (rows added as new rationalizations surface during sessions), making byte-exact cross-file duplication high-churn for low marginal AI-safety value. The C4-anchored regions in this file (gate-clause / proposal-format / bare-gogogo / env-metadata-contract) cover the load-bearing rule statements; the refuse-list is a teaching aid that lives canonically in WORKFLOW.md. `templates/CLAUDE.md` similarly doesn't carry the table.
 
-## Mandatory 5-step sequence on `<feature-verb> gogogo!`
+## Mandatory 5-step sequence on a `gogogo!`-authorized feature proposal
 
-Atomic.
+Atomic. Runs when the user `gogogo!`s a proposal Claude surfaced for a state-mutating feature change (per B-026 / B-028; see also [WORKFLOW.md → "The 5-step atomic sequence"](WORKFLOW.md#the-5-step-atomic-sequence-on-gogogo)).
 
 1. **Update the spec** — `docs/spec.md` reflects the change BEFORE any code is written. For architectural decisions, also add a Decision log entry in `docs/spec.md` (`D-NNN (YYYY-MM-DD) <title>` with Chose / Considered / Why / Implemented in).
 2. **Bump versions + CHANGELOG** — bump `VERSION` (and language-specific markers) and add a `CHANGELOG.md` entry under the new version. Markers for this project: <LIST_PROJECT_VERSION_MARKERS — e.g. `VERSION` at root, `pyproject.toml` `version`, `__version__` in `src/.../__init__.py`>.

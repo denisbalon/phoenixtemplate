@@ -6,6 +6,51 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.30.1 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.30.1. **Fix stale `<feature-verb> gogogo!` meta-syntax in `templates/CONTRIBUTING.md` heading** — flagged-not-fixed during Commit 3 (v1.29.2) of the improvements-3 sequence; addressed now as a quick follow-up before PR-open. Patch bump.
+
+### What it was
+
+`templates/CONTRIBUTING.md` line 267 had the heading:
+
+> `## Mandatory 5-step sequence on \`<feature-verb> gogogo!\``
+
+That `<feature-verb>` meta-syntax is the pre-v1.23.0 verb-prefix gate phrasing — the v1.23.0 + v1.23.1 sweeps replaced concrete verbs (`feat`/`commit`/`PR` etc.) and meta-references to the verb model with propose-and-confirm wording. The angle-bracketed meta-syntax `<feature-verb>` escaped the sweep because the v1.23.1 grep pattern targeted literal verb names (`\b(feat|commit|PR|...) gogogo!`) not the meta-syntax form `<...-verb> gogogo!`.
+
+The heading text was internally inconsistent post-v1.23.0: it described the workflow as keyed by `<feature-verb> gogogo!` but the body section is the standard 5-step (spec → bump+CHANGELOG → code → commit → deploy) that runs when the user `gogogo!`s any state-mutating proposal. The verb-prefix gate model has been gone since v1.23.0.
+
+### The fix
+
+Heading rewritten to:
+
+> ``## Mandatory 5-step sequence on a `gogogo!`-authorized feature proposal``
+
+Added a one-line preamble pointing at WORKFLOW.md's canonical "The 5-step atomic sequence" section, with anchor `#the-5-step-atomic-sequence-on-gogogo` validated by the new B-029 URL-fragment linter (6 URL fragments validating now across 25 files, was 5).
+
+### What didn't change
+
+- The 5-step procedure itself (spec → bump+CHANGELOG → code → commit → deploy) is unchanged.
+- No other prose in the section was touched.
+- No spec edits — the rule itself (B-026 + B-027 + B-028 gate + 5-step from WORKFLOW.md) is unchanged.
+- No C4 region edits — this heading is not inside any anchored region.
+- No new B blocks, no new D entries.
+
+### Why this didn't get caught by the v1.29.1 Invariant C
+
+Invariant C of the spec-consistency linter catches `verb-prefix gate` / `verb table (per|in|of) (the )?(active|current)` / `action verb (per|in|of) (the )?(active|current)`. The stale heading used `<feature-verb> gogogo!` — meta-syntax with angle brackets — which doesn't match those patterns.
+
+**Follow-up consideration** for a future invariant addition (NOT in this commit): a pattern like `\<[a-z-]+-verb\>` or `<verb> gogogo!` would catch the meta-syntax form. Deferred since this is the only known instance; D-014's bar is "we've shipped this exact bug already" + Invariants B/C were the structural-prevention exception. Adding more speculative patterns now would inflate the false-positive surface. Better to wait until a second instance of meta-syntax verb references actually surfaces, then decide whether to add the pattern.
+
+### Verified
+
+- All 4 linters green: C4 (3 regions) + C2 doc-ref (76 link targets, **6 URL fragments** validated across 25 files) + C3 placeholders (12 files) + C5 spec-consistency (10 invariant patterns).
+- Branch state: `improvements-3` now holds **10 commits** ahead of `main`. Ready for PR-open.
+
+### Next
+
+PR-open for `improvements-3` (10 commits). Would surface as a new `[change]` proposal next turn.
+
 ## v1.30.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.30.0. **Phase 4.3 of the Codex improvement plan — preset architecture design (B-030 + D-015).** Final commit (5 of 5) in the `improvements-3` sequence. Design only; no implementation work in this commit.
