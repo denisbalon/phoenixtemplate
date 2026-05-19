@@ -17,6 +17,8 @@ Plus meta tooling: `scripts/export-starter.sh` (portable kit archive), `scripts/
 
 ## Quickstart
 
+**Already have a project?** Read [`MIGRATION.md`](MIGRATION.md) instead — the kit is consumable as a toolkit (selective-import paths for the process layer, docs, env-bootstrap, or linter set), not only as a fresh-start template.
+
 From this repo (the source of truth):
 
 ```sh
@@ -49,6 +51,7 @@ What's missing or manual today vs. the polished end state. For the active roadma
 |---|---|
 | **Start here** — entry-point index pointing at all five companion docs | [`PROJECT_STARTER.md`](PROJECT_STARTER.md) |
 | Bootstrap checklist (zero → first commit) + decisions to answer before feature code | [`BOOTSTRAP.md`](BOOTSTRAP.md) |
+| Migration — adopting the kit selectively or incrementally into an existing project | [`MIGRATION.md`](MIGRATION.md) |
 | Workflow + gate + propose-and-confirm contract + conventions + PR review rubric | [`WORKFLOW.md`](WORKFLOW.md) |
 | File layout + `templates/` reference | [`TEMPLATE_INVENTORY.md`](TEMPLATE_INVENTORY.md) |
 | VPS deploy baseline + CI/CD + credential handling | [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) |
