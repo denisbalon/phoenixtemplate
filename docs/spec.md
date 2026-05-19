@@ -360,6 +360,29 @@ The bar set by B-029 + B-031 ("driven by known failure modes; narrow false-posit
 
 **Decision:** —
 
+### Block B-036: web-search before iterate on external surfaces
+
+**Rule:** When Claude touches any external surface — APIs, SDKs, 3rd-party services, library/framework versions — the order of operations is **search-then-iterate**, not iterate-then-search. Four concrete triggers; the `WebSearch` proposal precedes any code-side action in each:
+
+1. **New external surface.** Before writing integration code against an unfamiliar API/SDK/service/library, propose a `WebSearch` for current documentation, version-specific behavior, or breaking changes vs. the training-data version.
+2. **External error or exception.** Before attempting a code-side fix for any error/exception/unexpected behavior originating from an external surface, propose a `WebSearch` of the exact error string or symptom.
+3. **N=2 trip-wire.** After 2 failed iterations of the same external-behavior fix, STOP iterating on assumptions and propose a `WebSearch` for the specific symptom. "Maybe one more code change" past N=2 is forbidden.
+4. **Self-noticed guessing.** Any time Claude notices it's reasoning about external behavior without concrete documentation or test backing, STOP and propose a `WebSearch`.
+
+The `WebSearch` proposal is `[info]`-class per B-028 (read-only; no `gogogo!` needed); the user picks bare `N` to proceed with the search. Lowest possible friction between "we should check this" and "the answer is on screen." The rule applies **even when the relevant code looks in-training-data** — APIs/SDKs/services drift between minor versions and library/framework breaking changes are routine; the training snapshot is one point in time.
+
+Scope: extends Karpathy Pitfall #1 (`templates/docs/karpathy-claude-rules.md` §1 — "Unexamined assumptions → Think before coding") with the explicit web-search tactic. `templates/CLAUDE.md`'s "Coding pitfalls to avoid" Pitfall #1 carries the session-facing summary; the full rationale + four triggers live in `templates/docs/karpathy-claude-rules.md` as a `### Web-search before iterate on external surfaces (B-036)` subsection under §1. Not a C4 region — Karpathy standing rules are not gate-related, they live in templates/CLAUDE.md + the dedicated reference doc (the C4-anchored regions are gate-clause / proposal-format / bare-gogogo / env-metadata-contract only).
+
+**Rationale:** Claude's training data has a cutoff (January 2026 for the current model family) and external surfaces evolve constantly. A code-side iteration cycle on an external-behavior issue that turns out to be a known upstream bug + community workaround can burn hours; a `WebSearch` for the symptom typically surfaces the workaround in seconds. Karpathy Pitfall #1 ("verify load-bearing facts before depending on them") names the principle but doesn't name `WebSearch` as the concrete tactic; this block makes the tactic explicit and adds the N=2 trip-wire so the search isn't an afterthought-on-fail. The motivating incident: real bug on one of the user's other projects, fought code-side for half a day, turned out to be a known upstream issue everyone works around. A `WebSearch` of the symptom early in that session would have surfaced the workaround in seconds. This block exists so that failure mode doesn't repeat — across this project and every project that adopts the kit.
+
+The four-trigger shape was chosen over single-trigger alternatives because each trigger catches a real failure shape the others miss (new-surface integration vs. error-on-known-surface vs. iteration-not-converging vs. self-noticed-guessing). N=2 was chosen as the iteration threshold — tight enough to avoid offer-fatigue (Claude proposing "should I google?" on every routine API call would train the user to ignore the offers); loose enough to allow one assumption-revision attempt before forcing the search. See D-018 for the full Considered / Why / failure-mode analysis covering the placement choice (Karpathy-extension vs. new 5th rule vs. Coding-Conventions entry) and the trigger-selection.
+
+**Test:** manual — `templates/CLAUDE.md` Pitfall #1 contains the "For external surfaces specifically: ... propose a `WebSearch` *first*" extension with all four triggers named; `templates/docs/karpathy-claude-rules.md` §1 carries the `### Web-search before iterate on external surfaces (B-036)` subsection with full rationale + the four triggers enumerated; planted-behavior test (next session): when Claude hits an external-API error and starts to draft a code-side fix, the rule fires automatically before the code edit — proposing a `WebSearch` of the error string is the first response, not the second after a failed fix attempt.
+
+**Status:** frozen
+
+**Decision:** D-018
+
 ### Block B-030: preset architecture — `_common/` shared layer + `presets/<preset>/` specific layer
 
 **Rule:** When multi-preset support actually ships (not as of v1.30.0 — design only), the meta-repo's currently-flat `templates/` directory will be reorganized into two layers: `_common/` (stack-agnostic content shared across all presets — workflow docs, gate trio with C4 anchored regions, spec-block format, review rubric, env-bootstrap core, Karpathy rules, changelog conventions, meta scaffolding) and `presets/<preset-name>/` (stack-specific content — Makefile, CI workflow, deploy script, runtime pin, project metadata file, sample source tree, sample smoke test, setup-doc prereqs). A bootstrapped project = `_common/` contents flattened with one chosen `presets/<chosen>/` contents at the project root. Constraints: (1) single preset per project — mixed-preset out of scope; (2) no file conflicts between layers — each file has exactly one owner; (3) uniform placeholders — the B-024 canonical placeholder set works the same way across all presets; (4) C4 regions live in `_common/` — the byte-exact rule statements are stack-agnostic and don't get re-declared per preset. Design doc: `presets/PRESET_ARCHITECTURE.md`. **No implementation as of v1.30.0** — `_common/` and `presets/python-uv/` directories don't exist; `templates/` is unchanged; the design is the deliverable. Future implementation commits will create the directories, move files appropriately, update `scripts/export-starter.sh` to compose by preset, and update `scripts/smoke-test.sh` to test per-preset.
@@ -690,6 +713,48 @@ Refines / extends B-016 (live doc references resolve to shipped files or are exp
 **Implemented in:** v1.32.2 (decision only — no infrastructure change). Touches: this D-017 entry; `codex improvement plan.md` Phase 5 §3 updated to record the decision; `codex improvement plan.md` Phase 5 header updated to reflect the phase is closed. No spec block; no script; no behavior change.
 
 **Closes:** Phase 5 of the Codex improvement plan. With Phase 5.1 (B-034, v1.32.0) + Phase 5.2 (B-035, v1.32.1) + Phase 5.3 (this D-017, v1.32.2), all five phases of the Codex improvement plan are resolved. Future roadmap work — actual `_common/` + `presets/python-uv/` file move (gated by B-030); second language preset; new failure modes that emerge in real-world adoption — is outside the Codex plan's scope.
+
+### D-018 (2026-05-19) Web-search-before-iterate rule placement + trigger shape (B-036)
+
+**Chose:** (a) extend Karpathy Pitfall #1 in `templates/docs/karpathy-claude-rules.md` + the session-facing summary in `templates/CLAUDE.md`, NOT a new 5th Karpathy rule or a Coding-Conventions entry; (b) **all four triggers active** (new-surface; external-error; N=2 trip-wire; self-noticed guessing), NOT a single trigger; (c) **N=2 as the iteration threshold**; (d) `WebSearch` proposal classified `[info]` per B-028 (bare `N` proceeds, no `gogogo!`).
+
+**Considered (placement):**
+- **(a) Karpathy Pitfall #1 extension** — chosen.
+- **(b) new 5th Karpathy rule** — "Verify externally before iterating." More visible (top-level rule) but breaks the "Karpathy's four" branding inherited from Karpathy's Jan 26 2026 X-post; we'd be claiming a 5th canonical rule that isn't his.
+- **(c) Coding-Conventions entry in templates/CLAUDE.md** — concrete and operational but loses the "standing rule, applies-every-session" weight the Karpathy section carries.
+
+**Considered (trigger shape):**
+- **Single trigger: N=2 trip-wire only** — catches the iteration-not-converging case but misses the new-surface case (Claude writes integration code against an unfamiliar SDK without ever consulting docs) and the external-error case (Claude attempts a code-side fix for an exception that has a one-line community answer).
+- **Single trigger: external-error only** — misses the N=2 iteration case where each attempt LOOKS like it might succeed and the agent keeps grinding.
+- **Single trigger: self-noticed guessing only** — relies on the agent noticing, which is precisely what unexamined-assumptions failures mean it doesn't do reliably.
+- **All four triggers** — chosen. Each trigger catches a real failure shape the others miss; redundancy is the point.
+
+**Considered (N=2 threshold):**
+- **N=1** (force search after first failed iteration) — too aggressive; legitimate one-off assumption-revisions get short-circuited.
+- **N=2** — chosen. Tight enough to avoid the half-a-day case from the motivating incident; loose enough to allow one assumption-revision attempt before forcing the search.
+- **N=3+** — too permissive; by N=3 the user has watched the agent spin its wheels for non-trivial time, which is exactly the failure mode this rule prevents.
+
+**Considered (gate classification of WebSearch proposals):**
+- **`[change]`** — would require `gogogo!` for each search proposal. Defeats the purpose; the whole point is low-friction "let me check" turns.
+- **`[info]` per B-028** — chosen. Bare `N` proceeds. One keystroke between "we should check this" and "the answer is on screen."
+
+**Why (a) wins:** Web-search is a *tactic* for Karpathy Pitfall #1 (verify load-bearing facts), not a separate principle. Putting it as a sub-bullet inside Pitfall #1 reflects the actual semantic relationship and keeps the standing-rules section coherent. The full rationale lives in the dedicated reference doc (templates/docs/karpathy-claude-rules.md §1's new B-036 subsection); the session-facing summary in templates/CLAUDE.md is the operational reminder Claude loads every session.
+
+**Why all four triggers:** Single-trigger versions all have known failure modes (above). The marginal cost of additional triggers is zero (no implementation, just a rule statement); the marginal benefit is catching real failure shapes that would otherwise leak through. Conservative default.
+
+**Why N=2:** Calibrated against the motivating incident — half-a-day-on-a-known-issue is the failure mode; the agent burned through many iterations before the realization. N=2 would have triggered the search hours earlier. N=1 would over-trigger on legitimate refinement; N=3+ is too late.
+
+**Failure-mode analysis:**
+
+- **Offer-fatigue.** Claude proposing "should I `WebSearch`?" on every routine API call trains the user to ignore the offers. Mitigation: triggers are deliberately narrow — new SURFACES (not every call), errors from EXTERNAL surfaces (not all errors), N=2 (not N=1), self-noticed GUESSING (not normal reasoning). If the rule fires too often in practice, narrow the new-surface trigger first (e.g., "only when the surface is unfamiliar," which is harder to operationalize but worth iterating on).
+
+- **Search results are wrong or out of date.** Web content has its own staleness problems. Mitigation: not the rule's job to verify search quality; the agent reads the result, decides whether it's authoritative, and asks the user when unclear. The rule's job is forcing the search to happen; quality assessment is downstream.
+
+- **No linter coverage.** The rule applies to AGENT BEHAVIOR at runtime; there's no static-analysis way to enforce "the agent should have searched before this code change." Adding a structural-prevention linter was considered (option 3 in the original proposal) and explicitly flagged as a possible follow-up. Deferred from this commit; if the rule gets ignored in practice, a "code-side fix to external-error symptom without preceding `WebSearch` in the same session" linter becomes the next step.
+
+- **Rule expansion creep.** Once "search before iterate" is in place, more triggers will be tempting (every type signature lookup; every npm-package decision; etc.). Mitigation: keep the rule scoped to EXTERNAL SURFACES (APIs / SDKs / 3rd-party services / library versions). Internal reasoning about the project's own code stays on Pitfall #1's existing "verify load-bearing facts" sub-bullet without forcing a search.
+
+**Implemented in:** v1.33.0. Touches: `templates/CLAUDE.md` (Pitfall #1 extension); `templates/docs/karpathy-claude-rules.md` (§1 gets the `### Web-search before iterate on external surfaces (B-036)` subsection with full rationale + four triggers); `docs/spec.md` (B-036 added — frozen; this D-018 entry added). No C4 region changes (Karpathy rules are not gate-related per B-021 three-tier model). No linter changes; no script changes. Standing-rule additions don't usually need a Decision-log entry, but B-036's design space had real architectural choices (placement, trigger shape, threshold, gate classification) worth recording so future revisits have a starting point.
 
 ## Open project-level decisions
 

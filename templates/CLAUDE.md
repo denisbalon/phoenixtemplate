@@ -71,7 +71,7 @@ A `SessionStart` hook in `.claude/settings.json` runs `scripts/check-env.sh`. If
 
 Standing rules for every session. Full text + sources in [docs/karpathy-claude-rules.md](docs/karpathy-claude-rules.md).
 
-1. **Think before coding.** State assumptions explicitly; surface alternatives when ambiguous; verify load-bearing facts (file, signature, schema) before depending on them.
+1. **Think before coding.** State assumptions explicitly; surface alternatives when ambiguous; verify load-bearing facts (file, signature, schema) before depending on them. **For external surfaces specifically** (APIs, SDKs, 3rd-party services, library versions): propose a `WebSearch` *first* — before writing integration code against an unfamiliar surface, before attempting a code-side fix for any external error/exception, after 2 failed iterations of the same external-behavior fix (the N=2 trip-wire), and any time you notice you're guessing about external behavior. "Maybe one more code change" past N=2 is forbidden. Half a day fighting a "bug" that turns out to be a known upstream issue with a community workaround is the canonical failure mode this prevents (B-036).
 2. **Simplicity first.** Implement only what was asked. No speculative scaffolding, no "while I was here" cleanup, no premature abstractions. Three similar lines beats a wrong factory.
 3. **Surgical changes.** Touch only what the task requires. Match existing style. Don't bundle drive-by refactors into the diff — mention them in chat instead.
 4. **Goal-driven execution.** Define the success criterion *before* writing code, then actually run the check (test, endpoint, browser). "Types pass" ≠ "works."
