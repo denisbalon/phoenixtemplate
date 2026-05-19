@@ -35,6 +35,35 @@
 #         - '"Optional" if'  (specific v1.26.1-era phrasing)
 #       Reason: B-020 froze @directive as the contract in v1.14.1.
 #
+#   B — canonical-source for workflow lives in WORKFLOW.md, not PROJECT_STARTER.md.
+#       Added v1.29.1 as structural prevention (no shipped regression of this
+#       exact class yet — but Phase 2.1 audit found that PROJECT_STARTER.md's
+#       canonical-source role was reassigned to WORKFLOW.md in v1.25.0, and
+#       this invariant prevents future drift). Forbidden phrases:
+#         - 'PROJECT_STARTER\.md is the canonical'
+#         - 'PROJECT_STARTER\.md is canonical for'
+#         - 'PROJECT_STARTER\.md §2.{0,30}canonical' (present-tense; the
+#           audit-trail form "was PROJECT_STARTER.md §2 before v1.25.0"
+#           doesn't match because "canonical" doesn't appear within 30 chars)
+#         - 'canonical source.{0,30}PROJECT_STARTER\.md'
+#       Reason: B-025 (v1.22.0) split the workflow content into WORKFLOW.md
+#       in v1.25.0; D-012 (v1.27.1) settled PROJECT_STARTER.md as a permanent
+#       thin-index — these claims would contradict both.
+#
+#   C — verb-prefix gate model (per B-001+B-011+D-004, superseded v1.23.0).
+#       Added v1.29.1 as structural prevention. The propose-and-confirm gate
+#       (B-026) replaced verb-prefix in v1.23.0; any active-doc claim that
+#       still describes the verb-prefix model as current is a regression.
+#       Forbidden phrases:
+#         - 'verb-prefix gate'  (as a current claim; historical mentions in
+#           spec.md decision-log are out of scope per active-doc filter)
+#         - 'verb table (per|in|of) (the )?(active|current)'  (specific
+#           current-assertion phrasing)
+#         - 'action verb (per|in|of) (the )?(active|current)'  (same)
+#       Reason: B-001+B-011 are in the historical-superseded section of
+#       docs/spec.md; D-004 superseded by D-010+D-011. Their language must
+#       not reappear in active docs as current claims.
+#
 # Exit codes:
 #   0 — no forbidden phrases found
 #   1 — at least one forbidden phrase detected (each printed as
@@ -62,6 +91,21 @@ INV_A_PATTERNS=(
   'Optional prose'
   'comment block.*Optional'
   '"Optional" if'
+)
+
+# Invariant B — canonical-source for workflow lives in WORKFLOW.md.
+INV_B_PATTERNS=(
+  'PROJECT_STARTER\.md is the canonical'
+  'PROJECT_STARTER\.md is canonical for'
+  'PROJECT_STARTER\.md §2.{0,30}canonical'
+  'canonical source.{0,30}PROJECT_STARTER\.md'
+)
+
+# Invariant C — verb-prefix gate model is superseded.
+INV_C_PATTERNS=(
+  'verb-prefix gate'
+  'verb table (per|in|of) (the )?(active|current)'
+  'action verb (per|in|of) (the )?(active|current)'
 )
 
 EXIT=0
@@ -110,6 +154,16 @@ done
 # Run Invariant A patterns.
 for pattern in "${INV_A_PATTERNS[@]}"; do
   check_invariant "A" "$pattern"
+done
+
+# Run Invariant B patterns.
+for pattern in "${INV_B_PATTERNS[@]}"; do
+  check_invariant "B" "$pattern"
+done
+
+# Run Invariant C patterns.
+for pattern in "${INV_C_PATTERNS[@]}"; do
+  check_invariant "C" "$pattern"
 done
 
 if [[ $EXIT -eq 0 ]]; then
