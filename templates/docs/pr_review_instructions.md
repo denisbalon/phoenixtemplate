@@ -2,7 +2,7 @@
 
 **Reviewer-agnostic.** This document is the rubric + output contract whichever reviewer you point at this PR — Codex CLI, `/ultrareview`, another LLM (Cursor, Gemini CLI, GPT-5 via CI), or a human reading the diff. **The project ships no default reviewer and no invocation wiring** — pick whatever you prefer, point it at this file and the open PR, and the rubric below applies.
 
-Review happens **out-of-band**: Claude opens the PR (`PR gogogo!`); you run the reviewer in a separate session. The reviewer reads this file, walks the diff, and posts comments via `gh` (or its native integration) per the output contract below. The branch-owner runs reviewers serially — never in parallel. Claude does not dispatch, prepare, remind about, or wrap any reviewer flow; this file is **not** for the dev session — that's [`CLAUDE.md`](../CLAUDE.md).
+Review happens **out-of-band**: Claude opens the PR after a `gogogo!`-authorized PR-open proposal; you run the reviewer in a separate session. The reviewer reads this file, walks the diff, and posts comments via `gh` (or its native integration) per the output contract below. The branch-owner runs reviewers serially — never in parallel. Claude does not dispatch, prepare, remind about, or wrap any reviewer flow; this file is **not** for the dev session — that's [`CLAUDE.md`](../CLAUDE.md).
 
 ## Output contract — read this before anything else
 
