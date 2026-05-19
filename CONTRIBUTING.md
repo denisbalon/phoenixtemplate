@@ -4,7 +4,7 @@ This file is for working on **this meta repo** — the template kit itself. For 
 
 ## Workflow
 
-Read [`PROJECT_STARTER.md §2`](PROJECT_STARTER.md#2-the-process-workflow--gate) — it's the canonical source for the workflow rules (the propose-and-confirm `gogogo!` gate, 5-step, version-bump, branching, PR/merge flow, review flow). This meta repo follows the same rules as any consumer project, with the meta-specific overrides below.
+Read [`WORKFLOW.md`](WORKFLOW.md) — it's the canonical source for the workflow rules (the propose-and-confirm `gogogo!` gate, 5-step, version-bump, branching, PR/merge flow, review flow, conventions). This meta repo follows the same rules as any consumer project, with the meta-specific overrides below.
 
 ## Meta-repo specifics (overrides vs. consumer projects)
 
@@ -18,7 +18,7 @@ Read [`PROJECT_STARTER.md §2`](PROJECT_STARTER.md#2-the-process-workflow--gate)
 
 When you touch a workflow rule, remember the three-tier model:
 
-- `PROJECT_STARTER.md §2` is **canonical** for the rule + rationale.
+- `WORKFLOW.md` is **canonical** for the rule + rationale (was `PROJECT_STARTER.md §2` before v1.25.0).
 - `templates/CONTRIBUTING.md` carries the per-project operational version (and the rule statement again, for defensive redundancy).
 - `templates/CLAUDE.md` carries the session-facing summary (and the rule statement again, because the AI needs it in working context).
 

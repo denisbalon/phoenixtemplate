@@ -59,6 +59,7 @@ VIRTUAL_TEMPLATES_FILES=(
   "TEMPLATE_INVENTORY.md"
   "DEPLOY_BASELINE.md"
   "HARNESS_QUIRKS.md"
+  "WORKFLOW.md"
 )
 
 # All Markdown files except anything under .git/.
