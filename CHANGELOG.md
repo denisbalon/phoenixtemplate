@@ -6,6 +6,50 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.35.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.35.0. **Third feature on `improvements-4` — forbid null-action options in proposals (B-038 + D-020).** Gate-rule refinement removing the silly-and-redundant "stop here / wait / pick up later / wrap up / do nothing" trailing options from numbered proposal lists. Baked into the C4 `proposal-format` region across the trio. Minor bump per WORKFLOW.md (notable behavior change to gate; new spec block).
+
+### Motivating observation
+
+Across the session ending v1.34.0, many of my proposals included a trailing "stop here" / "pick up later" / "leave it open" / "wrap for now" option. User flagged: *"lets not offer any kind of wait or pickup later. lets update that rules set, its silly and redundant."* Correct read — the option adds zero choice (the user already has the implicit option to not respond, close the terminal, or steer in a different direction). Making "do nothing" a numbered choice doubles the action surface for no benefit, trains the user to ignore a third of every list, and dilutes the corrective swing back to clear authorization scope that B-028 was designed to restore.
+
+### What shipped
+
+New sentence inserted into the C4 `proposal-format` region's existing "Concrete means specific files..." paragraph:
+
+> "...not 'commit the changes.' **Every option must represent a real action** — code change, information lookup, navigation, or continued discussion. Null-action options ('stop here,' 'wait,' 'pick up later,' 'wrap up,' 'do nothing') are forbidden; the user can simply not respond. Null options dilute the gate signal and add visual clutter without surfacing real choice. An option to continue discussion or surface more information IS a real action and stays. For multi-step actions..."
+
+### Carve-out
+
+Continue-discussion / surface-more-information options ARE real `[info]`-class actions and stay. The distinction is: a real action moves the conversation forward concretely; a null action just terminates without progressing. "Discuss the blast-radius question more — give me a recent example" is real (continues discussion productively); "stop here for now" is null (terminates without producing anything).
+
+### Files touched
+
+- **WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md** — C4 `proposal-format` region, byte-exact across the trio; B-022 linter green.
+- **`docs/spec.md`** — B-038 added (frozen); D-020 added.
+
+### Spec
+
+- **B-038 added** (frozen) — forbidden-phrasings list (non-exhaustive; the test is intent, not literal-match); carve-out for discussion-continuation / info-surfacing; refines B-027 (proposal-when-path-to-surface) + B-028 (per-option classification); test recipe.
+- **D-020 added** — Considered/Why covering: forbid-entirely (chosen) over allow-but-discourage-in-prose (wouldn't fire reliably) + add-`[pass]`-or-`[skip]`-third-type (contradicts D-019 stay-binary); kit-scope (matches B-036 / B-037 precedent); non-exhaustive list (intent-test catches bypass-by-rewording). Failure-mode analysis: over-restriction on legitimate no-op situations (mitigation: B-027 permits messages without trailing proposals when no path fits naturally — the rule forbids the null OPTION, not the null SITUATION); carve-out wording confusion; rule applies to agent not user; no linter coverage (deferred per D-014 bar).
+
+### What didn't change
+
+- B-028's binary `[change]` / `[info]` classification — explicitly preserved over the rejected sub-tier option.
+- Any other rule, marker, or behavior beyond the prohibition on null-action options.
+- No script changes; no linter changes; no manifest changes.
+
+### Verified
+
+- All 5 linters green (C4 + C2 doc-ref + C3 placeholders + C5 spec-consistency + manifest).
+- C4 `proposal-format` region byte-exact across all 3 trio files.
+- Smoke test pre-flight (B-031 §0b) C4-content check still green.
+
+### Effective immediately
+
+Starting from the proposal that ends this changelog entry's corresponding assistant message, no null-action options appear in numbered lists.
+
 ## v1.34.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.34.0. **Second feature on `improvements-4` — emoji-prefixed `[change]` / `[info]` proposal markers (B-037 + D-019).** Visual marker refinement to B-028's per-option classification; baked into the C4 `proposal-format` region across the trio. Minor bump per WORKFLOW.md (notable UX change to gate; new spec block).
