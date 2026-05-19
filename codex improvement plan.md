@@ -212,6 +212,8 @@ Acceptance:
 
 The first-contact docs are much better now. The remaining UX work is about making adoption easier for more than just greenfield bootstrap.
 
+**Resolved (v1.32.0 + v1.32.1 + v1.32.2). Phase 5 closed.** See per-§ resolution notes below; D-017 in `docs/spec.md` records the Phase 5.3 decision and the closure of the Codex improvement plan in full.
+
 ### 1. Add migration guidance for existing projects
 
 Work:
@@ -221,6 +223,8 @@ Work:
 Acceptance:
 - The kit is usable as a toolkit, not only as a fresh-start template.
 
+**Resolved (v1.32.0, B-034):** `MIGRATION.md` at meta-repo root documents four selective-import paths (process layer / docs / env-bootstrap / linter set) with file lists + merge-with-existing guidance + standalone-vs-coupled assessment per linter, plus a week-by-week adoption order for phased import. Added to `scripts/export-starter.sh` ROOT_DOCS so it ships in the archive. B-034 in `docs/spec.md` makes the toolkit affordance contractual.
+
 ### 2. Add an example completed generated project or equivalent snapshot
 
 Work:
@@ -228,6 +232,8 @@ Work:
 
 Acceptance:
 - Consumers can compare template form to instantiated form concretely.
+
+**Resolved (v1.32.1, B-035):** `scripts/render-example.sh` produces a deterministic, fully-substituted instantiation on demand (default `~/Downloads/phoenixproject-example/`; override via `OUT_DIR`). Canonical substitution map covers all 10 B-024 placeholders with obviously-example values. Substitution-logic invariant matches `scripts/smoke-test.sh` phase 3 byte-for-byte. Picked the script-only shape over a static-committed `example-project/` directory + CI drift-check — same comparison affordance at materially lower maintenance cost. If static-committed becomes wanted later, renderer becomes the CI re-render source.
 
 ### 3. Consider a one-shot bootstrap helper only if it genuinely reduces current manual risk
 
@@ -240,6 +246,8 @@ Reason:
 
 Acceptance:
 - Either a clear helper is shipped, or the repo explicitly decides the manual path is acceptable for now.
+
+**Resolved (v1.32.2, D-017): deferred.** Manual bootstrap path documented in `BOOTSTRAP.md` is sufficient given adjacent work that shipped this trio: `scripts/render-example.sh` (B-035) shows consumers the substituted output in one command; `MIGRATION.md` (B-034) gives a non-bootstrap path for selective import; `templates/manifest.yaml` (B-032) makes the per-file placeholder set machine-readable for consumers who want to script their own substitution. Remaining friction (typing `mv` + `sed` once per new project) is small vs. the cost of building, testing, and maintaining a helper covering the `gh repo create` / branch-protection / merge-settings flows reliably. Full Chose / Considered / Why / Failure-mode analysis covers four options (a defer chosen; b thin substitution-only helper deferred-but-not-rejected as cheapest revisit path; c full helper rejected on `gh`-side fragility; d gated-by-flag rejected on principle). Trigger for revisit: adoption friction observable in the wild — option (b) is the cheapest first step at that point.
 
 ## Suggested Execution Order
 
@@ -294,3 +302,19 @@ Do not spend the next cycle on new language presets yet. First:
 2. finish stabilizing the post-split doc architecture,
 3. extend automation around the remaining drift gaps,
 4. and only then formalize preset boundaries for multi-preset growth.
+
+---
+
+## Plan status: closed (2026-05-19)
+
+All five phases of the Codex improvement plan are resolved:
+
+| Phase | Status | Resolution |
+|---|---|---|
+| Phase 1 — fix active doc regressions | done | v1.26.x |
+| Phase 2 — tighten documentation architecture | done | v1.18.0 / v1.27.1 / v1.29.2 |
+| Phase 3 — extend drift-detection automation | done | v1.27.0 / v1.29.x / v1.29.3 |
+| Phase 4 — formalize inventory + preset boundaries | done | v1.30.0 / v1.31.x (incl. D-016 for §4.4) |
+| Phase 5 — improve adoption UX | done | v1.32.0 / v1.32.1 / v1.32.2 (incl. D-017 for §5.3) |
+
+Future roadmap work — actual `_common/` + `presets/python-uv/` file move (gated by B-030); second language preset; new failure modes that emerge in real-world adoption — is outside the Codex plan's scope and tracked separately in `docs/spec.md` "Open project-level decisions."
