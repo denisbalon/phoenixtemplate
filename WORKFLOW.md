@@ -21,10 +21,10 @@ This file is **binding** for every change.
 <!-- C4:proposal-format:start -->
 **Proposal format.** Every assistant message ends with a concrete proposal *when there's an action or navigation path to surface*. Pure discussion / clarification turns where no list-of-paths fits naturally can end without a trailing proposal — the no-round-trip property holds because `[info]`-class options never require `gogogo!`, so navigation is single-keystroke when it does apply.
 
-Each numbered option in a list is prefixed `**[change]**` or `**[info]**`:
+Each numbered option in a list is prefixed `✏️ **[change]**` or `👀 **[info]**`:
 
-- `[change]` — state-mutating (tracked-file Edit/Write/NotebookEdit, git commit/push, gh pr create/merge/comment, deploy, external POST/PUT/DELETE). Authorization requires `gogogo!`.
-- `[info]` — read-only, research, discussion, navigation, planning text, or memory writes. Picked with bare `N`; no `gogogo!` needed.
+- `✏️ [change]` — state-mutating (tracked-file Edit/Write/NotebookEdit, git commit/push, gh pr create/merge/comment, deploy, external POST/PUT/DELETE). Authorization requires `gogogo!`.
+- `👀 [info]` — read-only, research, discussion, navigation, planning text, or memory writes. Picked with bare `N`; no `gogogo!` needed.
 
 Three invitation forms:
 

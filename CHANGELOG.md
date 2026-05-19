@@ -6,6 +6,71 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.34.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.34.0. **Second feature on `improvements-4` — emoji-prefixed `[change]` / `[info]` proposal markers (B-037 + D-019).** Visual marker refinement to B-028's per-option classification; baked into the C4 `proposal-format` region across the trio. Minor bump per WORKFLOW.md (notable UX change to gate; new spec block).
+
+### What shipped
+
+The proposal-format markers now carry an emoji prefix:
+
+- **`✏️ [change]`** — pencil emoji (edit / modify) for state-mutating options.
+- **`👀 [info]`** — eyes emoji (look / read) for read-only options.
+
+The emojis are visual markers only — semantic contract from B-028 is unchanged. Authorization rules, gate scope, and multi-select syntax all the same: `✏️ [change]` still requires `gogogo!`; `👀 [info]` still takes bare `N`. The literal `[change]` / `[info]` text remains the formal classification token; the emoji is just a visual prefix.
+
+### Scope of the emoji prefix
+
+- **Applied** at the start of each numbered option in a `Choose one:` or `Choose any (in order):` list.
+- **Applied** at the marker definitions in the C4 `proposal-format` region (the lines documenting what each marker means).
+- **Not applied** in running prose that references the type (e.g. "Multi-select against `[change]` options" stays bare).
+- **Not applied** to `Single suggestion` proposals (no numbered options to mark).
+- **Not applied** to section headers, status indicators, or anywhere else.
+
+Visual weight stays where it matters — the per-option markers.
+
+### Files touched
+
+- **WORKFLOW.md, templates/CONTRIBUTING.md, templates/CLAUDE.md** — C4 `proposal-format` region: marker definition line + the two bullet items. Byte-exact across all three trio files; B-022 linter verified green.
+- **`docs/spec.md`** — B-037 added (frozen); D-019 added.
+
+### Spec
+
+- **B-037 added** (frozen) — emoji-prefix rule, scope, in-spec-vs-presentation-layer choice (in-spec chosen), pair (✏️/👀 chosen), explicit not-applied list, test recipe.
+- **D-019 added** — Considered / Why covering scope (kit-level chosen over session-only + personal-global), placement (in-spec chosen over presentation-layer), pair (#3 ✏️/👀 chosen over pairs #1 🔧/📖, #2 ⚙️/ℹ️, #4 🛠️/🔍 — comparison on terminal-rendering reliability, semantic clarity, visual humility), vocabulary expansion (stay binary chosen over adding `[risky]` or `[push]` sub-tiers — preserves B-028's deliberate corrective swing back to clear authorization scope). Failure-mode analysis on terminal rendering inconsistency, emoji-fatigue, AI-parsing impact, binary-vocabulary lock-in.
+
+### Why kit-scope (b)
+
+Matches B-036 precedent (this branch's prior commit, v1.33.0). Visual benefit applies in every session of every project adopting the kit, not just the user's own sessions.
+
+### Why in-spec (vs. presentation-layer)
+
+C4 linter (B-022) is byte-exact; running it after the emoji edit verifies the trio stays in sync without separate render-rule plumbing. Presentation-layer would have doubled the contract surface (specification + render-rule both needing to stay synced) for no benefit.
+
+### Why pair #3 (✏️ + 👀)
+
+User picked it directly from the four candidates. Pencil and eyes are action verbs that match the semantic intent (editing vs. looking) without requiring users to learn an arbitrary glyph mapping. Renders reliably across major terminals.
+
+### Why stay binary (vs. adding `[risky]` / `[push]`)
+
+B-028's binary classification was a deliberate corrective swing back to clear authorization scope after the v1.24.0 always-`gogogo!` pattern had diluted the gate signal. Expanding to 3+ tiers reintroduces dilution risk. Blast-radius judgment lives in the proposal prose (per system-prompt "executing actions with care" guidance); the marker's job is gate scope, not risk tier. If real adoption surfaces consistent miscalibrations, a sub-tier is the natural next refinement — earned by demonstrated need, not preemptively shipped.
+
+### What didn't change
+
+- B-028's semantic contract — `[change]` / `[info]` classification rules + authorization scope unchanged.
+- The four C4 regions themselves (gate-clause / proposal-format / bare-gogogo / env-metadata-contract) — same four, content refined in one of them.
+- No script changes; no manifest changes; no linter changes.
+- All other C4-region content unchanged — only the marker definition line + the two bullet items in `proposal-format` were touched.
+
+### Verified
+
+- C4 linter (B-022) green — proposal-format region byte-exact across all 3 trio files.
+- C2 doc-ref linter green — 87 link targets resolved.
+- C3 placeholder linter green — no canonical placeholders in plain prose.
+- C5 spec-consistency linter green — no forbidden phrases triggered (emoji prefix doesn't match any pattern).
+- Manifest linter green — 44 entries.
+- Smoke test pre-flight (B-031 §0b) C4-content check still green — region content well above 100 non-blank-char threshold.
+
 ## v1.33.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.33.0. **First feature on `improvements-4` branch — web-search-before-iterate rule for external surfaces (B-036 + D-018).** Standing-rule addition extending Karpathy Pitfall #1 with the explicit `WebSearch`-first tactic for APIs / SDKs / 3rd-party services / library versions. Minor bump per WORKFLOW.md (notable behavior change to standing rules).

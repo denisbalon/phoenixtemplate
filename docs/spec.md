@@ -383,6 +383,32 @@ The four-trigger shape was chosen over single-trigger alternatives because each 
 
 **Decision:** D-018
 
+### Block B-037: emoji-prefixed `[change]` / `[info]` markers in the proposal format
+
+**Rule:** The proposal-format markers defined by B-028 (per-option `[change]` / `[info]` classification) gain a single emoji prefix each, baked into the C4-anchored `proposal-format` region across the doc trio (WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md):
+
+- **`✏️ [change]`** — state-mutating options. Pencil emoji (edit / modify).
+- **`👀 [info]`** — read-only options. Eyes emoji (look / read).
+
+The emojis are visual markers only; they do NOT change the semantic contract from B-028. Authorization rules, gate scope, and multi-select syntax are all unchanged — `✏️ [change]` still requires `gogogo!`; `👀 [info]` still takes bare `N`; the literal `[change]` / `[info]` text in the marker remains the formal classification token.
+
+Scope of the emoji prefix:
+- **Always applied** at the start of each numbered option in a `Choose one:` or `Choose any (in order):` list.
+- **Applied at the marker definitions** in the C4 `proposal-format` region (the lines documenting what each marker means).
+- **Not applied** in running prose that references the type (e.g. "Multi-select against `[change]` options" stays bare; the bare token is the type, the emoji-prefixed form is the rendered marker).
+- **Not applied** to `Single suggestion` proposals (no numbered options to mark).
+- **Not applied** to section headers, status indicators, or anywhere else — the markers are the only place; visual weight stays where it matters.
+
+**Rationale:** B-028 introduced the per-option `[change]` / `[info]` classification to give the gate signal back its precision (after the always-`gogogo!`-on-every-option pattern from v1.24.0 had been diluting it). The textual markers work, but they lend a uniform visual weight to every option — a long "Choose any (in order):" list with mixed types reads as a wall of bracketed text where the eye has to parse `[c-h-a-n-g-e]` vs `[i-n-f-o]` per option. A single emoji prefix per type makes the type recognizable at a glance without changing the rule. Pair chosen (✏️ + 👀) was selected from four candidates on humble-not-loud grounds — pencil/eyes are action verbs ("editing" / "looking") that match the semantic intent without competing for visual weight; alternative pairs considered: 🔧/📖 (wrench/book), ⚙️/ℹ️ (gear/info-symbol), 🛠️/🔍 (tools/magnifier) — see D-019 for the comparison. Pair #3 (✏️/👀) chosen.
+
+The change is in-spec (the C4 region carries the emoji) rather than presentation-layer (spec stays as `[change]`/`[info]`, render-time adds emoji). In-spec keeps one source of truth and zero drift surface; the C4 linter (B-022) still works byte-exact on the new text including the emojis. Presentation-layer would require a second contract describing what the render rules are, doubling the surface for no benefit.
+
+**Test:** manual — the four C4-anchored `proposal-format` regions across WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md all contain `✏️ **[change]**` / `👀 **[info]**` in the marker definition line and `✏️ [change]` / `👀 [info]` in the bullet items. C4 linter (B-022) passes — regions are byte-exact across the trio. C5 spec-consistency linter passes — no forbidden phrases triggered. Smoke test pre-flight C4-content check (B-031 §0b) still passes — region content well above the 100 non-blank-char threshold.
+
+**Status:** frozen
+
+**Decision:** D-019
+
 ### Block B-030: preset architecture — `_common/` shared layer + `presets/<preset>/` specific layer
 
 **Rule:** When multi-preset support actually ships (not as of v1.30.0 — design only), the meta-repo's currently-flat `templates/` directory will be reorganized into two layers: `_common/` (stack-agnostic content shared across all presets — workflow docs, gate trio with C4 anchored regions, spec-block format, review rubric, env-bootstrap core, Karpathy rules, changelog conventions, meta scaffolding) and `presets/<preset-name>/` (stack-specific content — Makefile, CI workflow, deploy script, runtime pin, project metadata file, sample source tree, sample smoke test, setup-doc prereqs). A bootstrapped project = `_common/` contents flattened with one chosen `presets/<chosen>/` contents at the project root. Constraints: (1) single preset per project — mixed-preset out of scope; (2) no file conflicts between layers — each file has exactly one owner; (3) uniform placeholders — the B-024 canonical placeholder set works the same way across all presets; (4) C4 regions live in `_common/` — the byte-exact rule statements are stack-agnostic and don't get re-declared per preset. Design doc: `presets/PRESET_ARCHITECTURE.md`. **No implementation as of v1.30.0** — `_common/` and `presets/python-uv/` directories don't exist; `templates/` is unchanged; the design is the deliverable. Future implementation commits will create the directories, move files appropriately, update `scripts/export-starter.sh` to compose by preset, and update `scripts/smoke-test.sh` to test per-preset.
@@ -755,6 +781,50 @@ Refines / extends B-016 (live doc references resolve to shipped files or are exp
 - **Rule expansion creep.** Once "search before iterate" is in place, more triggers will be tempting (every type signature lookup; every npm-package decision; etc.). Mitigation: keep the rule scoped to EXTERNAL SURFACES (APIs / SDKs / 3rd-party services / library versions). Internal reasoning about the project's own code stays on Pitfall #1's existing "verify load-bearing facts" sub-bullet without forcing a search.
 
 **Implemented in:** v1.33.0. Touches: `templates/CLAUDE.md` (Pitfall #1 extension); `templates/docs/karpathy-claude-rules.md` (§1 gets the `### Web-search before iterate on external surfaces (B-036)` subsection with full rationale + four triggers); `docs/spec.md` (B-036 added — frozen; this D-018 entry added). No C4 region changes (Karpathy rules are not gate-related per B-021 three-tier model). No linter changes; no script changes. Standing-rule additions don't usually need a Decision-log entry, but B-036's design space had real architectural choices (placement, trigger shape, threshold, gate classification) worth recording so future revisits have a starting point.
+
+### D-019 (2026-05-19) Emoji-prefixed `[change]` / `[info]` proposal markers (B-037)
+
+**Chose:** (a) **kit-scope** edit (touches the C4 `proposal-format` region across the trio); (b) **in-spec** placement (emojis baked into the C4 region; one source of truth); (c) **pair #3** ✏️ + 👀 (pencil / eyes); (d) **stay binary** — keep the `[change]` / `[info]` vocabulary; do NOT add a `[risky]` or `[push]` sub-tier in this commit.
+
+**Considered (scope):**
+- **Session-only** — Claude starts using emojis in this conversation; no kit change. Ephemeral.
+- **Personal global** — user's `~/.claude/CLAUDE.md` (applies to all their sessions). Doesn't propagate to other adopters of the kit.
+- **Kit-level** (chosen) — extends B-028 across the C4 region so every project that adopts the kit benefits. Matches the precedent set by B-036 (v1.33.0, prior commit on this branch) which also went kit-scope.
+
+**Considered (placement):**
+- **In-spec** (chosen) — emojis appear in the C4 region itself. Pro: one source of truth; the C4 linter (B-022) still works byte-exact including the emoji characters. Con: the spec text picks up visual decoration that's strictly user-facing.
+- **Presentation-layer** — C4 region stays as bare `[change]`/`[info]`; a separate "render this way" rule adds the emoji at output time. Pro: keeps the spec text plain. Con: doubles the contract surface (now there's a "specification" AND a "render rule" that both have to stay in sync); the C4 linter would only catch drift in the spec text, not in render practice.
+
+**Considered (emoji pair):**
+- **#1 — 🔧 / 📖** (wrench / book) — semantically clean (mutation / reading); slightly more "tooling-ish" weight.
+- **#2 — ⚙️ / ℹ️** (gear / info-symbol) — most abstract; matched weight. ℹ️ has a literal "info" meaning. Some terminals render ℹ️ as text not glyph, which can look inconsistent.
+- **#3 — ✏️ / 👀** (pencil / eyes) — chosen. Action verbs ("editing" / "looking"); both render reliably across terminals; slightly more playful than #1/#2 but still humble.
+- **#4 — 🛠️ / 🔍** (tools / magnifier) — both implementational; 🔍 reads more as "search" than "read."
+
+**Considered (vocabulary expansion):**
+- **Stay binary** (chosen) — `[change]` + `[info]` cover the gate-scope distinction B-028 cares about; finer-grained risk tiers exist in the prose of each proposal (the user is expected to read what's being proposed, not rely solely on the marker for blast-radius judgment).
+- **Add `[risky]`** — high-blast-radius sub-tier of `[change]` for irreversible / shared / external actions (force-push to main, deploy to prod, external POST). Pro: visual flag for high-stakes operations. Con: every `[change]` proposal now requires a sub-classification decision; risk of bikeshedding "is this `[change]` or `[risky]`?" on every proposal turn.
+- **Add `[push]`** — middle-tier sub-classification between local-`[change]` and external-`[risky]`. Same con as `[risky]` doubled.
+
+**Why (a) kit-scope:** matches the pattern set by B-036 (v1.33.0, this branch's prior commit) for standing-rule additions. The visual benefit applies in every session of every project adopting the kit, not just the user's own. The cost — one C4-region edit — is one-time.
+
+**Why (b) in-spec:** the C4 linter (B-022) is byte-exact; running it after the emoji edit verifies the trio remains in sync without separate render-rule plumbing. The "spec text picks up visual decoration" concern is real but mitigated by the fact that the spec IS what's rendered (these aren't internal compiler artifacts; they're agent-output formatting rules).
+
+**Why (c) pair #3 ✏️ + 👀:** user picked it directly out of the four options surfaced. Pencil and eyes are action verbs that match the semantic intent (editing vs. looking) without requiring users to learn an arbitrary glyph mapping. Renders reliably across major terminals (some terminals downgrade ⚙️/ℹ️/🛠️ to text symbols which breaks visual consistency).
+
+**Why (d) stay binary:** B-028's binary classification was a deliberate corrective swing back to clear authorization scope after the always-`gogogo!`-on-every-option pattern from v1.24.0 had diluted the gate signal. Expanding to 3+ tiers reintroduces the dilution risk. Blast-radius judgment lives in the proposal prose (per the system-prompt "executing actions with care" guidance — high-stakes irreversible operations get explicit flagging in the proposal text); the marker's job is gate scope, not risk tier. If real adoption surfaces consistent miscalibrations (e.g., the binary keeps lumping force-push with file-edits in ways that hurt), a sub-tier is the natural next refinement — but earned by demonstrated need, not preemptively shipped.
+
+**Failure-mode analysis:**
+
+- **Terminal rendering inconsistency.** Some terminals or fonts may render ✏️ / 👀 differently than expected (text fallback, missing glyph, mis-sized). Mitigation: ✏️ (U+270F) and 👀 (U+1F440) are widely-supported emoji in modern terminals (iTerm, Terminal.app, gnome-terminal, alacritty, kitty all render them as glyphs). If a future adopter reports rendering trouble, swap in a presentation-layer rule that lets the consumer pick an alternate pair via CLAUDE.md override; that's a `presentation-layer` shape we explicitly considered + rejected here but kept on the table as a future option.
+
+- **Emoji-fatigue.** Once the precedent is set ("we have emojis in proposal markers"), pressure to add emojis elsewhere (section headers, status messages, every proposal type) is real. Mitigation: B-037 scope is deliberately narrow — emojis ONLY at the per-option markers in `Choose one:` / `Choose any (in order):` lists; explicitly NOT at section headers, status indicators, single-suggestion proposals, or anywhere else. Future expansion would need its own B-NNN with its own justification.
+
+- **AI-parsing impact.** Emoji characters are multi-byte; could affect text-processing tooling that assumes ASCII. Mitigation: the C4 linter parses files byte-exact and handles UTF-8 correctly; the spec-consistency linter (C5) operates on POSIX ERE patterns over the text content, no emoji-specific regression risk. Smoke test pre-flight (B-031 §0b) counts non-blank chars — emoji characters count, no threshold drift.
+
+- **Binary-vocabulary lock-in.** Shipping the binary-with-emojis sets a UX precedent that may make expanding to `[risky]` harder later (would need new emoji + harmonizing visual system). Mitigation: explicit option to revisit binary in future B-NNN; D-019 records that the expansion question was considered + deferred, so the future-revisit has documented starting points.
+
+**Implemented in:** v1.34.0. Touches: the C4 `proposal-format` region across WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md (byte-exact; B-022 linter verified green after the edit); `docs/spec.md` (B-037 added — frozen; this D-019 entry added). No script changes; no manifest changes; no behavior changes beyond visual marker presentation. C5 spec-consistency linter green — emoji prefix doesn't trigger any forbidden-phrase pattern. Smoke test pre-flight green — C4-region content still well above 100 non-blank-char threshold.
 
 ## Open project-level decisions
 
