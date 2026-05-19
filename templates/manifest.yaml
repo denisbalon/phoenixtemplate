@@ -301,3 +301,9 @@ files:
     tier: meta-only
     placeholders: []
     exported_by_starter: false
+
+  - path: ONBOARDING_PROMPT.md
+    purpose: structured guide Claude follows when bootstrapping a new project from the kit (B-039)
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false

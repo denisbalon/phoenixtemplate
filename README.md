@@ -17,6 +17,12 @@ Plus meta tooling: `scripts/export-starter.sh` (portable kit archive), `scripts/
 
 ## Quickstart
 
+**Brand new to the kit?** The fastest path is via [phoenixprojecttemplate.com](https://phoenixprojecttemplate.com) — paste one prompt into Claude Code, answer six questions, get a working project. Or paste this directly into Claude Code in an empty directory:
+
+> Read https://raw.githubusercontent.com/denisbalon/phoenixprojecttemplate/main/ONBOARDING_PROMPT.md and follow it exactly to bootstrap a new project for me here. If you can't fetch URLs, ask me to enable WebFetch via `/permissions` first.
+
+Claude reads [`ONBOARDING_PROMPT.md`](ONBOARDING_PROMPT.md), asks six setup questions, scaffolds the project, and optionally creates the GitHub repo. ~5 minutes end-to-end. **WebFetch not enabled?** Type `/permissions` in Claude Code, add `WebFetch` to the allow list, then try the paste again.
+
 **Already have a project?** Read [`MIGRATION.md`](MIGRATION.md) instead — the kit is consumable as a toolkit (selective-import paths for the process layer, docs, env-bootstrap, or linter set), not only as a fresh-start template.
 
 From this repo (the source of truth):
