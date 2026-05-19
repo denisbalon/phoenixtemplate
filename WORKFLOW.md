@@ -233,7 +233,7 @@ Each round of fixes follows the full `gogogo!` workflow. New commits go on the s
 
 Only after the user `gogogo!`s a merge proposal Claude surfaced. Never implicit. The bare word "merge" without `gogogo!` does NOT authorize, and a proposal without `gogogo!` doesn't either.
 
-With branch protection on ([`PROJECT_STARTER.md §1.6`](PROJECT_STARTER.md#16-branch-protection-on-main)), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked.
+With branch protection on (set up per [`BOOTSTRAP.md` → "Branch protection on `main`"](BOOTSTRAP.md#branch-protection-on-main)), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked.
 
 ```sh
 gh pr merge <PR#> --rebase --delete-branch
