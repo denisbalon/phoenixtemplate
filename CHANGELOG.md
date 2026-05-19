@@ -6,6 +6,40 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.32.5 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.32.5. **Rewrite `codex improvement plan.md` as closed-status archive doc.** Post-merge follow-up: now that PR #3 closed the entire Codex improvement plan (Phases 1-5 resolved across v1.9.0 → v1.32.4), the plan document itself was rewritten from a live "active priorities + phases + acceptance criteria" doc into a compact "Status: Closed" archive that preserves the audit trail of what shipped + names the source-of-truth docs to consult for future work. Patch bump per WORKFLOW.md (typical doc rewrite).
+
+### What it was
+
+Pre-rewrite, `codex improvement plan.md` was still shaped as a live plan with Phase 1-5 sections, per-§ Work + Acceptance bullets, and resolution paragraphs appended below each item. The doc had been edited additively across this session's commits (commit 3 of the v1.31.x trio bundled an earlier rewrite from the user's working tree; subsequent commits added per-§ resolution notes inside the Phase 5 section + a "Plan status: closed" appendix below Recommendations). That additive style made the doc readable but ~500+ lines and structurally pre-closure.
+
+### The rewrite
+
+Doc restructured to a compact closed-status archive (~108 lines, was ~290):
+
+- **`## Status`** — plain "Closed on 2026-05-19" header with a one-paragraph summary pointing at D-017.
+- **`## What Was Delivered`** — 8 numbered outcomes describing what the plan actually shipped across all 5 phases. Replaces the original Phase 1-5 detailed sections.
+- **`## Remaining Work`** — 5 numbered items naming the future roadmap that's *outside* the closed plan's scope: implement the layered preset structure (B-030); add a second preset; revisit bootstrap modes only after layered presets are real; revisit `new-project.sh` only if adoption friction surfaces; handle new drift case-by-case in `docs/spec.md`. Each item has Current-state / Still-to-build (or Still-to-decide) / Why-this-matters fields.
+- **`## Recommended Next Focus`** — three-step sequencing recommendation: layered structure first, then a second preset, then re-evaluate bootstrap modes + helper tooling against that real structure.
+- **`## Source Of Truth`** — explicit pointer at the three authoritative docs to consult instead of this closed plan: `docs/spec.md`, `presets/PRESET_ARCHITECTURE.md`, `CHANGELOG.md`.
+
+### Why this matters
+
+Keeping the closed plan readable in archive form (rather than as a sprawling document with resolution markers scattered through original-plan text) makes it easier for future contributors to see the lifecycle at a glance: what got done, what's *intentionally* still open, where to look for current authoritative state. The pre-rewrite shape conflated "what was originally planned" with "what's still active" — confusing for new readers; the closed-status archive separates them cleanly.
+
+### What didn't change
+
+- No spec changes — the closed-status records what already shipped; the rule changes themselves (B-NNN / D-NNN entries) live in `docs/spec.md` unchanged.
+- No code changes; no linter changes; no template changes.
+- No new spec block — the rewrite is editorial, not behavioral.
+- No changes to any other doc — `docs/spec.md` D-017 and the per-phase changelog entries already record the closures.
+
+### Verified
+
+- All 5 linters green (codex improvement plan.md is excluded from `scripts/check-placeholders.sh` per its existing exclusion; not in any active-doc / C4 / manifest scope so the other linters don't scan it either, but the doc-references linter does check its Markdown links — all internal links resolve).
+- `docs/spec.md` Source-Of-Truth references point at existing files.
+
 ## v1.32.4 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.32.4. **Fix Strong finding from Codex review of PR #3** — `TEMPLATE_INVENTORY.md:71` carried pre-split language describing `templates/CONTRIBUTING.md` as a "verbatim copy of `PROJECT_STARTER.md` §2 with project specifics filled in," which has been stale since v1.25.0 (`WORKFLOW.md` became canonical for the workflow) and v1.27.1 (D-012 settled `PROJECT_STARTER.md` as a permanent thin index). Reviewer flagged this as Strong on commit `06c34ea` (B-032, v1.31.0) because the newly-blessed human-readable companion to `templates/manifest.yaml` carried an inconsistent ownership claim — exactly the kind of finding B-032's tier classification was meant to prevent going forward. Commit 2 of 2 of the review-fix sequence. Patch bump per WORKFLOW.md (typical doc fix, no spec change).
