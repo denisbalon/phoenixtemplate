@@ -248,6 +248,29 @@ Both are doc-vs-reality drift the v1.19.0 linter trio specifically didn't cover.
 
 **Decision:** D-014
 
+### Block B-031: smoke-test pre-flight integrity checks (B-014 extension)
+
+**Rule:** `scripts/smoke-test.sh` runs two pre-flight integrity checks before the template-instantiation flow (B-014). Both target known past failure modes and run on the meta-repo files (not on the exported archive).
+
+- **Check 0a — env-schema parses cleanly.** Sources `templates/scripts/_env-schema-parse.sh` with `EXAMPLE=templates/.env.example` and verifies the `VARS` array is populated with at least one entry. Catches: malformed `.env.example` that doesn't parse (e.g., orphan directive without var declaration; var-name regex mismatch; syntax error). The parser is the load-bearing contract for B-020; a malformed schema source would silently break `bootstrap.sh` + `check-env.sh` in consumer projects.
+- **Check 0b — C4 trio regions carry substantive content (≥100 non-blank chars per region per file).** For each region in `C4_REGIONS=(gate-clause proposal-format bare-gogogo env-metadata-contract)` and each file in `C4_FILES=(WORKFLOW.md templates/CONTRIBUTING.md templates/CLAUDE.md)`, extract content between the `<!-- C4:<region>:start -->` and `<!-- C4:<region>:end -->` anchors, strip whitespace, count remaining characters. Fail if any region in any file has < 100 non-blank chars. Catches: a region that's been gutted to whitespace-only or near-empty content but where the anchors remain — the existing C4 rule-consistency linter (B-022) only errors on zero-byte regions via `[[ ! -s ]]`, so it would pass a region containing only whitespace.
+
+Both checks run before the existing 7-phase smoke-test flow (export → extract → substitute → uv sync → pytest → ruff → mypy). Pre-flight failures abort the smoke test before any export work begins. Wired into CI via `.github/workflows/template-self-test.yml`'s existing `template-self-test / smoke` job (no separate step needed — same script).
+
+**Rationale:** Phase 3.3 of the Codex improvement plan called for "expand smoke coverage where it closes a real past failure mode" — explicitly cautioning against broad smoke inflation. Two narrow checks were chosen:
+
+- **0a (env-schema parse)** addresses a near-miss class: the `@directive` parser is consumed by both `bootstrap.sh` and `check-env.sh`; a syntax error in `templates/.env.example` would break consumer setup at first run, with no current automated check between the source file and the parser. The B-020 spec describes the contract; no test verifies the source actually conforms. v1.14.x parser-swap commits could have shipped a parsing regression; nothing caught it at the template level. This check closes that gap.
+
+- **0b (C4 region content)** addresses a vandalism / accidental-emptying class. The B-022 linter ensures byte-exact match across the trio, but matches between three empty regions would pass — a silent loss of rule content. The `[[ ! -s ]]` check catches zero-byte but not whitespace-only or near-empty. The 100-char threshold is conservative (current regions average several hundred chars); near-empty content is a real warning signal.
+
+The bar set by B-014 + B-029 ("driven by known failure modes, not broad coverage") is preserved: these two specific checks have specific failure modes they prevent, and the check-list won't grow speculatively. New checks added per shipped regression.
+
+**Test:** automated — `./scripts/smoke-test.sh` runs both pre-flight checks and prints `✓ parsed N vars from templates/.env.example` + `✓ all 4 C4 regions ≥ 100 non-blank chars across 3 trio files` before continuing to phase 1. Planting a violation (e.g. `EXAMPLE=/tmp/nonexistent` for 0a; emptying a C4 region anchor body for 0b) fails the smoke test with the specific check name + the violating file / region / char count. CI runs the smoke test on every push and PR.
+
+**Status:** frozen
+
+**Decision:** — (no new D entry; B-031 is execution of Phase 3.3 under the framework set by B-014 + B-029)
+
 ### Block B-020: `.env.example` schema is declared via `@directive` comments
 
 **Rule:** Each environment variable in `templates/.env.example` (and the resulting `.env.example` in consumer projects) carries machine-readable metadata via `# @directive: value` lines preceding the var declaration. Recognized directives:
