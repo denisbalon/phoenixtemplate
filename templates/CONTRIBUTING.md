@@ -190,43 +190,44 @@ gh pr view <PR#> --json state    # MERGED
 
 ---
 
-# `gogogo!` passphrase — hard gate + action-verb convention
+# `gogogo!` passphrase — hard gate + propose-and-confirm convention
 
 ## The hard gate
 
 <!-- C4:gate-clause:start -->
-**Do NOT take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.**
+**Do NOT take any state-mutating action unless: (a) Claude's immediately preceding message contained a concrete proposal (specific files/commands/commits, not vague phrasing), AND (b) the user's CURRENT message contains the literal substring `gogogo!`, optionally preceded by a digit (e.g. `2 gogogo!`) selecting one option from a numbered list.**
 <!-- C4:gate-clause:end -->
 
-`gogogo!` is the **execute trigger**. It must be preceded by an **action verb** in the same message — the verb specifies *what* to execute.
+`gogogo!` confirms a concrete proposal Claude surfaced. The proposal IS the contract — what file gets edited, what commit gets pushed, what command runs. The action Claude executes is exactly what the proposal described.
 
-### Verb → action
+### Proposal format
 
-<!-- C4:verb-table:start -->
-| Phrase | Action |
-|---|---|
-| `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy) |
-| `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) |
-| `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request |
-| `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
-| `deploy gogogo!` | Run the project's deploy command |
-| `revert gogogo!` | Revert last commit + redeploy |
-<!-- C4:verb-table:end -->
+<!-- C4:proposal-format:start -->
+**Proposal format.** Every state-mutating action Claude takes is preceded by a proposal in its own assistant message, ending with one of two invitation forms:
+
+- **Single suggestion** — a bold "Proposed: <action>" header, a concrete plan (specific files / commands / commits), and a final line inviting `gogogo!` to proceed.
+- **Numbered choice** — a bold "Choose:" header, numbered options (each one concrete), and a final line inviting `N gogogo!` to pick option N.
+
+Concrete means specific files, specific commands, specific commits — not "commit the changes." For multi-step actions (5-step feature work), enumerate every step. The user's `gogogo!` authorizes exactly the proposed plan; mid-execution deviation requires a new proposal.
+<!-- C4:proposal-format:end -->
 
 <!-- C4:bare-gogogo:start -->
-**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. Review is out-of-band — no verb for it.
+**Bare `gogogo!` with no preceding proposal** → reply *"I haven't proposed anything concrete yet. Describe what you'd like and I'll surface options."* and STOP.
 <!-- C4:bare-gogogo:end -->
 
 Self-check before any state-mutating tool call:
 
-1. Does THIS exact message contain `gogogo!`?
-2. What verb is immediately before it?
-3. Does that verb match the action I'm about to take?
+1. Did MY IMMEDIATELY-PRECEDING assistant message contain a concrete proposal (specific files/commands/commits)?
+2. Does THE USER'S CURRENT message contain the literal substring `gogogo!`?
+3. If a numbered choice was offered, did the user select with `N gogogo!`? Does N match my numbered list?
+4. Am I about to do exactly what the proposal described, or has something deviated?
 
-- No `gogogo!` → reply with the plan + "Send `<verb> gogogo!` and I'll do it." STOP.
-- Bare `gogogo!` (no verb) → see the canonical prompt above.
-- `<verb> gogogo!` but I was about to do a *different* action → STOP, surface the mismatch.
-- `<verb> gogogo!` matching the action → execute.
+- No prior proposal → propose now. Don't execute.
+- Prior proposal but conversation drifted (questions, clarifications, no re-proposal in my last message) → re-propose before acting.
+- No `gogogo!` in current message → respond with a concrete proposal + invitation line. STOP.
+- Bare `gogogo!` without prior proposal → see the canonical prompt above.
+- `N gogogo!` selecting from a list I offered → execute option N exactly as described.
+- Mid-execution deviation from the proposal → STOP and re-propose.
 
 The check is the FIRST step of every action response. **Auto mode does NOT override this gate.**
 
@@ -234,9 +235,9 @@ The check is the FIRST step of every action response. **Auto mode does NOT overr
 
 Bare imperatives *without* `gogogo!`:
 
-`now lets X` · `let's X` · `can you X` · `please X` · `do X` · `go` · `proceed` · `ship it` · `yes` · `yeah` · `ok do it` · `sure` · `we should X` · `merge` (alone) · `revert` (alone) · `commit` (alone) · `deploy` (alone) · `push` (alone) · `PR` (alone) · detailed feature descriptions in imperative mood · user pasting an exact diff with "just do the fix"
+`now lets X` · `let's X` · `can you X` · `please X` · `do X` · `go` · `proceed` · `ship it` · `yes` · `yeah` · `ok do it` · `sure` · `we should X` · detailed feature descriptions in imperative mood · user pasting an exact diff with "just do the fix"
 
-All → reply with the plan + "Send `<verb> gogogo!` and I'll do it" → STOP. The action verbs above are ONLY authorizing when paired with `gogogo!` in the same message.
+All → respond with a concrete proposal + invitation line → STOP. The user must then `gogogo!` (or `N gogogo!`) the proposal.
 
 ## Phrases that mean DEFINITELY NOT action
 
@@ -244,7 +245,7 @@ All → reply with the plan + "Send `<verb> gogogo!` and I'll do it" → STOP. T
 
 ## Allowed without `gogogo!`
 
-Reading files · grep · read-only git · web search · planning text · clarifying questions · writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`).
+Reading files · grep · read-only git · web search · planning text · proposing (the propose-then-wait pattern itself never requires `gogogo!`) · clarifying questions · writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`).
 
 `.claude/settings.json` (committed) IS gated.
 
@@ -252,16 +253,17 @@ Reading files · grep · read-only git · web search · planning text · clarify
 
 | Rationalization | Why it's wrong |
 |---|---|
-| "Intent is unambiguous, just ship it" | Gate is the literal `gogogo!` substring, not intent. |
-| "User said `gogogo!` recently, this is in scope" | Every action needs a FRESH `<verb> gogogo!` in the CURRENT message. |
+| "Intent is unambiguous, just ship it" | Gate is `gogogo!` after a concrete proposal, not intent. |
+| "User said `gogogo!` recently, this scope counts" | Each `gogogo!` authorizes one specific proposal. New action = new proposal. |
 | "Auto mode says minimize interruptions" | Auto mode does NOT override this gate. |
 | "Direct imperative + clarity = authorization" | Imperative grammar ≠ `gogogo!`. |
 | "User said yes" | `yes` is not `gogogo!`. |
-| "It's just a docs/SPEC tweak" | Tracked-file edits need the gate. |
+| "It's just a docs/SPEC tweak" | Tracked-file edits need a proposal + `gogogo!`. |
 | "User pasted the diff verbatim" | WHAT ≠ WHEN. |
 | "User is rushing" | Schedule is not my problem; the gate is. |
-| "Bare `gogogo!`, I'll default to the 5-step" | Bare `gogogo!` is ambiguous — ask for the verb. |
-| "`merge gogogo!` is close enough to authorize a PR open too" | One verb, one action. `PR gogogo!` for PR; `merge gogogo!` for merge. |
+| "Bare `gogogo!`, I'll default to whatever feels right" | Bare `gogogo!` without a prior proposal is invalid — ask for clarification. |
+| "Reality deviated from my proposal mid-action; close enough" | STOP and re-propose. The original `gogogo!` only authorized the original plan. |
+| "I proposed concretely several messages ago, the user is following up now" | The proposal must be in the IMMEDIATELY-PRECEDING message. Conversation drift → re-propose. |
 
 ## Mandatory 5-step sequence on `<feature-verb> gogogo!`
 

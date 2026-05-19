@@ -36,7 +36,7 @@ FILES=(
 
 REGIONS=(
   "gate-clause"
-  "verb-table"
+  "proposal-format"
   "bare-gogogo"
 )
 

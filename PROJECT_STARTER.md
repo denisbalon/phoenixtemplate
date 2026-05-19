@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.22.0
+**Template version:** v1.23.0
 **Last updated:** 2026-05-19
 
 A reusable bootstrap kit for new software projects worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
@@ -197,52 +197,52 @@ This section is **binding** for every change.
 ### 2.1 The `gogogo!` passphrase — hard gate
 
 <!-- C4:gate-clause:start -->
-**Do NOT take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.**
+**Do NOT take any state-mutating action unless: (a) Claude's immediately preceding message contained a concrete proposal (specific files/commands/commits, not vague phrasing), AND (b) the user's CURRENT message contains the literal substring `gogogo!`, optionally preceded by a digit (e.g. `2 gogogo!`) selecting one option from a numbered list.**
 <!-- C4:gate-clause:end -->
 
-`gogogo!` is the **execute trigger**. It must be preceded by an **action verb** in the same message — the verb specifies *what* to execute. `gogogo!` is the signature; the verb is the contract.
+`gogogo!` confirms a concrete proposal Claude surfaced. The proposal IS the contract — what file gets edited, what commit gets pushed, what command runs. The action Claude executes is exactly what the proposal described. There are no verbs; proposals carry the action description in plain English, and `gogogo!` (or `N gogogo!`) is the authorization signal.
 
-#### Action verb → workflow
+#### Proposal format
 
-<!-- C4:verb-table:start -->
-| Phrase | Action |
-|---|---|
-| `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy) |
-| `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) |
-| `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request |
-| `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
-| `deploy gogogo!` | Run the project's deploy command |
-| `revert gogogo!` | Revert last commit + redeploy |
-<!-- C4:verb-table:end -->
+<!-- C4:proposal-format:start -->
+**Proposal format.** Every state-mutating action Claude takes is preceded by a proposal in its own assistant message, ending with one of two invitation forms:
 
-Workflow detail per verb: feature verbs (`code` / `feat` / `fix` / `chore` / `docs` / `refactor` / `test` / `perf` / `ship`) run the full 5-step sequence in §2.2; `commit gogogo!` runs only §2.5 (commit + push, still bumps version + CHANGELOG); `PR gogogo!` / `ready gogogo!` / `open PR gogogo!` opens a PR per §2.6; `merge gogogo!` rebase-merges per §2.9; `deploy gogogo!` deploys current `main` per §2.11; `revert gogogo!` reverts + redeploys per §2.12.
+- **Single suggestion** — a bold "Proposed: <action>" header, a concrete plan (specific files / commands / commits), and a final line inviting `gogogo!` to proceed.
+- **Numbered choice** — a bold "Choose:" header, numbered options (each one concrete), and a final line inviting `N gogogo!` to pick option N.
+
+Concrete means specific files, specific commands, specific commits — not "commit the changes." For multi-step actions (5-step feature work), enumerate every step. The user's `gogogo!` authorizes exactly the proposed plan; mid-execution deviation requires a new proposal.
+<!-- C4:proposal-format:end -->
 
 <!-- C4:bare-gogogo:start -->
-**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. Review is out-of-band — no verb for it.
+**Bare `gogogo!` with no preceding proposal** → reply *"I haven't proposed anything concrete yet. Describe what you'd like and I'll surface options."* and STOP.
 <!-- C4:bare-gogogo:end -->
 
-Before any state-mutating tool call (`Edit` / `Write` / `NotebookEdit` / `Bash` running `git commit` / `git push` / deploy / `gh pr create|merge|comment` / `gh issue create` / curl POST/PUT/DELETE), self-check:
+#### Self-check before any state-mutating action
 
-1. Does THIS exact message contain the literal substring `gogogo!`?
-2. What is the action verb immediately before it?
-3. Does that verb match the action I'm about to take?
+Before any state-mutating tool call (`Edit` / `Write` / `NotebookEdit` / `Bash` running `git commit` / `git push` / deploy / `gh pr create|merge|comment` / `gh issue create` / curl POST/PUT/DELETE):
 
-- No `gogogo!` → reply with the plan in text + "Send `<verb> gogogo!` and I'll do it." STOP.
-- Bare `gogogo!` (no verb) → see the canonical prompt above.
-- `<verb> gogogo!` but I was about to do a *different* action → STOP, surface the mismatch, do nothing.
-- `<verb> gogogo!` matching the action → execute the workflow for that verb.
+1. Did MY IMMEDIATELY-PRECEDING assistant message contain a concrete proposal (specific files/commands/commits)?
+2. Does THE USER'S CURRENT message contain the literal substring `gogogo!`?
+3. If a numbered choice was offered, did the user select with `N gogogo!`? Does N match my numbered list?
+4. Am I about to do exactly what the proposal described, or has something deviated?
 
-The check is the FIRST step of every action response — before drafting code, before reading files for the change, before describing the plan. **Auto mode does NOT override this gate.**
+- No prior proposal → propose now. Don't execute.
+- Vague prior proposal ("commit the changes") → re-propose concretely. Don't execute.
+- Prior proposal but conversation drifted (questions, clarifications, no re-proposal in my last message) → re-propose before acting.
+- No `gogogo!` in current message → STOP. Plan-text only.
+- Bare `gogogo!` without prior proposal → see the canonical prompt above.
+- `N gogogo!` selecting from a list I offered → execute option N exactly as described.
+- Mid-execution deviation from the proposal → STOP and re-propose.
+
+**Auto mode does NOT override this gate.** The check is the FIRST step of every action response — before writing code, before reading files for the change.
 
 #### Phrases that LOOK like authorization but aren't
 
 Bare imperatives *without* `gogogo!`:
 
-`now lets X` · `let's X` · `can you X` · `could you X` · `please X` · `do X` · `do that` · `go` · `proceed` · `ship it` · `yes` · `yes do` · `yeah` · `ok do it` · `sure` · `we should X` · `we need X` · `time to X` · `merge` (alone) · `revert` (alone) · `commit` (alone) · `deploy` (alone) · `push` (alone) · `PR` (alone) · detailed feature descriptions in imperative mood · user pasting an exact diff with "just do the fix"
+`now lets X` · `let's X` · `can you X` · `could you X` · `please X` · `do X` · `do that` · `go` · `proceed` · `ship it` · `yes` · `yes do` · `yeah` · `ok do it` · `sure` · `we should X` · `we need X` · `time to X` · detailed feature descriptions in imperative mood · user pasting an exact diff with "just do the fix"
 
-All → reply with the plan + "Send `<verb> gogogo!` and I'll do it" → STOP.
-
-The action verbs in the table above (`PR`, `merge`, `deploy`, etc.) are ONLY authorizing when paired with `gogogo!` in the same message. `merge` alone never triggers a merge.
+All → respond with a concrete proposal + invitation line → STOP.
 
 #### Phrases that mean DEFINITELY NOT action
 
@@ -250,7 +250,7 @@ The action verbs in the table above (`PR`, `merge`, `deploy`, etc.) are ONLY aut
 
 #### Allowed without `gogogo!`
 
-Reading files · grep · read-only git (`log` / `status` / `diff`) · web search · planning text · spec-style description of what *would* be built · clarifying questions · writes to local-only memory/settings files (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`).
+Reading files · grep · read-only git (`log` / `status` / `diff`) · web search · planning text · proposing (the propose-then-wait pattern itself never requires `gogogo!`) · spec-style description of what *would* be built · clarifying questions · writes to local-only memory/settings files (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`).
 
 **`.claude/settings.json` (committed) IS gated** — counts as code.
 
@@ -258,16 +258,17 @@ Reading files · grep · read-only git (`log` / `status` / `diff`) · web search
 
 | Rationalization | Why it's wrong |
 |---|---|
-| "Intent is unambiguous, just ship it" | Gate is the literal `gogogo!` substring, not intent. |
-| "User said `gogogo!` recently, this is in scope" | Every action needs a FRESH `<verb> gogogo!` in the CURRENT message. |
+| "Intent is unambiguous, just ship it" | Gate is `gogogo!` after a concrete proposal, not intent. |
+| "User said `gogogo!` recently, this scope counts" | Each `gogogo!` authorizes one specific proposal. New action = new proposal. |
 | "Auto mode says minimize interruptions" | Auto mode does NOT override this gate. |
 | "Direct imperative + clarity = authorization" | Imperative grammar ≠ `gogogo!`. |
 | "User said yes" | `yes` is not `gogogo!`. |
-| "It's just a docs/SPEC tweak" | If it's an `Edit` on tracked files, it needs the gate. |
+| "It's just a docs/SPEC tweak" | If it's an `Edit` on tracked files, it needs a proposal + `gogogo!`. |
 | "User pasted the diff verbatim" | Specifying WHAT ≠ authorizing WHEN. |
 | "User is rushing" | Schedule is not my problem; the gate is. |
-| "Bare `gogogo!`, I'll default to the 5-step" | Bare `gogogo!` is ambiguous — ask for the verb. |
-| "`merge gogogo!` is close enough to authorize a PR open too" | One verb, one action. `PR gogogo!` for PR; `merge gogogo!` for merge. |
+| "Bare `gogogo!`, I'll default to whatever feels right" | Bare `gogogo!` without a prior proposal is invalid — ask for clarification. |
+| "Reality deviated from my proposal mid-action; close enough" | STOP and re-propose. The original `gogogo!` only authorized the original plan. |
+| "I proposed concretely several messages ago, the user is following up now" | The proposal must be in the IMMEDIATELY-PRECEDING message. Conversation drift → re-propose. |
 
 ### 2.2 The 5-step atomic sequence (on `gogogo!`)
 
@@ -350,7 +351,7 @@ If a push is rejected (rebase needed, etc.), surface it loudly — never `--forc
 
 ### 2.6 Pull requests
 
-**User-triggered only.** The 5-step sequence does NOT auto-open a PR. PR opens when the user explicitly says **`PR gogogo!`** / **`ready gogogo!`** / **`open PR gogogo!`** — typically after the branch has accumulated many commits across many `<verb> gogogo!`s. The bare word "PR" without `gogogo!` does NOT authorize.
+**User-triggered only.** The 5-step sequence does NOT auto-open a PR. PR opens when the user `gogogo!`s a PR-open proposal Claude surfaced — typically after the branch has accumulated many commits across many `gogogo!`s. The bare word "PR" without `gogogo!` does NOT authorize, and Claude surfacing a proposal does NOT authorize either — both halves must be present.
 
 Generate the title + body from the actual commit log. Group commits by area; call out reverts.
 
@@ -373,16 +374,16 @@ BODY
 
 ### 2.7 Review
 
-**PR review is out-of-band and reviewer-agnostic.** Claude opens the PR on `PR gogogo!` and stops there. Everything after that — picking a reviewer, invoking it, addressing findings — happens in a separate session. **The project ships no Claude-side reviewer wiring:** no skill, no Makefile target, no `review gogogo!` verb. The rubric and output contract in `docs/pr_review_instructions.md` apply to whichever reviewer you point at the PR (Codex CLI, `/ultrareview`, another LLM, manual human). **Independence beats deepening:** a different model family with fresh context catches what the original missed. Reviewers run **serially**, never in parallel; one per PR.
+**PR review is out-of-band and reviewer-agnostic.** Claude opens the PR after a `gogogo!`-authorized PR proposal and stops there. Everything after that — picking a reviewer, invoking it, addressing findings — happens in a separate session. **The project ships no Claude-side reviewer wiring:** no skill, no Makefile target, no review-specific proposal flow. The rubric and output contract in `docs/pr_review_instructions.md` apply to whichever reviewer you point at the PR (Codex CLI, `/ultrareview`, another LLM, manual human). **Independence beats deepening:** a different model family with fresh context catches what the original missed. Reviewers run **serially**, never in parallel; one per PR.
 
-#### The workflow after `PR gogogo!`
+#### The workflow after a PR is opened
 
 1. Open whichever reviewer you prefer in a separate terminal or session.
 2. Point it at `docs/pr_review_instructions.md` (the rubric) and the open PR.
 3. The reviewer walks `main..HEAD`, posts per-commit comments via `gh` (or its native PR-comment integration) per the output contract. If it's interactive (Codex CLI, manual review), you approve each shell call.
-4. Return to Claude. Address feedback with more `<verb> gogogo!`s on the same branch.
+4. Return to Claude. Address feedback with more `gogogo!`-authorized commits on the same branch.
 
-That's it. No prereq checking from Claude. No "remind me of the command." No matrix to navigate. The user picks a reviewer and runs it — Claude's job ended at `PR gogogo!`.
+That's it. No prereq checking from Claude. No "remind me of the command." No matrix to navigate. The user picks a reviewer and runs it — Claude's job ended at the PR open.
 
 #### Output contract (universal)
 
@@ -394,7 +395,7 @@ Each round of fixes follows the full `gogogo!` workflow. New commits go on the s
 
 ### 2.9 Merge
 
-Only after the user explicitly says **`merge gogogo!`**. Never implicit. The bare word "merge" without `gogogo!` does NOT authorize.
+Only after the user `gogogo!`s a merge proposal Claude surfaced. Never implicit. The bare word "merge" without `gogogo!` does NOT authorize, and a proposal without `gogogo!` doesn't either.
 
 With branch protection on (§1.6), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked.
 
@@ -771,6 +772,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.23.0 | 2026-05-19 | **Gate model rewrite: propose-and-confirm replaces verb-prefix.** Most invasive change since the project started — touches B-001 + B-011 + D-004 (all superseded), B-021 + B-022 content (regions list updated), the doc trio (PROJECT_STARTER.md §2 / templates/CONTRIBUTING.md / templates/CLAUDE.md fully rewritten), and `scripts/check-rule-consistency.sh` (REGIONS array). New gate rule: no state-mutating action proceeds unless (a) Claude's immediately-preceding assistant message contained a concrete proposal (specific files/commands/commits, not vague phrasing), (b) the user's CURRENT message contains the literal substring `gogogo!` (optionally preceded by a digit selecting from a numbered list), and (c) the action matches the proposal exactly — mid-execution deviation requires a new proposal. There are no action verbs anymore; the action description lives in the proposal in plain English. Multi-step workflows (5-step feature work) still authorize on one `gogogo!` — Claude enumerates the plan upfront. Bare `gogogo!` without a preceding proposal triggers a clarification prompt. The three C4 linter regions are now `gate-clause` (new text) + `proposal-format` (new region) + `bare-gogogo` (new text); `verb-table` region is retired. Failure-mode analysis: D-004's original "agent picks wrong workflow on bare authorization" is preserved (corrective surface moves from user-typed verb to Claude-surfaced concrete proposal). New protection: "agent picks wrong file/scope under a correctly-formed verb" — verbs only encoded action type, proposals encode files / commands / commits too. New mitigation: vague proposals don't satisfy the gate's "concrete" requirement; the IMMEDIATELY-PRECEDING-MESSAGE constraint catches conversation drift. Spec: B-001 + B-011 moved to historical-superseded section; D-004 marked superseded; B-026 added (frozen, the new gate); D-010 added; B-021 + B-022 content updated in place. User feedback drove the design: *"always re-ask users, so he confirms your understanding"* — the proposal IS the re-ask. Sweep of remaining repo references to verbs will land in v1.23.1. |
 | 1.22.0 | 2026-05-19 | First of three commits splitting `PROJECT_STARTER.md` (Codex Phase 4 #2). Three companion docs shipped at meta-repo root: `TEMPLATE_INVENTORY.md` (extracted §3 + §4 — file/folder layout + `templates/` reference table), `DEPLOY_BASELINE.md` (extracted §6 + §7 + §13 — VPS deploy + CI/CD baseline + credential handling), `HARNESS_QUIRKS.md` (extracted §12 + §14 — Claude Code harness gotchas + `bootstrap.sh` design principles). PROJECT_STARTER.md drops from 1121 to ~810 lines; the extracted sections retain their heading + a one-line pointer for stable mental anchors. §0.2 Reading order rewritten to reference the new files. `scripts/export-starter.sh` gains a `ROOT_DOCS` array and copies all four root docs into the archive stage so cross-links resolve in the consumer's extracted layout; `scripts/check-doc-references.sh` `VIRTUAL_TEMPLATES_FILES` extended to match. README.md "Known limitations" updated to reflect split progress + linter trio. Spec: B-025 added (frozen — captures the three-commit split rationale and stub-with-pointer convention); B-015 archive-layout rule updated in place to name `ROOT_DOCS` instead of just PROJECT_STARTER.md; B-023's `VIRTUAL_TEMPLATES_FILES` mention updated. Next: v1.22.1 ships WORKFLOW.md (extracts §2 + §9 + §10 + §11, coordinates B-022 C4-linter target relocation); v1.22.2 ships BOOTSTRAP.md (extracts §0 + §1 + §5) and reduces PROJECT_STARTER.md to a thin index. |
 | 1.21.0 | 2026-05-19 | C3 placeholder linter (Codex Phase 8 #3). `scripts/check-placeholders.sh` walks meta-repo `*.md` files (excluding `templates/` and the external Codex plan), strips fenced code blocks and inline code spans, and fails non-zero if any canonical substitution placeholder (`<package_name>` / `<PACKAGE_NAME>` / `<PROJECT_NAME>` / `<PROJECT_SLUG>` / `<GITHUB_USER>` / `<HOST>` / `<DOMAIN>` / `<PROJECT_DESCRIPTION>` / `<COPYRIGHT_HOLDER>` / `<YEAR>`) appears in plain prose. Catches the failure mode where an unresolved placeholder leaks from the template-bootstrap surface into a user-facing meta-doc, making the docs read as if they ship with TODO markers. Mentions inside backticks like `<package_name>` stay fine — code spans are a clear signal the writer is referencing the placeholder concept rather than waiting for substitution. Scope is meta-repo `*.md` only (not `*.sh` / `*.py` / `*.toml`, where placeholder strings appear as docstrings or comments that don't render to users); generic angle-bracket meta-syntax (`<verb>`, `<file>`, `<X.Y.Z>`) is not flagged because it isn't in the canonical set. Wired into `.github/workflows/template-self-test.yml` after the doc-reference linter (B-023) and before the smoke test (B-014). Six meta-repo files currently pass clean. Completes the linter trio (B-022 / B-023 / B-024) that gates the upcoming safe `PROJECT_STARTER.md` split. Spec: B-024 added. |
 | 1.20.0 | 2026-05-19 | C2 doc-reference linter (Codex Phase 8 #2). `scripts/check-doc-references.sh` walks every Markdown file in the repo, extracts `[label](target)` link targets (skipping URLs, anchors, autolinks), strips `#anchor` and `?query`, resolves relative to the linking file's directory, and fails non-zero if any target file or directory is missing on disk. 50 Markdown link targets across 19 files currently pass. Knows about the export layout: links inside `templates/` that target `PROJECT_STARTER.md` resolve via `VIRTUAL_TEMPLATES_FILES` because `scripts/export-starter.sh` flattens templates contents alongside `PROJECT_STARTER.md` in the archive. Wired into `.github/workflows/template-self-test.yml` as a step between rule-consistency and the smoke test. Closes the "manual until C2 linter ships" caveat in B-016. Spec: B-023 added. |

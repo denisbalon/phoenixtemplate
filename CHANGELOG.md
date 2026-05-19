@@ -6,6 +6,68 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.23.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.23.0. **Gate model rewrite — most invasive change in this project's history.** The verb-prefix gate (`feat gogogo!`, `commit gogogo!`, `merge gogogo!`, etc.) is replaced by propose-and-confirm. Triggered by user feedback that the verb system put cognitive burden on the user (remember nine verbs, remember mapping) while only encoding action TYPE, not action SCOPE — a `commit gogogo!` could commit anything Claude had staged. The new model inverts that.
+
+### The new gate (B-026)
+
+> No state-mutating action proceeds unless ALL of: (a) Claude's immediately preceding assistant message contained a concrete proposal — single suggestion or numbered list of choices, with specific files / commands / commits named, not vague phrasing; (b) the user's CURRENT message contains the literal substring `gogogo!`, optionally preceded by a digit selecting one option from a numbered list (e.g. `2 gogogo!`); (c) the action Claude takes is exactly what the proposal described — mid-execution deviation requires a new proposal.
+
+What changes in practice:
+
+- **No more verbs.** The action description lives in Claude's proposal in plain English. `feat gogogo!`, `commit gogogo!`, `PR gogogo!`, etc. all collapse into "Claude proposes the concrete plan, user `gogogo!`s." The workflows themselves (full 5-step, commit-only, PR open, merge, deploy, revert) still exist as action shapes — they're just named in the proposal text.
+- **Multi-step ergonomics preserved.** A 5-step feature workflow is still authorized by one `gogogo!`. Claude enumerates the full plan in the proposal upfront (Step 1: spec; Step 2: bump+CHANGELOG; etc.) and one `gogogo!` confirms the whole plan. Same total typing as before; the verb is just gone.
+- **Numbered choice for ambiguity.** When there are two-plus plausible paths, Claude presents a numbered list ending with `Type 1 gogogo! or 2 gogogo!`. The user selects with `N gogogo!` (or just `gogogo!` if only one path is offered).
+- **Bare `gogogo!` without prior proposal** → reply *"I haven't proposed anything concrete yet. Describe what you'd like and I'll surface options."* This replaces today's "Which action? code / commit / PR / merge / deploy / revert?" prompt.
+- **Conversation drift catches.** If Claude's last message was clarification rather than a fresh proposal, the next `gogogo!` does NOT authorize — Claude must re-propose. The "immediately preceding message" constraint in condition (a) is load-bearing for this.
+
+### Canonical proposal format (B-026 + B-022)
+
+The proposal format is byte-exact-matched across the doc trio by C4 linter region `proposal-format`:
+
+- **Single suggestion** — a bold "Proposed: <action>" header, a concrete plan (specific files / commands / commits), and a final line inviting `gogogo!` to proceed.
+- **Numbered choice** — a bold "Choose:" header, numbered options (each one concrete), and a final line inviting `N gogogo!` to pick option N.
+
+Concrete means specific files, specific commands, specific commits — not "commit the changes." For multi-step actions, every step is enumerated.
+
+### Failure-mode analysis (why this is safer, not just different)
+
+- **D-004's original failure** ("agent picks wrong workflow on bare authorization") is preserved. Bare `gogogo!` is still invalid — the corrective surface just moves from a user-typed verb to a Claude-surfaced concrete proposal.
+- **New failure mode the propose model PREVENTS:** "agent picks wrong file/scope under a correctly-formed verb." Verbs only encoded action TYPE; the proposal encodes everything down to the commit message.
+- **New failure mode it could INTRODUCE:** "agent proposes vaguely (`commit the changes`), user `gogogo!`s, agent picks wrong scope." Mitigated by B-026 condition (a)'s explicit "concrete" requirement — vague proposals don't satisfy the gate, and the canonical `proposal-format` region makes "concrete" mechanically inspectable.
+- **Another new failure mode it could INTRODUCE:** "user `gogogo!`s after long Q&A drift, expecting old proposal still valid." Mitigated by the IMMEDIATELY-PRECEDING-MESSAGE constraint — drift triggers re-propose, not action on stale plan.
+
+### Files touched
+
+- **`scripts/check-rule-consistency.sh`** REGIONS array: `verb-table` removed, `proposal-format` added. The three regions are now `gate-clause` + `proposal-format` + `bare-gogogo`.
+- **`PROJECT_STARTER.md` §2** fully rewritten: new gate clause + new proposal-format section + new bare-gogogo handling + new self-check (4 steps instead of 3) + sweep of verb references in §2.2/§2.6/§2.7/§2.9. Refuse-list table gains two new rows ("Reality deviated mid-action" and "Proposal was several messages ago"). Allowed-without-gogogo list gains "proposing (the propose-then-wait pattern itself never requires `gogogo!`)."
+- **`templates/CONTRIBUTING.md`** gate section fully rewritten to match — same three regions byte-exact, same self-check, same refuse-list updates. Surrounding prose framed as per-project operational.
+- **`templates/CLAUDE.md`** gate section fully rewritten to match — same three regions byte-exact. The "Canonical scope" header marker updated to name proposal-format instead of verb-table in the duplicated-rule list. Surrounding prose framed as session-facing summary.
+- **`docs/spec.md`** surgery: **B-001** and **B-011** moved to the historical-superseded section with `**Status:** superseded by B-026 (v1.23.0)` notes that preserve the original Rule/Rationale/Test for audit. **B-026** added as the new frozen gate rule. **D-004** marked superseded by D-010 with a status note at the top (original Chose/Considered/Why preserved). **D-010** added at the end of the decision log with the full failure-mode analysis. **B-021** content updated in place: the duplicated-rule-statement list now names `gate-clause` / `proposal-format` / `bare-gogogo`; the Test field switched from "manual until C4 linter ships" to "automated via B-022" (this should have happened in v1.19.0 but caught up here). **B-022** content updated in place: the three named regions and the addition/removal rules reflect the new set.
+
+### What stays the same
+
+- `gogogo!` is still the gate token. The literal-substring check (B-001 condition) survives as B-026 condition (b).
+- Memory writes (`~/.claude/projects/.../memory/`) and `.claude/settings.local.json` remain carved out — no `gogogo!` needed.
+- The refuse-list (rationalizations to refuse) still applies — `yes`, `do it`, "user is rushing", "auto mode says minimize interruptions" — all still NOT authorization.
+- The 5-step workflow shape (spec → bump+CHANGELOG → code → commit+push → deploy) is unchanged. So are PR / merge / deploy / revert workflows. Only the triggering changed.
+- Auto mode still does NOT override the gate.
+
+### Spec
+
+- **B-001** → moved to Historical blocks; superseded by B-026.
+- **B-011** → moved to Historical blocks; superseded by B-026.
+- **D-004** → status note added (superseded by D-010); original Chose/Considered/Why preserved for audit.
+- **B-026** added (frozen) — the new gate rule + full rationale + failure-mode analysis.
+- **D-010** added — the gate-model decision, including the failure-mode analysis at decision level (not just block level).
+- **B-021** content updated in place — three-tier model's duplicated-rule list now names the new regions.
+- **B-022** content updated in place — REGIONS array contents and the region-add/remove procedure.
+
+### Next
+
+- **v1.23.1 (`refactor gogogo!`):** Sweep remaining repo references to action verbs — CHANGELOG history is naturally preserved as audit trail (historical mentions stay), but any active doc that still describes the verb model gets updated. Likely candidates: README.md (if it mentions verbs), templates/README.md, templates/docs/*, this CHANGELOG entry's "Next" section becomes whatever's next on the roadmap (v1.22.1 WORKFLOW.md extraction, queued from the prior split sequence).
+
 ## v1.22.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.22.0. **First of three commits splitting `PROJECT_STARTER.md` (Codex Phase 4 #2).** Three companion docs shipped at meta-repo root; the remaining two (`WORKFLOW.md`, `BOOTSTRAP.md`) ship in v1.22.1 and v1.22.2.
