@@ -10,7 +10,7 @@
 
 Reading files, grepping, planning in chat, clarifying questions, surfacing proposals, and writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
 
-`gogogo!` confirms a concrete proposal Claude surfaced. There are no verbs — the proposal carries the action description in plain English, and `gogogo!` (or `N gogogo!` for a single pick, or `N1 N2 ... gogogo!` for multi-select against a "Choose any" list) is the authorization signal. The action executed is exactly what the proposal described. **Every assistant message ends with a concrete proposal** — never leave the user without something to `gogogo!`; clarification turns end with "continue with [next queued item] or describe a different direction."
+`gogogo!` confirms a concrete proposal Claude surfaced. There are no verbs — the proposal carries the action description in plain English, and `gogogo!` (or `N gogogo!` for a single pick, or `N1 N2 ... gogogo!` for multi-select against a "Choose any" list) is the authorization signal. The action executed is exactly what the proposal described. **Most assistant messages end with a concrete proposal** *when there's an action or navigation path to surface* — see the proposal-format C4 region just below for the full contract; pure discussion / clarification turns where no list-of-paths fits naturally can end without a trailing proposal.
 
 ### Proposal format
 

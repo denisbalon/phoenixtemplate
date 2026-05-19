@@ -6,6 +6,51 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.32.3 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.32.3. **Fix Block finding from Codex review of PR #3** — `templates/CLAUDE.md:13` carried an unconditional "Every assistant message ends with a concrete proposal" sentence that contradicted the qualified C4-anchored form 5 lines below it (and the canonical form in `WORKFLOW.md` + `templates/CONTRIBUTING.md`). Reviewer flagged this as a Block on commit `1653ad6` (B-028, v1.28.0). Patch bump per WORKFLOW.md (typical doc fix, no spec change).
+
+### What it was
+
+Line 13 of `templates/CLAUDE.md` — supplementary prose between the gate-clause C4 region (above) and the proposal-format C4 region (below):
+
+> "**Every assistant message ends with a concrete proposal** — never leave the user without something to `gogogo!`; clarification turns end with "continue with [next queued item] or describe a different direction.""
+
+This unconditional form was pre-v1.28.0 language. B-028 (v1.28.0) refined B-027's always-propose rule to "propose *when there's a path to surface*" — pure discussion turns where no list-of-paths fits naturally MAY end without a trailing proposal. The C4 region at line 18 correctly reflects the refinement; line 13's prose summary did not get the corresponding update.
+
+Result: the session-facing AI doc (auto-loaded every Claude Code session) was internally contradictory. The C4 linter's byte-exact check on the proposal-format region (lines 18-onwards) passes — the region itself is correct across all three trio files. The unconditional line above the region is outside any C4 anchor, so the linter doesn't see it. The spec-consistency linter's invariants (Invariants A/B/C in B-029) don't currently include a pattern for "unconditional proposal-end claim" — added to the considered-but-not-shipped patterns list (D-014 bar: "we've shipped this exact bug already" was just met for the first time by this Codex review finding; a fourth invariant pattern is now justified, but deferred to its own commit so this fix stays surgical).
+
+### The fix
+
+Line 13 rewritten to:
+
+> "**Most assistant messages end with a concrete proposal** *when there's an action or navigation path to surface* — see the proposal-format C4 region just below for the full contract; pure discussion / clarification turns where no list-of-paths fits naturally can end without a trailing proposal."
+
+Changes:
+- `**Every assistant message**` → `**Most assistant messages**` (matches the relaxed semantic).
+- Added `*when there's an action or navigation path to surface*` qualifier (mirrors the C4 region's italicized phrase exactly).
+- Replaced the "clarification turns end with..." prescription (which was prescribing a specific phrasing for clarification turns — not actually a B-028 rule) with the C4-region-accurate "pure discussion / clarification turns ... can end without a trailing proposal" permission.
+- Added pointer "see the proposal-format C4 region just below for the full contract" so the prose summary explicitly defers to the canonical anchored region.
+
+### What didn't change
+
+- No C4 region edits — the proposal-format region in all three trio files (WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md) is unchanged; C4 linter remains green.
+- No spec changes — B-027/B-028 are the canonical rule; this commit aligns prose to the existing spec, doesn't change it.
+- No new spec block — the fix is editorial, not behavioral.
+- No changes to `WORKFLOW.md` or `templates/CONTRIBUTING.md` — both already carry only the qualified form (verified via `grep -n "ends with a concrete proposal"` — only `templates/CLAUDE.md:13` had the unconditional form).
+- No new linter invariant — deferred (D-014 bar met for the first time; adding the invariant is its own future commit if the user wants the structural prevention).
+
+### Verified
+
+- All 5 linters green.
+- Post-fix `grep -n "Every assistant message ends with"` returns nothing — unconditional form fully removed.
+- `grep -n "Most assistant messages end with"` returns the single new line in templates/CLAUDE.md.
+- C4 region byte-exact match preserved across the trio.
+
+### Next
+
+Commit 2 of 2 (review-fix sequence): TEMPLATE_INVENTORY.md row update for `templates/CONTRIBUTING.md` (Strong finding from same review), v1.32.4.
+
 ## v1.32.2 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.32.2. **Phase 5.3 of Codex improvement plan — defer `scripts/new-project.sh` (D-017). Closes the Codex improvement plan in full.** Commit 3 of 3 of the Phase-5 trio. Docs-only change; no infrastructure or behavior change. Patch bump per WORKFLOW.md.
