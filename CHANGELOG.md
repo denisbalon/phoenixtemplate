@@ -6,6 +6,32 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.20.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.20.0. **Codex Phase 8 #2 — doc-reference linter.** Resolves B-016's "manual until C2 linter ships" caveat.
+
+### Ship `scripts/check-doc-references.sh` + CI wiring
+
+B-016 (v1.11.1) established the invariant that every live doc reference resolves to a shipped file or is an explicit example. Until now enforcement was a manual audit on each release-prep — fast to forget, easy to regress. Every prior rename or removal of a file (e.g. `request-codex-review` skill, `validators.sh` sidecar, `WEBHOOK_BASE_URL` env var) was one missed `grep` away from leaving a dangling `[..](..)` link somewhere in the docs.
+
+The new linter resolves that:
+
+- **Scope.** Walks every `*.md` file in the repo (excluding `.git/`). Extracts only Markdown link targets of the form `[label](target)` via an awk pattern that handles multiple links per line. Skips fenced code blocks entirely (lines starting with three backticks toggle the fence state) and strips inline single-backtick code spans before scanning, so docs that show the literal Markdown link syntax inside backticks (like this very entry) don't false-trigger. Skips `http://` / `https://` / `mailto:` / `tel:` / `data:` / `ftp://` URLs, anchor-only links (`#section`), autolinks (`<url>`), and empty targets. Strips a trailing `#anchor` or `?query` from the target before the existence check, so `PROJECT_STARTER.md#01-current-scope` is checked as `PROJECT_STARTER.md`. Strips optional Markdown link titles (`[label](path "Title")`). Existence is checked with `[ -e ]` so directory targets like `[templates/](templates/)` pass.
+- **Resolution.** Relative targets resolve from the linking file's directory; absolute targets (starting `/`) from the repo root. Paths are normalized via `realpath -m --relative-to="$REPO_ROOT"` (no existence requirement during normalization).
+- **Export-layout awareness.** Links inside `templates/` are authored against the consumer's project layout, where the export script flattens templates contents next to `PROJECT_STARTER.md`. To match that, the linter accepts targets that resolve to `templates/<f>` for any `<f>` in `VIRTUAL_TEMPLATES_FILES` (currently just `PROJECT_STARTER.md`) as long as `<f>` exists at meta-repo root. Without this rule, two existing valid links would false-positive: `templates/README.md:19 → PROJECT_STARTER.md` and `templates/docs/spec.md:13 → ../PROJECT_STARTER.md`. Updating the export script to promote additional files requires appending to this list.
+- **Backtick paths are NOT linted.** A deliberate scope choice — the false-positive rate on backtick paths is high because much of the prose in `README.md` and `PROJECT_STARTER.md` describes the consumer's layout (`src/<package_name>/...`) or shows illustrative examples rather than this repo's actual files. Markdown link syntax has explicit semantic intent ("this is a navigable reference"), which gives a high signal-to-noise ratio.
+- **Output.** On clean run: `OK: 50 Markdown link targets resolved across 19 files.` (exit 0). On any failure: one line per broken link as `<file>:<line> -> <target>  (resolved: <normalized>)` to stderr, followed by `FAIL: <N> broken doc reference(s) across 19 files (<scanned> links scanned).` (exit 1).
+- **CI wiring.** `.github/workflows/template-self-test.yml` gains a `check-doc-references` step between the existing `check-rule-consistency` step and the smoke test. Push or PR drift fails the build.
+
+### Spec
+
+- **B-023** added (frozen) — C2 doc-reference linter contract: scope, resolution rules, export-layout awareness, CI integration, error format.
+- **B-016** test method updated from manual `find` + grep to automated via B-023. Manual audit remains as backup for the "explicit example" / "placeholder" / "prescriptive recommendation" sub-categories that no machine check covers cleanly.
+
+### Next
+
+- **v1.21.0 (`feat gogogo!`):** Placeholder linter (Codex Phase 8 #3). Enumerates allowed placeholders (`<package_name>`, `<PROJECT_NAME>`, `<GITHUB_USER>`, `<HOST>`, `<DOMAIN>`, `<PROJECT_DESCRIPTION>`, `<COPYRIGHT_HOLDER>`, `<YEAR>`); fails CI on unresolved placeholders in meta-repo files (excluding `templates/`). Closes the linter trio that gates the safe `PROJECT_STARTER.md` split coming after.
+
 ## v1.19.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.19.0. **Codex Phase 8 #4 — consistency linter for canonical workflow phrases.** Resolves B-021's "manual until C4 linter ships" caveat.
