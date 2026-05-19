@@ -6,6 +6,40 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.19.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.19.0. **Codex Phase 8 #4 — consistency linter for canonical workflow phrases.** Resolves B-021's "manual until C4 linter ships" caveat.
+
+### Ship `scripts/check-rule-consistency.sh` + CI wiring
+
+B-021 (v1.18.0) made the three-tier doc redundancy load-bearing — rule statements (verb table, gate clause, bare-`gogogo!` prompt) are deliberately duplicated across `PROJECT_STARTER.md` §2 / `templates/CONTRIBUTING.md` / `templates/CLAUDE.md` as defensive AI-safety equipment. Without a mechanical check, one careless edit could silently drift the copies and reopen the failure mode B-021 was designed to prevent.
+
+The new linter resolves that:
+
+- **Anchors.** Each of the three canonical rule regions in each of the three files is bracketed by HTML-comment markers `<!-- C4:<region>:start --> ... <!-- C4:<region>:end -->`. HTML comments are invisible in rendered markdown so the source layout stays clean, but bash + awk can locate them trivially. Regions in v1.19.0: `gate-clause`, `verb-table`, `bare-gogogo`.
+- **Linter.** `scripts/check-rule-consistency.sh` walks all three files for each region, extracts the content between matching anchors, and diffs every pair (against the first file as reference). Missing region in any file → fail with `ERROR: region '<name>' missing or empty in <file>`. Mismatched region → fail with a unified diff naming the two files and the drifted lines. Clean run prints `OK: canonical rule regions match across 3 files.` and exits 0.
+- **CI wiring.** `.github/workflows/template-self-test.yml` gains a `check-rule-consistency` step that runs before the existing smoke test. Push or PR drift fails the build.
+
+### Pre-linter alignment (same commit)
+
+Byte-exact match required normalizing existing-but-divergent wording in the three files first:
+
+- `templates/CLAUDE.md` gate clause: `**Never take any state-mutating action...**` → `**Do NOT take any state-mutating action...**` (matches the canonical wording already present in `PROJECT_STARTER.md` §2.1 and `templates/CONTRIBUTING.md`).
+- `PROJECT_STARTER.md` §2.1 verb table: collapsed from 3 columns (Phrase / Action / Workflow) to the 2-column shared form (Phrase / Action) used by the other two tiers. The dropped Workflow column carried §-references (e.g. `5-step (§2.2)`, `§2.5 only`); those moved to a prose sentence immediately below the table so the operational detail isn't lost. Action wording also unified — `Full feature change` → `Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy)`, etc.
+- Bare-`gogogo!` prompt: unified across all three files to a standalone bold paragraph `**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. Review is out-of-band — no verb for it.` In `templates/CONTRIBUTING.md` and `PROJECT_STARTER.md` §2.1, the conflicting bullet in the existing self-check list (which had slightly different phrasing in each file) now reads `Bare `gogogo!` (no verb) → see the canonical prompt above.` — the self-check still walks the four outcomes but no longer duplicates the canonical wording.
+
+### Adding regions in future versions
+
+Append a `C4:<new-region>:start/end` pair (same canonical text in all three files) and add the region name to the linter's `REGIONS` array. No parser changes; the linter is region-name-agnostic.
+
+### Spec
+
+- **B-022** added (frozen) — C4 rule-consistency linter contract: anchor format, three regions, CI integration, drift behavior.
+
+### Next
+
+- **v1.20.0 (`feat gogogo!`):** Doc-reference linter (Codex Phase 8 #2). Parses `*.md` for local file references and verifies existence; closes the P1 #4 audit loop mechanically.
+
 ## v1.18.0 — 2026-05-18
 
 Mirrors `PROJECT_STARTER.md` template v1.18.0. **Codex Phase 1 #1 — three-tier doc-canonical model with deliberate AI-safety redundancy.**

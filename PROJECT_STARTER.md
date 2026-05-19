@@ -1,7 +1,7 @@
 # Project Starter
 
-**Template version:** v1.18.0
-**Last updated:** 2026-05-18
+**Template version:** v1.19.0
+**Last updated:** 2026-05-19
 
 A reusable bootstrap kit for new software projects worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
 
@@ -194,20 +194,30 @@ This section is **binding** for every change.
 
 ### 2.1 The `gogogo!` passphrase — hard gate
 
+<!-- C4:gate-clause:start -->
 **Do NOT take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.**
+<!-- C4:gate-clause:end -->
 
 `gogogo!` is the **execute trigger**. It must be preceded by an **action verb** in the same message — the verb specifies *what* to execute. `gogogo!` is the signature; the verb is the contract.
 
 #### Action verb → workflow
 
-| Phrase | Action | Workflow |
-|---|---|---|
-| `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full feature change | 5-step (§2.2): spec → bump+CHANGELOG → code → commit+push → deploy |
-| `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) | §2.5 only |
-| `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request from current branch | §2.6 |
-| `merge gogogo!` | Merge the open PR (rebase + delete-branch) | §2.9 |
-| `deploy gogogo!` | Deploy current `main` | §2.11 |
-| `revert gogogo!` | Revert last commit + redeploy | §2.12 |
+<!-- C4:verb-table:start -->
+| Phrase | Action |
+|---|---|
+| `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy) |
+| `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) |
+| `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request |
+| `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
+| `deploy gogogo!` | Run the project's deploy command |
+| `revert gogogo!` | Revert last commit + redeploy |
+<!-- C4:verb-table:end -->
+
+Workflow detail per verb: feature verbs (`code` / `feat` / `fix` / `chore` / `docs` / `refactor` / `test` / `perf` / `ship`) run the full 5-step sequence in §2.2; `commit gogogo!` runs only §2.5 (commit + push, still bumps version + CHANGELOG); `PR gogogo!` / `ready gogogo!` / `open PR gogogo!` opens a PR per §2.6; `merge gogogo!` rebase-merges per §2.9; `deploy gogogo!` deploys current `main` per §2.11; `revert gogogo!` reverts + redeploys per §2.12.
+
+<!-- C4:bare-gogogo:start -->
+**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. Review is out-of-band — no verb for it.
+<!-- C4:bare-gogogo:end -->
 
 Before any state-mutating tool call (`Edit` / `Write` / `NotebookEdit` / `Bash` running `git commit` / `git push` / deploy / `gh pr create|merge|comment` / `gh issue create` / curl POST/PUT/DELETE), self-check:
 
@@ -216,7 +226,7 @@ Before any state-mutating tool call (`Edit` / `Write` / `NotebookEdit` / `Bash` 
 3. Does that verb match the action I'm about to take?
 
 - No `gogogo!` → reply with the plan in text + "Send `<verb> gogogo!` and I'll do it." STOP.
-- `gogogo!` with no verb → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. (No `review` — review is out-of-band per §2.7, no Claude-side action to authorize.)
+- Bare `gogogo!` (no verb) → see the canonical prompt above.
 - `<verb> gogogo!` but I was about to do a *different* action → STOP, surface the mismatch, do nothing.
 - `<verb> gogogo!` matching the action → execute the workflow for that verb.
 
@@ -1072,6 +1082,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.19.0 | 2026-05-19 | C4 rule-consistency linter (Codex Phase 8 #4). `scripts/check-rule-consistency.sh` extracts three named rule regions — `gate-clause` / `verb-table` / `bare-gogogo` — bracketed by `<!-- C4:<region>:start/end -->` HTML-comment anchors from `PROJECT_STARTER.md` §2, `templates/CONTRIBUTING.md`, `templates/CLAUDE.md`; diffs them pairwise; exits non-zero with a unified diff on drift. Wired into `.github/workflows/template-self-test.yml` as a step before the existing smoke test, so drift fails CI. Pre-linter alignment commit: `templates/CLAUDE.md` gate clause `Never` → `Do NOT`; PROJECT_STARTER §2 verb table simplified from 3-column (Phrase/Action/Workflow) to 2-column shared form, with the dropped Workflow column's section refs moved to a prose sentence below the table; bare-`gogogo!` prompt unified across all three files to a standalone bold paragraph with trailing "Review is out-of-band — no verb for it." Resolves B-021's "manual until C4 linter ships" caveat. Spec: B-022 added. |
 | 1.18.0 | 2026-05-18 | Codex Phase 1 #1 — three-tier doc-canonical model with deliberate AI-safety redundancy. Refined from "one canonical source" framing per user pushback: the historical triple-source layout was defensive redundancy added after observed AI failures (missed gate, wrong verb, ignored bare-gogogo) — not architecture debt. New framing: canonical per concern, rule statements deliberately duplicated. **PROJECT_STARTER §2** canonical for core workflow rules + rationale; **templates/CONTRIBUTING.md** canonical for per-project ops; **templates/CLAUDE.md** session-facing summary with mandatory inline rule duplication. Each file has a `**Canonical scope:**` header marker; duplicated rule sections annotated as deliberate redundancy. Plus thin root `CONTRIBUTING.md` for the meta repo (~30 lines, pointer + meta-specific overrides). Spec: B-021 added (three-tier model + redundancy rationale). Next: C4 consistency linter (mechanical sync for the deliberate duplication). |
 | 1.17.0 | 2026-05-18 | Codex Phase 1 #3 — split `docs/spec.md` into active + historical-superseded sections. 14 active blocks (B-001/002/003/004/005/010/011/012/014/015/016/017/019/020) live in `## Frozen behavior` in numerical order; 6 superseded blocks (B-006/007/008/009/013/018) moved to new `## Historical blocks (superseded)` appendix at end of file. Decision log + Open project-level decisions unchanged. Zero content removed — pure reorganization. `templates/docs/spec.md` skeleton gains a third editing rule documenting the convention so consumer projects follow it. No new B block. Next on Phase 1: #1 canonical-source design discussion, then #2 PROJECT_STARTER split + #4 duplication reduction. |
 | 1.16.1 | 2026-05-18 | Add Known Limitations section to README (Codex Phase 5 #2). Five concrete limitations with one-paragraph explanations each: (1) placeholder substitution still manual — `bootstrap.sh` only handles `.env` creds; (2) single language preset (Python/uv/FastAPI/VPS only); (3) `PROJECT_STARTER.md` still a 1000-line monolith; (4) no automated drift detection (no linters yet); (5) Windows requires WSL. Each links to the relevant open item / roadmap phase. Section sits between Quickstart and Docs; points at `docs/spec.md` "Open project-level decisions" for full roadmap. No spec block (doc-only). |
