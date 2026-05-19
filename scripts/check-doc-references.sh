@@ -82,6 +82,7 @@ VIRTUAL_TEMPLATES_FILES=(
   "HARNESS_QUIRKS.md"
   "WORKFLOW.md"
   "BOOTSTRAP.md"
+  "MIGRATION.md"
 )
 
 # All Markdown files except anything under .git/.

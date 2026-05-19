@@ -41,6 +41,7 @@ ROOT_DOCS=(
   "HARNESS_QUIRKS.md"
   "WORKFLOW.md"
   "BOOTSTRAP.md"
+  "MIGRATION.md"
 )
 
 for doc in "${ROOT_DOCS[@]}"; do

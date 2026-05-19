@@ -60,6 +60,12 @@ files:
     placeholders: []
     exported_by_starter: true
 
+  - path: MIGRATION.md
+    purpose: incremental + selective adoption guide for existing projects (B-034)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
   # ----- templates/ root files ------------------------------------------
 
   - path: templates/README.md

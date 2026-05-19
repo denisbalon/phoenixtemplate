@@ -6,6 +6,51 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.32.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.32.0. **Phase 5.1 of Codex improvement plan — migration guide (B-034).** Commit 1 of 3 closing Codex Phase 5 (the final phase). Minor bump per WORKFLOW.md (new root-exported artifact + new spec block).
+
+### What shipped
+
+New `MIGRATION.md` at meta-repo root (~280 lines) — the canonical guide for adopting the kit selectively or incrementally into an existing project, as opposed to greenfield bootstrap which `BOOTSTRAP.md` already covers.
+
+**Six sections:**
+
+- **When to use the full kit vs. import selected parts** — decision table mapping situation to path.
+- **Importing just the process layer** — `gogogo!` gate + 5-step workflow + C4-anchored trio + standing rules. Files: `CONTRIBUTING.md` + `CLAUDE.md` + `.claude/settings.json` + `.claude/skills/spec-block/`. Includes merge-with-existing guidance for projects that already have their own `CONTRIBUTING.md`/`CLAUDE.md`.
+- **Importing just docs** — PR review rubric + Karpathy standing rules + spec-block format. Reviewer-agnostic per B-010 — works with any reviewer (Codex CLI, `/ultrareview`, manual, any LLM).
+- **Importing just env-bootstrap** — the four-file self-contained unit (`.env.example` + `_env-schema-parse.sh` + `bootstrap.sh` + `check-env.sh`). Includes `.claude/settings.json` `SessionStart` hook wiring snippet.
+- **Importing just the linter set** — per-linter standalone-vs-coupled assessment in a table. `check-doc-references.sh` standalone; `check-rule-consistency.sh` / `check-placeholders.sh` / `check-spec-consistency.sh` need local adaptation; `check-manifest.sh` requires the manifest convention (B-032).
+- **Adoption order** — recommended week-by-week sequence for projects that want the whole kit eventually but phased across time. Highlights that each layer is independent and reversible (delete the files = back where you started; no schema migration, no persistent state).
+- **What this kit doesn't try to be** — explicit non-goals: not a framework; not Python-only except today; not a forced-migration kit.
+
+### Wiring
+
+- **`scripts/export-starter.sh`** — `MIGRATION.md` added to `ROOT_DOCS` array. Archive now ships 7 root docs (was 6).
+- **`scripts/check-doc-references.sh`** — `MIGRATION.md` added to `VIRTUAL_TEMPLATES_FILES` so links inside `templates/` resolve correctly in the archive layout (B-023).
+- **`templates/manifest.yaml`** — new entry: `tier: common`, `placeholders: []`, `exported_by_starter: true`. Total: 43 entries (was 42).
+- **`README.md`** — Quickstart preamble: "Already have a project? Read MIGRATION.md instead..." surfacing the toolkit path before the greenfield path. New docs-table row for MIGRATION.md.
+
+### Spec
+
+- **B-034 added** (frozen) — the kit is consumable as a toolkit (selective import), not only as a fresh-start template; `MIGRATION.md` is canonical for the toolkit path; the four selective-import layers (process / docs / env-bootstrap / linter set) are named explicitly; each has a known file list and a standalone-vs-coupled assessment.
+
+### What didn't change
+
+- No changes to `BOOTSTRAP.md` (greenfield path remains the default; this is additive).
+- No changes to existing C4 regions, gate semantics, manifest schema, or any consumer-facing tooling behavior.
+- No new scripts; no new linter invariants.
+
+### Verified
+
+- All 5 linters green (C4 + C2 doc-ref + C3 placeholders + C5 spec-consistency + manifest). C2 link target count now 80+ (new MIGRATION.md links land in scope).
+- Manifest count: 43 entries.
+- `scripts/export-starter.sh` `ROOT_DOCS` includes MIGRATION.md; archive includes it.
+
+### Next
+
+Commit 2 of 3: `scripts/render-example.sh` + B-035 (v1.32.1). Commit 3 of 3: D-017 defer `scripts/new-project.sh` + close Codex plan (v1.32.2).
+
 ## v1.31.2 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.31.2. **Phase 4.4 of Codex improvement plan — bootstrap-mode deferral decision (D-016).** Final commit (3 of 3) closing Codex Phase 4. Docs-only change; no infrastructure or behavior change. Patch bump per WORKFLOW.md.
