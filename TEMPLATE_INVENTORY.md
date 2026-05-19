@@ -68,7 +68,7 @@ The companion `templates/` directory holds skeleton files. When bootstrapping a 
 |---|---|---|
 | `templates/README.md` | Project entry point — pitch + doc-table | `<PROJECT_NAME>`, `<PROJECT_DESCRIPTION>` |
 | `templates/CLAUDE.md` | Session conventions for Claude Code; auto-loaded every session | `<PROJECT_NAME>`, `<STACK>`, `<HOST>`, sensitive context |
-| `templates/CONTRIBUTING.md` | Process rules — verbatim copy of `PROJECT_STARTER.md` §2 with project specifics filled in | `<PROJECT_NAME>`, version-marker list |
+| `templates/CONTRIBUTING.md` | Per-project operational process doc — carries the four C4-anchored rule statements (`gate-clause`, `proposal-format`, `bare-gogogo`, `env-metadata-contract`) as deliberate AI-safety redundancy per B-021's three-tier model. Canonical source for the workflow is [`WORKFLOW.md`](WORKFLOW.md) since v1.25.0; this per-project tier holds the same rule text byte-exact for per-project enforcement (the C4 linter — B-022 — keeps the three tiers in sync mechanically). | `<PROJECT_NAME>`, version-marker list |
 | `templates/CHANGELOG.md` | Per-version diary skeleton | initial v0.1.0 entry |
 | `templates/.env.example` | Env-var declarations skeleton with `@directive` metadata (see B-020 in `docs/spec.md`) | category headers; vars per project |
 | `templates/.gitignore` | Sensible default ignores | language-specific lines if needed |
