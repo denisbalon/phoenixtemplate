@@ -6,6 +6,64 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.32.1 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.32.1. **Phase 5.2 of Codex improvement plan — on-demand example rendering (B-035).** Commit 2 of 3 closing Codex Phase 5. Patch bump per WORKFLOW.md (new convenience script + narrow spec block; no behavioral surface change).
+
+### What shipped
+
+New `scripts/render-example.sh` (~80 lines, meta-only — not exported by `scripts/export-starter.sh`) produces a deterministic, fully-substituted instantiation of the kit for inspection. Output: `OUT_DIR` (default `~/Downloads/phoenixproject-example/`; wiped + recreated on every run).
+
+**Canonical substitution map** covers every B-024 canonical placeholder:
+
+| Placeholder | Value |
+|---|---|
+| `<PROJECT_NAME>` | `ExampleProject` |
+| `<PROJECT_SLUG>` | `example-project` |
+| `<PROJECT_DESCRIPTION>` | `An example project rendered from the kit.` |
+| `<package_name>` | `exampleproj` |
+| `<PACKAGE_NAME>` | `EXAMPLEPROJ` |
+| `<GITHUB_USER>` | `example-org` |
+| `<HOST>` | `example.host` |
+| `<DOMAIN>` | `example.com` |
+| `<COPYRIGHT_HOLDER>` | `Example Org` |
+| `<YEAR>` | `$(date +%Y)` |
+
+**Substitution-logic invariant:** matches `scripts/smoke-test.sh` phase 3 byte-for-byte — same canonical pattern (one `mv` for `src/<package_name>` rename; one `sed` across `*.py` / `*.toml` / `Makefile` / `*.yml` / `*.yaml` / `*.sh` / `*.example`). If the smoke-test substitution logic changes, this script changes in the same commit. The smoke test is the executable-and-tested reference; `render-example.sh` is the inspectable-by-humans companion. Extended scope for the canonical-map application: `*.md` + `LICENSE` (smoke-test doesn't apply non-`<package_name>` substitutions because they don't affect tooling correctness; this script applies them all because the purpose is humans-reading-output).
+
+### Shape decision: script-only, no committed example-project/
+
+The Codex Phase 5.2 acceptance is "consumers can compare template form to instantiated form concretely." Two shapes satisfy it: (a) static committed `example-project/` directory + CI drift check; (b) on-demand render script. Picked (b): script + README + MIGRATION pointers. Maintenance cost dramatically lower (no 30-file duplication, no drift surface); same comparison affordance. If (a) becomes wanted later for GitHub-browsable-without-checkout, the renderer becomes the CI re-render source — extension is straightforward.
+
+### Wiring
+
+- **`templates/manifest.yaml`** — new entry: `scripts/render-example.sh`, `tier: meta-only`, `placeholders: []`, `exported_by_starter: false`. Total: 44 entries (was 43).
+- **`README.md`** — new paragraph at the end of Quickstart: "Want to see what a rendered project looks like first? Run `./scripts/render-example.sh`..."
+- **`MIGRATION.md`** — new paragraph above the When-to-use section: same surface, framed for selective-import audience.
+
+### Spec
+
+- **B-035 added** (frozen) — canonical substitution map (table) + substitution-logic invariant (matches smoke-test phase 3 byte-for-byte) + shape rationale (script-only vs static-committed) + test recipe.
+
+### What didn't change
+
+- No changes to `scripts/smoke-test.sh` — substitution logic already correct; render-example matches it.
+- No changes to `templates/` content (all substitutions are runtime; template files retain `<...>` placeholders).
+- No changes to existing C4 regions, gate semantics, manifest schema, or any consumer-facing tooling behavior.
+- No new linter — render-example correctness is verified by spec.
+
+### Verified
+
+- Clean run: `OUT_DIR=/tmp/rx ./scripts/render-example.sh` exits 0; 29 files rendered.
+- Post-render grep: no canonical placeholders remain (`<package_name>` / `<PACKAGE_NAME>` / `<PROJECT_NAME>` / `<PROJECT_SLUG>` / `<GITHUB_USER>` / `<HOST>` / `<DOMAIN>` / `<COPYRIGHT_HOLDER>` / `<YEAR>` / `<PROJECT_DESCRIPTION>` all substituted in their bare form).
+- Instructional meta-syntax preserved: `<PROJECT_DESCRIPTION — one or two sentences.>` in `templates/README.md` correctly untouched (not in canonical set).
+- `templates/src/<package_name>/` renders as `src/exampleproj/`.
+- All 5 linters green; manifest count: 44.
+
+### Next
+
+Commit 3 of 3: D-017 defer `scripts/new-project.sh` + close Codex plan (v1.32.2).
+
 ## v1.32.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.32.0. **Phase 5.1 of Codex improvement plan — migration guide (B-034).** Commit 1 of 3 closing Codex Phase 5 (the final phase). Minor bump per WORKFLOW.md (new root-exported artifact + new spec block).

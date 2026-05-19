@@ -8,6 +8,10 @@ If you're starting fresh, [`BOOTSTRAP.md`](BOOTSTRAP.md) is the right doc instea
 
 ---
 
+**Want to see what a fully-rendered project looks like before deciding what to import?** Run `./scripts/render-example.sh` from this repo — produces a deterministic example with every canonical placeholder substituted (`PROJECT_NAME=ExampleProject`, `package_name=exampleproj`, etc.). Output lives at `~/Downloads/phoenixproject-example/` by default; override via `OUT_DIR=/path/to/wherever`. The script doesn't require uv or Python — just bash — so it's safe to run on any machine without setting up the dev environment first.
+
+---
+
 ## When to use the full kit vs. import selected parts
 
 | Situation | Path |

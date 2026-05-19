@@ -295,3 +295,9 @@ files:
     tier: meta-only
     placeholders: []
     exported_by_starter: false
+
+  - path: scripts/render-example.sh
+    purpose: render an inspectable example instantiation of the kit (B-035)
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false
