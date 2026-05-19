@@ -271,6 +271,18 @@ The bar set by B-014 + B-029 ("driven by known failure modes, not broad coverage
 
 **Decision:** — (no new D entry; B-031 is execution of Phase 3.3 under the framework set by B-014 + B-029)
 
+### Block B-030: preset architecture — `_common/` shared layer + `presets/<preset>/` specific layer
+
+**Rule:** When multi-preset support actually ships (not as of v1.30.0 — design only), the meta-repo's currently-flat `templates/` directory will be reorganized into two layers: `_common/` (stack-agnostic content shared across all presets — workflow docs, gate trio with C4 anchored regions, spec-block format, review rubric, env-bootstrap core, Karpathy rules, changelog conventions, meta scaffolding) and `presets/<preset-name>/` (stack-specific content — Makefile, CI workflow, deploy script, runtime pin, project metadata file, sample source tree, sample smoke test, setup-doc prereqs). A bootstrapped project = `_common/` contents flattened with one chosen `presets/<chosen>/` contents at the project root. Constraints: (1) single preset per project — mixed-preset out of scope; (2) no file conflicts between layers — each file has exactly one owner; (3) uniform placeholders — the B-024 canonical placeholder set works the same way across all presets; (4) C4 regions live in `_common/` — the byte-exact rule statements are stack-agnostic and don't get re-declared per preset. Design doc: `presets/PRESET_ARCHITECTURE.md`. **No implementation as of v1.30.0** — `_common/` and `presets/python-uv/` directories don't exist; `templates/` is unchanged; the design is the deliverable. Future implementation commits will create the directories, move files appropriately, update `scripts/export-starter.sh` to compose by preset, and update `scripts/smoke-test.sh` to test per-preset.
+
+**Rationale:** D-009 (v1.8.0) committed to "Python/uv/FastAPI/VPS today; multi-preset roadmap" without specifying the architecture. Phase 4.3 of the Codex improvement plan called for "define `_common` vs preset boundaries before adding more presets" — addressing the gap. Without a clear layering design, future preset additions would risk: (a) re-deriving stack-agnostic content per preset, leading to drift; (b) file conflicts between preset-specific and shared content; (c) ambiguity about whether C4 anchored regions should be per-preset or shared. The layered model addresses all three: shared content has one home; preset-specific content has its own dirs; placeholders + C4 are uniformly shared via `_common/`. The standard pattern for multi-target scaffolds (`cookiecutter`, `copier`, similar tools) uses this two-layer approach. Alternative architectures considered + rejected — see D-015 for full Considered / Why analysis: branched repos (drift risk), single-tree with Jinja conditionals (hard to reason about with 3+ stacks), inverted naming (user-facing semantics worse). The chosen design preserves the AI-safety benefit of B-021's three-tier model (C4 regions stay in one place, every preset inherits them) while letting preset-specific content evolve independently.
+
+**Test:** manual (design doc) — `presets/PRESET_ARCHITECTURE.md` exists at meta-repo root and specifies the layer model + composition rule + 4 constraints. Future implementation commits will be tested by per-preset smoke-test runs; that test infrastructure ships when the first multi-preset implementation commit lands. No automated test as of v1.30.0 — this is design-only.
+
+**Status:** frozen (design; implementation deferred to future commits gated by this block)
+
+**Decision:** D-015
+
 ### Block B-020: `.env.example` schema is declared via `@directive` comments
 
 **Rule:** Each environment variable in `templates/.env.example` (and the resulting `.env.example` in consumer projects) carries machine-readable metadata via `# @directive: value` lines preceding the var declaration. Recognized directives:
@@ -505,6 +517,36 @@ Refines D-011 (which froze B-027's original "always propose" framing). B-026 (th
 Refines / extends B-016 (live doc references resolve to shipped files or are explicit examples) and B-023 (doc-reference linter validates Markdown link targets). The new fragment-validation in B-023 makes B-016's invariant strictly stronger (anchors also resolve, not just files). The new spec-consistency linter handles the orthogonal class of "doc content matches spec content" that B-016/B-023 don't address.
 
 **Implemented in:** v1.29.0. Touches: `scripts/check-doc-references.sh` (extended with `github_slug` + `extract_headings` + `validate_fragment` functions + integration into the per-link processing loop; ~80 added lines); new `scripts/check-spec-consistency.sh` (~85 lines, narrow forbidden-phrase checker with code-span stripping); `.github/workflows/template-self-test.yml` (new step between placeholder check and smoke test); B-029 added (frozen); this D-014 entry added. No changes to other linters or C4 region machinery.
+
+### D-015 (2026-05-19) Preset architecture — layered `_common/` + `presets/<preset>/`
+
+**Chose:** Two-layer model for multi-preset support — `_common/` (stack-agnostic shared content) + `presets/<preset-name>/` (stack-specific). A bootstrapped project = `_common/` flattened with exactly one chosen preset. Constraints frozen by B-030: single preset per project; no file conflicts between layers; placeholders + C4 anchored regions stay in `_common/`. Design doc at `presets/PRESET_ARCHITECTURE.md`. **No implementation as of v1.30.0** — moving files into `_common/` + populating `presets/python-uv/` is separate work gated by this decision.
+
+**Considered:** (a) two-layer composed model — `_common/` + `presets/<preset>/` (this option); (b) branched template repos — each preset is a separate repo (e.g., `phoenixprojecttemplate-python`, `phoenixprojecttemplate-node`); (c) single-tree with stack-conditional rendering — Jinja-style `{% if stack == 'python' %}` blocks in a unified `templates/`; (d) inverted naming — `_python-uv/` + `<core>/` (same architecture as (a) with naming swapped).
+
+**Why:**
+
+- **(a) chosen.** Clear ownership (each file has exactly one home); mechanically composable (no template engine; bootstrap tooling just flattens two directories); future-friendly (adding Node = `mkdir presets/node-pnpm/` + populate, no `_common/` edits unless the new preset surfaces a Python assumption to extract); migrate-friendly (existing v1.x consumers continue with their flat `templates/`-derived files; new bootstraps from the release that ships `_common/` + presets/ use the new structure; no forced upgrade); AI-safety preserved (C4-anchored rule trio stays in `_common/`, every preset inherits them, no per-preset re-derivation).
+
+- **(b) rejected** — branched repos lead to drift between preset-specific copies of workflow/gate/spec-format content. Each preset re-derives what `_common/` would centralize, increasing maintenance cost and divergence risk over time. Loses the AI-safety benefit of B-021's three-tier model (each branch would need its own C4 regions, with no cross-branch sync mechanism). Multiple repos to keep in sync; consumer has to choose which to clone — fragmented UX.
+
+- **(c) rejected** — Jinja-style conditionals in a single tree make "view the Python preset" a filtering operation; harder to reason about + harder to lint. Templates that mix stack-specific blocks with `{% if stack == 'python' %}` ... `{% endif %}` are notoriously hard to maintain when you have 3+ stacks. The layered model is the standard alternative — `cookiecutter` / `copier` / similar tools use it for the same reason.
+
+- **(d) rejected on naming.** `presets/<name>/` matches `cookiecutter` / `copier` conventions; reads naturally for the variable part of the tree. `_common/` reads as "the shared layer everything depends on." Inverted naming would have `<name>/` as a top-level dir alongside `_common/`, mixing the meta-`_common` with a real-named preset. Less clear hierarchy.
+
+**Failure-mode analysis:**
+
+- **`_common/` accumulates over time.** Stack-agnostic content grows as workflow refinements / new C4 regions / new linters are added. `_common/` becomes large. Mitigation: it's still ONE directory; reading "what's in `_common/`" stays tractable. If it grows to where preset authors don't want to inherit ALL of it, sub-options needed — flagged for Phase 4.4 of the Codex plan (bootstrap modes: `full-python-vps` vs `python-local-only` vs `docs-only`).
+
+- **Preset conflict with `_common/`.** A preset wants to override a file `_common/` ships (hypothetical: a no-runtime preset doesn't want the env-bootstrap core; a Go preset wants a different `.gitignore`). The composition rule says "no file conflicts": each file has exactly one owner. If a future preset legitimately needs to vary something `_common/` owns, the layer model breaks for that file. Mitigation: structure `_common/` so it owns only TRULY stack-agnostic files. If conflicts surface, either (i) move the conflict-prone file from `_common/` to all presets (each preset owns its own copy — small duplication accepted), or (ii) introduce sub-layers (`_common/core/`, `_common/env-bootstrap/`, etc.) so presets can opt out of specific sub-layers. Both options remain future work, deferred.
+
+- **C4 regions may need preset-specific context.** Currently the 4 anchored regions (gate-clause / proposal-format / bare-gogogo / env-metadata-contract) are stack-agnostic. If a future regression motivates a preset-specific anchored rule (unlikely but possible), the C4 linter (B-022) would need per-preset `FILES` arrays. Not anticipated; flagged as a constraint to watch.
+
+- **Smoke-test coverage multiplies by preset count.** Currently `scripts/smoke-test.sh` instantiates one Python preset. With multi-preset, CI would run the smoke flow per preset (matrix). Adds CI time linearly. Acceptable cost.
+
+- **`scripts/export-starter.sh` needs updating** when the new structure ships — currently flattens `templates/` directly. Will need a `--preset` flag (default `python-uv` for backward compatibility) and compose `_common/` + chosen preset. Tracked as future work.
+
+**Implemented in:** v1.30.0 (design only — no file moves, no script changes). Touches: `presets/PRESET_ARCHITECTURE.md` (new file at meta-repo root); B-030 added (frozen — layer model + composition rule); this D-015 entry (decision with Considered / Why / Failure-mode analysis). `templates/` remains unchanged; `scripts/export-starter.sh` remains unchanged. Future commits — gated by this design — will create `_common/` and `presets/python-uv/`, move files appropriately, update the export script + smoke test. Those are separate proposals.
 
 ## Open project-level decisions
 

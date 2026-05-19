@@ -6,6 +6,73 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.30.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.30.0. **Phase 4.3 of the Codex improvement plan — preset architecture design (B-030 + D-015).** Final commit (5 of 5) in the `improvements-3` sequence. Design only; no implementation work in this commit.
+
+### What shipped
+
+A new `presets/PRESET_ARCHITECTURE.md` at meta-repo root (~140 lines) documenting the layer model + composition rule for future multi-preset support:
+
+**Layer model:**
+
+- **`_common/`** — stack-agnostic content shared across all future presets. Owns: workflow docs (WORKFLOW.md + the per-project + AI-session template trio); spec-block format skeleton + the `spec-block` skill; reviewer-agnostic review rubric (B-010); changelog conventions + B-002 version-bump rule; env-bootstrap core (`_env-schema-parse.sh` / `bootstrap.sh` / `check-env.sh`); Karpathy standing rules; meta scaffolding (`.gitignore`, `.claude/settings.json`, `CHANGELOG.md` skeleton).
+- **`presets/<preset-name>/`** — stack-specific content. Owns: runtime pin (`.python-version` / `.nvmrc` / etc.); project metadata file (`pyproject.toml` / `package.json` / `go.mod`); Makefile with stack-appropriate commands; CI workflow with stack-appropriate lint / typecheck / test gates; deploy script (varies dramatically per stack); sample source tree (`src/<package_name>/` Python / `src/index.ts` Node / `cmd/<binary>/main.go` Go); sample smoke test; setup-doc prereqs.
+
+**Composition rule:** a bootstrapped project = `_common/` contents flattened with one chosen `presets/<chosen>/` contents at the project root.
+
+**Four constraints frozen by B-030:**
+
+1. Single preset per project — mixed-preset out of scope.
+2. No file conflicts between layers — each file has exactly one owner.
+3. Uniform placeholders per B-024's canonical set work the same way across all presets.
+4. C4-anchored regions (gate-clause / proposal-format / bare-gogogo / env-metadata-contract) live in `_common/`; presets don't override them.
+
+### Spec
+
+- **B-030 added** (frozen) — layer model + composition rule + four constraints. References `presets/PRESET_ARCHITECTURE.md` as the canonical design source.
+- **D-015 added** — chosen alternative + rejected alternatives (branched repos, Jinja-style single-tree, inverted naming) with full failure-mode analysis: `_common/` accumulation risk, preset-conflict edge cases (what if a future preset legitimately needs to vary something `_common/` owns?), C4 regions potentially needing preset-specific context, smoke-test coverage multiplication, export-starter.sh update needed when implementation lands.
+- Refines D-009 (Python/uv/FastAPI/VPS-only scope + multi-preset roadmap) by specifying HOW multi-preset would work.
+
+### What's NOT in this commit (deliberately deferred)
+
+- **`_common/` and `presets/python-uv/` directories do NOT exist** as of v1.30.0. Only the design doc + spec blocks exist.
+- **`templates/` is unchanged** — files stay in their current flat layout.
+- **`scripts/export-starter.sh` is unchanged** — still exports flat `templates/`.
+- **`scripts/smoke-test.sh` is unchanged** — tests one Python preset (the existing flat layout).
+- **No second preset (Node / Go / no-runtime) implementation.**
+- **No bootstrap mode decision** (`full-python-vps` vs `python-local-only` vs `docs-only`) — Phase 4.4 of the Codex plan; separate decision.
+
+The design doc includes a suggested implementation order for when the multi-preset work begins: (1) create `_common/` + move stack-agnostic files; (2) create `presets/python-uv/` + move stack-specific files; (3) update `scripts/export-starter.sh` with `--preset` flag; (4) update `scripts/smoke-test.sh` for per-preset matrix; (5) add a second preset to exercise the architecture. Each step is a separate `gogogo!`-authorized proposal when its time comes.
+
+### Verified
+
+- All 4 linters green: C4 (3 regions byte-exact, 4 named) + C2 doc-ref (the new `presets/PRESET_ARCHITECTURE.md` is in scope; its Markdown links resolve including the `docs/spec.md` references) + C3 placeholders (the new doc adds canonical placeholder mentions inside backticks — code spans stripped per linter convention so no false-positives) + C5 spec-consistency (10 invariants, scope unchanged).
+- Smoke test green: 4 C4 regions ≥ 100 non-blank chars; `.env.example` parses to 6 vars; full export → instantiate → uv-sync → pytest → ruff → mypy pipeline passes.
+
+### `improvements-3` branch state after this commit
+
+5 commits stacked on `main` (top of branch is this commit). The full sequence:
+
+1. **v1.29.0** (`fd137d4`) — B-029 URL-fragment validation + spec-consistency linter (Phase 3.2).
+2. **v1.29.1** (`10a49b2`) — Spec-consistency Invariants B + C structural prevention (Phase 2.1 reframed).
+3. **v1.29.2** (`c38f785`) — Trim duplicated refuse-list from templates/CONTRIBUTING.md (Phase 2.2).
+4. **v1.29.3** (`37507d1`) — B-031 smoke-test pre-flight integrity checks (Phase 3.3).
+5. **v1.30.0** (this commit) — B-030 + D-015 preset architecture design doc (Phase 4.3).
+
+Total: 5 commits, all linter-green, smoke-test-passing. Combined with the v1.27.x + v1.28.0 commits earlier on the branch, `improvements-3` carries 9 commits total ahead of `main`. Ready for a PR-open proposal when directed.
+
+### What's left from the Codex plan after this branch
+
+- **Phase 4.1** — machine-checkable template manifest (gates Phase 4.2's core/optional/preset-specific marking).
+- **Phase 4.2** — mark assets explicitly (trivial once 4.1 ships).
+- **Phase 4.4** — bootstrap modes decision (`full-python-vps` / `python-local-only` / `docs-only`).
+- **Phase 5.1** — migration guidance for existing projects (toolkit-mode adoption).
+- **Phase 5.2** — example completed generated project / snapshot.
+- **Phase 5.3** — one-shot bootstrap helper (`scripts/new-project.sh` for placeholder substitution).
+
+Plus the deferred-from-Commit-3 follow-up: fix `templates/CONTRIBUTING.md` line ~279 stale heading using `<feature-verb> gogogo!` meta-syntax (v1.23.1 sweep missed it; needs either a one-line edit OR extending Invariant C in spec-consistency to cover meta-syntax patterns).
+
 ## v1.29.3 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.29.3. **Phase 3.3 of the Codex improvement plan — two pre-flight smoke checks (B-031)** (commit 4 of 5 in the `improvements-3` sequence). Patch bump.
