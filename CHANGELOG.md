@@ -6,6 +6,71 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.29.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.29.0. **Phase 3.2 of the Codex improvement plan (B-029 + D-014): close v1.26.1 + v1.26.2 regression classes via two new automation surfaces — URL-fragment validation + narrow forbidden-phrase spec-consistency checker.** Minor bump (notable new automation).
+
+### What shipped
+
+**(a) `scripts/check-doc-references.sh` extended with URL-fragment validation.** Three new functions:
+
+- `extract_headings()` — emits each heading line from a Markdown file (line starts with `#+` whitespace), skipping fenced code blocks (lines starting with `#` inside ``` fences aren't headings — e.g. shell comments).
+- `github_slug()` — computes GitHub's auto-anchor slug: lowercase → drop characters outside `[a-z0-9 _-]` → whitespace runs to single hyphen → trim leading/trailing hyphens. Mirrors GitHub's behavior for typical headings. Doesn't handle duplicate-anchor disambiguation (`-1`/`-2` suffixes) — accepted limitation; no duplicates in this repo.
+- `validate_fragment()` — given a file + fragment, returns 0 if the fragment matches a heading slug in the file. Used by the per-link processing loop.
+
+Integration: after the existence check passes (real or virtual-fallback), if the original target had a `#anchor` portion, the linter validates the anchor against the resolved file's headings. Failure prints `<file>:<line> -> <target>  (broken URL fragment: #<frag> in <resolved>)`. 4 URL fragments currently validate across 24 Markdown files.
+
+**(b) New `scripts/check-spec-consistency.sh` linter.** Narrow forbidden-phrase checker scoped to 5 active root docs (README, BOOTSTRAP, WORKFLOW, templates/CONTRIBUTING, templates/CLAUDE). Strips fenced code blocks + inline single-backtick code spans before scanning (matches the convention used by B-023 / B-024).
+
+Invariant A (env-metadata `@directive` contract, per B-020) — forbidden POSIX-ERE patterns, case-sensitive:
+
+- `Optional prose`
+- `comment block.*Optional`
+- `"Optional" if`
+
+Hits print `<file>:<line> [Invariant A] forbidden phrase matched "<pattern>": <line content>`. Exit 0 on clean, 1 on hit. Invariant set is extensible — new entries added per shipped regression class, not speculatively.
+
+**Wired into CI:** `.github/workflows/template-self-test.yml` gains a `check spec consistency (B-029)` step between the placeholder linter and the smoke test. The extended `check doc references` step runs the new fragment-validation in-place (no separate step needed).
+
+### Closing the regression classes
+
+- **v1.26.1** ("WORKFLOW.md's `.env.example` section described requiredness via `Optional` prose while B-020 said `@directive`"): the new spec-consistency linter's Invariant A catches this directly. Same forbidden phrasing → CI fails.
+- **v1.26.2** ("WORKFLOW.md linked to `PROJECT_STARTER.md#16-branch-protection-on-main` after §1.6 moved to BOOTSTRAP.md"): the new fragment-validation in B-023 catches this. File-level link still resolved; anchor goes nowhere → linter fails with `(broken URL fragment: #16-... in PROJECT_STARTER.md)`.
+
+Both regressions are now structurally prevented.
+
+### One in-scope fix during Commit 1
+
+The new fragment-validation immediately caught one live broken anchor on its first run:
+
+- **PROJECT_STARTER.md line 40** (v1.25.0 row of Template changelog) contained the literal Markdown link `[PROJECT_STARTER.md §1.6](PROJECT_STARTER.md#16-branch-protection-on-main)` as part of describing what v1.25.0 changed in WORKFLOW.md's §2.9 prose. The link was VALID at v1.25.0 time (when §1.6 still lived in PROJECT_STARTER.md) but became DEAD in v1.26.0 (BOOTSTRAP.md absorbed §1.6).
+
+Fixed by wrapping the historical link syntax in backticks so it reads as a literal code example (the linter strips inline code before parsing link targets, so the anchor is no longer checked). Added a parenthetical noting "the link was valid at v1.25.0 time; §1.6 later moved to BOOTSTRAP.md in v1.26.0, so the anchor is dead today — historical-syntax example only." Preserves audit-trail accuracy without leaving a live broken anchor.
+
+### Spec
+
+- **B-029 added** (frozen) — defines both surfaces (URL-fragment validation + spec-consistency linter), scope, acceptance, exit codes, CI integration.
+- **D-014 added** — rationale, rejected alternatives (extend-only-B-023, broader semantic analysis, more C4 regions, defer-to-manual-audit), failure-mode analysis. Codifies "bar for new invariants is we've shipped this exact bug already."
+- No changes to other linters / C4 regions.
+
+### Linter trio → quartet
+
+The active linter set as of v1.29.0:
+
+- **C4 rule consistency** (B-022) — byte-exact match across the doc trio for 4 anchored regions (gate-clause / proposal-format / bare-gogogo / env-metadata-contract).
+- **C2 doc references** (B-023, extended in v1.29.0) — Markdown link targets resolve as files/dirs AND `#anchor` fragments match real headings.
+- **C3 placeholders** (B-024) — no canonical substitution placeholders leak into plain prose.
+- **C5 spec consistency** (B-029, new) — narrow forbidden-phrase invariants in active docs.
+
+### Verified
+
+- All 4 linters green: `OK: canonical rule regions match across 3 files.` / `OK: 74 Markdown link targets resolved across 24 files (4 URL fragments validated).` / `OK: no canonical placeholders found in plain prose across 11 meta-repo files.` / `OK: no forbidden phrases found in 5 active docs (3 invariant patterns checked).`
+- Planted-violation tests: both new check types fail loudly on synthetic bad inputs (broken anchor, forbidden phrase) and pass after restoration.
+
+### Next in this 5-commit sequence
+
+Commit 2 of 5 (v1.29.1) — Phase 2.1: canonical-vs-duplicated cleanup across active docs.
+
 ## v1.28.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.28.0. **Gate refinement (D-013): per-option `[change]`/`[info]` classification + scoped `gogogo!`.** User pushback that B-027's always-propose-with-`gogogo!` pattern was diluting the gate's deliberate-state-change signal — applied universally even to navigation and discussion options where nothing mutates state. Minor bump per WORKFLOW.md (notable behavior change in the gate).

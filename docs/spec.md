@@ -225,6 +225,29 @@ The threshold for `[change]` is "any state mutation outside the gate carve-outs 
 
 **Decision:** D-013
 
+### Block B-029: URL-fragment validation + spec-consistency linter
+
+**Rule:** Two complementary automation surfaces guard against semantic drift between active docs and frozen spec behavior in `docs/spec.md`:
+
+**(a) URL-fragment validation** — `scripts/check-doc-references.sh` (originally B-023) was extended in v1.29.0 to validate the `#anchor` portion of every Markdown link target. After file existence is confirmed (real or virtual-export-fallback), if the target contains a `#fragment`, the linter extracts all headings from the resolved file (skipping fenced code blocks), computes GitHub-style auto-anchor slugs (lowercase, drop punctuation outside `[a-z0-9 _-]`, replace whitespace runs with single hyphen, trim leading/trailing hyphens), and verifies the fragment matches at least one heading slug. Failures print `<file>:<line> -> <target>  (broken URL fragment: #<frag> in <resolved>)`. Closes the regression class v1.26.2 caught (WORKFLOW.md linked to `PROJECT_STARTER.md#16-branch-protection-on-main` after §1.6 had moved to BOOTSTRAP.md in v1.26.0; the file-level link still resolved but the anchor was dead).
+
+**(b) Spec-consistency linter** — new `scripts/check-spec-consistency.sh`. Narrow forbidden-phrase checker scoped to the 5 active root docs (README.md, BOOTSTRAP.md, WORKFLOW.md, templates/CONTRIBUTING.md, templates/CLAUDE.md). Strips fenced code blocks + inline code spans before scanning (matching the convention of the other linters); fails on any forbidden phrase match. Invariants are POSIX ERE patterns, case-sensitive, deliberately conservative. **Invariant A (v1.29.0)** — env-metadata `@directive` contract (B-020): forbidden phrases `Optional prose` / `comment block.*Optional` / `"Optional" if`. Catches the regression class v1.26.1 fixed (WORKFLOW.md described requiredness via "Optional" prose while B-020 froze `@directive` metadata as the contract). The invariant list is extensible — add new entries as new regression classes surface. PROJECT_STARTER.md / CHANGELOG.md / docs/spec.md are intentionally OUT of scope (their changelog tails + historical-superseded sections have legitimate audit-trail mentions of pre-supersession state).
+
+Both checks are wired into `.github/workflows/template-self-test.yml` between the placeholder linter (B-024) and the smoke test (B-014). Together they close the doc-reference gap (B-023 only verified file existence; not anchor presence) and the semantic-drift gap (no other linter caught content-of-doc-vs-content-of-spec mismatches).
+
+**Rationale:** The v1.26.1 + v1.26.2 regression pair surfaced two distinct failure modes the existing linter trio (B-022/B-023/B-024) didn't catch:
+
+- v1.26.1: WORKFLOW.md's `Environment variables` section was extracted verbatim from PROJECT_STARTER.md §9.1 in v1.25.0, carrying stale pre-`@directive` "Optional prose" wording that B-020 had superseded in v1.14.1. Manual review caught it; no mechanical check existed. This is *semantic drift* — the doc says X, the spec says Y, and B-023 (file-level) / B-024 (placeholder) / B-022 (byte-exact regions) don't compare doc-content against spec-content.
+- v1.26.2: WORKFLOW.md's `Merge` section linked to `PROJECT_STARTER.md#16-branch-protection-on-main` — valid in v1.25.0, dead in v1.26.0 after BOOTSTRAP.md absorbed §1.6. The file existed (PROJECT_STARTER.md) so B-023 passed; the anchor was the missing piece.
+
+Both are doc-vs-reality drift the v1.19.0 linter trio specifically didn't cover. Phase 3.2 of the Codex improvement plan named these gaps; B-029 closes them. The narrow forbidden-phrase approach for invariant checks was chosen over broader semantic analysis (e.g., NLP-based assertion-matching) for the same reason B-022 and B-024 are conservative: false-positive rate at zero is the only sustainable bar. New invariants get added when new regression classes surface — not speculatively. Per D-014's rationale, the bar for adding an invariant is "we've shipped this exact bug already." The URL-fragment check has zero ambiguity (anchor either matches a real heading or doesn't); the semantic check leverages backtick / code-fence stripping (proven safe in B-023 / B-024) to avoid matching legitimate code-example references.
+
+**Test:** automated — (a) `./scripts/check-doc-references.sh` exits 0 on a clean checkout and prints `OK: <N> Markdown link targets resolved across <M> files (<F> URL fragments validated).`; planting a broken anchor (e.g. `[label](BOOTSTRAP.md#nonexistent)` in any *.md) exits 1 with `(broken URL fragment: #nonexistent in BOOTSTRAP.md)`. (b) `./scripts/check-spec-consistency.sh` exits 0 on clean state; planting `comment block contains Optional` in any active doc's plain prose exits 1 with `[Invariant A] forbidden phrase matched "comment block.*Optional": <line>`. The `template-self-test` CI job runs both on every push and PR.
+
+**Status:** frozen
+
+**Decision:** D-014
+
 ### Block B-020: `.env.example` schema is declared via `@directive` comments
 
 **Rule:** Each environment variable in `templates/.env.example` (and the resulting `.env.example` in consumer projects) carries machine-readable metadata via `# @directive: value` lines preceding the var declaration. Recognized directives:
@@ -425,6 +448,40 @@ User feedback drove the design: *"i suggest we add gogogo! to only items that do
 Refines D-011 (which froze B-027's original "always propose" framing). B-026 (the propose-and-confirm gate proper) is unchanged in its conditions — D-013 only refines what kinds of options trigger the `gogogo!` requirement.
 
 **Implemented in:** v1.28.0. Touches: C4 `gate-clause` region updated byte-exact across the doc trio (condition b explicitly handles `[change]` vs `[info]` selection); C4 `proposal-format` region rewritten byte-exact to describe the marker convention + per-option gate scope + discussion-mode relaxation; supporting prose in WORKFLOW.md §2.1 self-check list + refuse-list (gains rows for "force proposal in pure discussion", "bare N against [change]", "info → change re-classification"); supporting prose in `templates/CONTRIBUTING.md` self-check list updated similarly. B-027 content updated in place (status flipped from original "every message must propose" to refined framing); B-028 added (frozen). No C4 region added or removed — same 4 regions (gate-clause / proposal-format / bare-gogogo / env-metadata-contract), just different content in the first two.
+
+### D-014 (2026-05-19) Extend B-023 + add narrow forbidden-phrase spec-consistency linter
+
+**Chose:** Two parallel automation surfaces — (a) extend the existing `scripts/check-doc-references.sh` (B-023) with URL-fragment validation (GitHub-slug computation + match against headings in the target file); (b) add a NEW `scripts/check-spec-consistency.sh` doing narrow forbidden-phrase checks on the 5 active root docs against invariants derived from frozen spec behavior. Both are wired into CI. Invariant list starts with one entry (A — env-metadata `@directive` contract per B-020); extensible as new regression classes surface.
+
+**Considered:** (a) extend B-023 + add forbidden-phrase linter (chosen); (b) only extend B-023 (closes URL-fragment class only, leaves semantic-drift class open); (c) broader semantic analysis (NLP-based assertion matching of doc claims against spec claims — too much false-positive risk for v1); (d) add tighter C4 rule-consistency regions across more rules instead (over-anchoring; not all spec invariants are duplicated-rule patterns); (e) defer entirely and rely on manual audit (status quo until v1.29.0; rejected because the v1.26.1 + v1.26.2 regression pair proved manual audit is insufficient).
+
+**Why:**
+
+- (a) — chosen. Two narrow tools each closing one well-defined gap:
+  - URL-fragment validation: pure mechanical check, zero ambiguity (anchor matches a heading slug or it doesn't), low false-positive rate.
+  - Forbidden-phrase invariants: conservative; each entry is an exact ERE pattern manually selected after a regression has been shipped. Bar for new invariants is "we've shipped this exact bug already." Avoids the false-positive trap of broader semantic checks.
+
+- (b) — rejected. Would close v1.26.2's URL-fragment class but leave v1.26.1's semantic-drift class open. The two regressions are sibling failure modes; closing one without the other leaves the door open.
+
+- (c) — rejected. Broader semantic analysis (e.g., asserting "every active doc claim about X matches the spec claim about X" via NLP / parsed AST) has unbounded false-positive surface. The narrow approach is incrementally extensible: add one specific pattern per shipped regression, no speculative coverage.
+
+- (d) — rejected. C4 (B-022) is for *deliberately-duplicated* rule statements across the doc trio (gate-clause, proposal-format, bare-gogogo, env-metadata-contract). Adding regions for every spec invariant would over-anchor — many spec invariants aren't trio-duplicated for AI safety; they live in one canonical doc + spec. The forbidden-phrase approach handles single-source claims that contradict spec.
+
+- (e) — rejected. Status quo failed twice in one PR cycle (v1.26.1 + v1.26.2). Manual audit catches the typical case but proven-insufficient for the regression-after-extract case.
+
+**Failure-mode analysis:**
+
+- New failure mode this introduces: false positive on a forbidden phrase that appears in legitimate context. Mitigation: phrases are deliberately conservative + case-sensitive + bounded by ERE specificity. The strip_code function ignores backtick code spans and fenced blocks so example mentions don't fire.
+
+- New failure mode this introduces: invariant set grows stale (a fixed bug pattern keeps being checked long after the actual risk is gone). Mitigation: this is acceptable cost; running an extra pattern check is cheap. Patterns can be removed when proven unnecessary.
+
+- Cannot detect: regression classes we haven't shipped yet. By design — the linter is reactive, not predictive. New patterns get added per concrete bug.
+
+- Cannot detect: semantic drift NOT captured by a specific exact-phrase pattern. Out of scope for narrow forbidden-phrase model; would require option (c)'s broader analysis. Acceptable trade-off for v1.
+
+Refines / extends B-016 (live doc references resolve to shipped files or are explicit examples) and B-023 (doc-reference linter validates Markdown link targets). The new fragment-validation in B-023 makes B-016's invariant strictly stronger (anchors also resolve, not just files). The new spec-consistency linter handles the orthogonal class of "doc content matches spec content" that B-016/B-023 don't address.
+
+**Implemented in:** v1.29.0. Touches: `scripts/check-doc-references.sh` (extended with `github_slug` + `extract_headings` + `validate_fragment` functions + integration into the per-link processing loop; ~80 added lines); new `scripts/check-spec-consistency.sh` (~85 lines, narrow forbidden-phrase checker with code-span stripping); `.github/workflows/template-self-test.yml` (new step between placeholder check and smoke test); B-029 added (frozen); this D-014 entry added. No changes to other linters or C4 region machinery.
 
 ## Open project-level decisions
 
