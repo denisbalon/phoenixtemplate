@@ -592,6 +592,32 @@ Refines / extends B-016 (live doc references resolve to shipped files or are exp
 
 **Implemented in:** v1.30.0 (design only — no file moves, no script changes). Touches: `presets/PRESET_ARCHITECTURE.md` (new file at meta-repo root); B-030 added (frozen — layer model + composition rule); this D-015 entry (decision with Considered / Why / Failure-mode analysis). `templates/` remains unchanged; `scripts/export-starter.sh` remains unchanged. Future commits — gated by this design — will create `_common/` and `presets/python-uv/`, move files appropriately, update the export script + smoke test. Those are separate proposals.
 
+### D-016 (2026-05-19) Bootstrap modes deferred until after multi-preset file move ships
+
+**Chose:** Defer bootstrap modes (the candidate set `full-python-vps`, `python-local-only`, `docs-only` named in `presets/PRESET_ARCHITECTURE.md` and Phase 4.4 of the Codex improvement plan) until after the actual `_common/` + `presets/python-uv/` file move ships. The preset architecture (B-030 / D-015) is the layer that lands first; mode-selection is a separate optionality surface that we are explicitly not designing for v1 of the layered structure.
+
+**Considered:** (a) defer bootstrap modes entirely until the file move lands (this option); (b) ship bootstrap modes alongside the `_common/` + `presets/python-uv/` file move in the same release sequence; (c) replace preset selection with bootstrap modes (modes carry an implicit preset; no separate `--preset` flag); (d) layer modes over preset selection (`--preset python-uv --mode python-local-only` as orthogonal axes).
+
+**Why:**
+
+- **(a) chosen.** Stacking mode-selection on top of preset-selection before the single-preset multi-tier layout (B-030) even exists doubles the optionality surface for no current consumer. The kit ships exactly one preset today (Python/uv/FastAPI/VPS) and the candidate modes (`full-python-vps`, `python-local-only`, `docs-only`) all describe subsets or variants of that one preset — meaning the mode design can't even be validated against multi-preset reality until multi-preset exists. Deferring keeps the v1 layered structure focused on one job (mechanical preset composition); the mode question can be revisited once a second preset (Node or Go) actually surfaces concrete demand for partial-bootstrap variants. No current user is blocked by the absence of modes — greenfield consumers get the full Python preset today; the `docs-only` mode is a Phase-5 adoption-UX concern (covered by Phase 5.1 migration guidance, not by mode-selection in bootstrap).
+
+- **(b) rejected.** Bundling modes with the file move triples the scope of an already-large refactor. The file move itself (estimated 2-3 commits per `presets/PRESET_ARCHITECTURE.md`'s "Implementation order") needs careful sequencing — moving stack-agnostic files into `_common/`, then stack-specific into `presets/python-uv/`, then updating `scripts/export-starter.sh` to compose them, then updating smoke-test to matrix per preset. Adding mode-selection on top would mean ALSO designing the mode vocabulary (what does `python-local-only` exclude exactly? deploy.sh? CI? both?), updating export-starter to honor `--mode` semantics, and matrix-testing each (preset × mode) combination in CI. Concrete coupling cost without concrete benefit — neither feature blocks the other.
+
+- **(c) rejected.** Collapsing preset and mode into one axis (so `full-python-vps` IS the preset choice) couples two orthogonal decisions: "what language stack" and "how much of the kit do I want." A Node consumer who wants the `docs-only` variant would need a `docs-only-node` mode duplicating `docs-only-python`'s exclusion logic. Doesn't scale past the first preset.
+
+- **(d) deferred-but-not-rejected.** This is the long-term shape the mode question would likely take when it's revisited — orthogonal axes `--preset` × `--mode`. But "this is probably the right shape" is not the same as "ship it now." Without a second preset existing, the orthogonality is theoretical; the implementation work would be designing against absent data.
+
+**Failure-mode analysis:**
+
+- **Mode demand surfaces sooner than expected.** A consumer wants `docs-only` before multi-preset implementation lands. Mitigation: the Phase-5 migration guidance work (Codex plan Phase 5.1) covers the same use case — "import selected parts of the kit into an existing repo" achieves what `docs-only` mode would offer, just as a manual procedure rather than a flag. Migration docs are cheaper to write than mode infrastructure.
+
+- **The deferred decision gets forgotten.** D-016 is exactly the structural-prevention surface against this: a decision-log entry with status "deferred" is durable; "tracked separately" prose in a design doc is not. Future revisits of multi-preset work see D-016 and the open question is rebound to a concrete next step (when, by whom, against what trigger).
+
+- **Bootstrap modes turn out to be incompatible with the layered structure once it ships.** Risk: the file-move work makes assumptions that later constrain mode-selection design. Mitigation: the four constraints frozen by B-030 (single preset per project; no file conflicts between layers; uniform placeholders; C4 in `_common/`) are mode-orthogonal — none of them force a particular mode shape. The orthogonal-axes shape (option d) remains available if revived.
+
+**Implemented in:** v1.31.2 (decision only — no infrastructure change). Touches: this D-016 entry; `presets/PRESET_ARCHITECTURE.md` "What's deferred" §updated to reference D-016 instead of inline prose; `codex improvement plan.md` Phase 4 §4 updated to record the decision. No spec block; no linter; no behavior change.
+
 ## Open project-level decisions
 
 Resolve as they come up. Move resolved entries to the Decision log above.
