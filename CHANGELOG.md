@@ -6,6 +6,41 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.21.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.21.0. **Codex Phase 8 #3 — placeholder linter.** Closes the third and final linter in the trio that gates the upcoming safe `PROJECT_STARTER.md` split.
+
+### Ship `scripts/check-placeholders.sh` + CI wiring
+
+The template's bootstrap surface defines a canonical set of placeholders that consumers `sed` away on first commit: `<package_name>` (lowercase, package import name); plus `<PACKAGE_NAME>` / `<PROJECT_NAME>` / `<PROJECT_SLUG>` / `<GITHUB_USER>` / `<HOST>` / `<DOMAIN>` / `<PROJECT_DESCRIPTION>` / `<COPYRIGHT_HOLDER>` / `<YEAR>` (the broader set). These belong in `templates/` files (where they're load-bearing) and in meta-repo `*.md` files only inside backticks (where they're documentation of the placeholder concept). What they must never be: out in plain prose of a meta-repo doc — that reads as "the docs shipped with TODO markers."
+
+Until now, that invariant was held only by review attention. The new linter enforces it mechanically:
+
+- **Scope.** Walks meta-repo `*.md` files only — `README.md`, `CONTRIBUTING.md`, `PROJECT_STARTER.md`, `CHANGELOG.md`, and `docs/*.md`. Excludes `templates/` (placeholders expected there) and the external Codex improvement plan (frozen content). Six files in total today.
+- **Code-span / fenced-block stripping.** Reuses the same approach as the doc-reference linter (B-023): lines starting with three backticks toggle the fence state and fenced-block lines are emitted as blank lines (line numbers stay in sync with the source file); inline single-backtick spans are stripped before scanning. So a sentence that mentions `<package_name>` inside backticks stays fine — the writer is referencing the placeholder concept, not waiting for substitution.
+- **Canonical-set only.** The linter checks the 10-item canonical set explicitly. Generic angle-bracket meta-syntax used elsewhere in prose (`<verb>`, `<file>`, `<region>`, `<X.Y.Z>`, etc.) is not in the set and is not flagged — the repo uses `<X>` as a general placeholder convention for many documentation purposes, only a subset of which are substitution placeholders.
+- **Non-.md files NOT scanned.** Meta-repo `*.sh` / `*.py` / `*.toml` files do contain canonical placeholder strings in comments or docstrings (e.g. `scripts/check-doc-references.sh` mentions `<package_name>` in a comment describing what it parses), but those don't render to users and won't surprise a consumer. Markdown is the user-facing surface; that's where the invariant matters.
+- **Output.** Clean: `OK: no canonical placeholders found in plain prose across 6 meta-repo files.` (exit 0). Failure: `<file>:<line> -> <placeholder>` per occurrence on stderr, followed by `FAIL: <N> canonical placeholder occurrence(s) leaked into plain prose across 6 meta-repo files.` (exit 1).
+- **CI wiring.** `.github/workflows/template-self-test.yml` gains a `check-placeholders` step between `check-doc-references` (B-023) and the smoke test (B-014). Push or PR drift fails the build.
+
+### The C-linter trio is now complete
+
+This closes the trio of mechanical checks for canonical-doc invariants:
+
+- **C4 — rule-consistency** (B-022, v1.19.0): the three deliberately-duplicated rule regions (gate clause, verb table, bare-gogogo prompt) stay byte-exact across `PROJECT_STARTER.md` / `templates/CONTRIBUTING.md` / `templates/CLAUDE.md`.
+- **C2 — doc references** (B-023, v1.20.0): every `[label](target)` Markdown link target resolves to a shipped file or directory.
+- **C3 — placeholders** (B-024, this release): no canonical substitution placeholder leaks into user-facing prose.
+
+Together they make the upcoming `PROJECT_STARTER.md` split (Codex Phase 4 #2 — break the 1000-line monolith into `BOOTSTRAP.md` / `WORKFLOW.md` / `TEMPLATE_INVENTORY.md` / `DEPLOY_BASELINE.md` / `HARNESS_QUIRKS.md`) safe to do mechanically: file moves and reference rewrites can't silently break rule duplication, link resolution, or placeholder presentation without CI failing.
+
+### Spec
+
+- **B-024** added (frozen) — C3 placeholder linter contract: scope, canonical placeholder set, code-span handling, CI integration, error format.
+
+### Next
+
+- **v1.22.0 (`refactor gogogo!`):** Split `PROJECT_STARTER.md` (Codex Phase 4 #2). Five focused docs; PROJECT_STARTER.md becomes a thin index + canonical authoring source. The linter trio guards the move.
+
 ## v1.20.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.20.0. **Codex Phase 8 #2 — doc-reference linter.** Resolves B-016's "manual until C2 linter ships" caveat.
