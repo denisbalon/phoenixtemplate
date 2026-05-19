@@ -52,7 +52,7 @@ Constraints (frozen by B-030):
 
 - **Actual `_common/` + `presets/python-uv/` directory creation.** Moving files from `templates/` into the new layout is separate work gated by this design. Estimated as 2-3 commits when it lands.
 - **`scripts/export-starter.sh` update** to compose `_common/` + chosen preset for the archive. Currently exports `templates/` flat — needs reshaping when the new structure ships.
-- **Bootstrap mode decision** (Phase 4.4 of the Codex plan) — whether bootstrap modes (`full-python-vps`, `python-local-only`, `docs-only`) sit alongside preset selection, OR replace it, OR layer over it. Deferred; tracked separately.
+- **Bootstrap mode decision** (Phase 4.4 of the Codex plan) — whether bootstrap modes (`full-python-vps`, `python-local-only`, `docs-only`) sit alongside preset selection, OR replace it, OR layer over it. **Deferred per D-016 (v1.31.2)** until after the actual file move ships; the orthogonal-axes shape (`--preset` × `--mode`) is the likely long-term form when the question is revisited. See D-016's failure-mode analysis for what triggers a revisit and how Phase 5.1 migration guidance covers the `docs-only` use case in the interim.
 - **Specific Node / Go / no-runtime preset content.** Each preset is its own follow-on commit set once the architecture is in place.
 - **Migration of existing v1.x consumers** when `_common/` + `presets/python-uv/` actually ship. No forced migration; existing consumers keep their flat `templates/`-shaped files; new bootstraps from the release that introduces the layered structure use it. Consumers can opt to re-export later.
 

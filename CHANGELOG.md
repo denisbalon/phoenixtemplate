@@ -6,6 +6,48 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.31.2 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.31.2. **Phase 4.4 of Codex improvement plan — bootstrap-mode deferral decision (D-016).** Final commit (3 of 3) closing Codex Phase 4. Docs-only change; no infrastructure or behavior change. Patch bump per WORKFLOW.md.
+
+### What shipped
+
+D-016 in `docs/spec.md` Decision log records that bootstrap modes (the candidate set `full-python-vps`, `python-local-only`, `docs-only` named in `presets/PRESET_ARCHITECTURE.md` and Phase 4.4 of the Codex plan) are **deferred** until after the actual `_common/` + `presets/python-uv/` file move ships.
+
+**Reasoning summary** (full Chose / Considered / Why / Failure-mode analysis in the D-016 entry):
+
+- Stacking mode-selection on top of preset-selection before the single-preset multi-tier layout (B-030) even exists doubles the optionality surface for no current consumer.
+- The kit ships exactly one preset today (Python/uv/FastAPI/VPS); all candidate modes describe subsets/variants of that one preset, so the mode design can't be validated against multi-preset reality until multi-preset exists.
+- The orthogonal-axes shape (`--preset` × `--mode`) is the likely long-term form when the question is revisited.
+- Phase 5.1 migration guidance (covered separately in the Codex plan) handles the `docs-only` use case as a manual procedure in the interim — cheaper than mode infrastructure.
+
+### Docs
+
+- `presets/PRESET_ARCHITECTURE.md` "What's deferred" §: replaced the inline "tracked separately" prose for bootstrap-mode decision with a pointer at D-016, plus the orthogonal-axes long-term-form note.
+- `codex improvement plan.md` Phase 4 §4: appended a "**Resolved (v1.31.2, D-016): deferred**" paragraph below the existing Acceptance line; original text unchanged.
+
+### Phase 4 of the Codex improvement plan now closes
+
+- §4.1 (machine-readable manifest) — shipped v1.31.0 (B-032).
+- §4.2 (core / optional / preset-specific classification) — shipped v1.31.0 as `tier` field in the manifest.
+- §4.3 (`_common` vs preset boundary design) — shipped v1.30.0 (B-030 + D-015).
+- §4.4 (bootstrap-mode decision) — resolved this commit (D-016, deferred).
+
+All Phase 4 acceptance criteria met. Remaining roadmap work: actual `_common/` + `presets/python-uv/` file move (gated by B-030; separate proposal); Phase 5 adoption-UX work (migration guidance, instantiated-project snapshot, evaluate `scripts/new-project.sh`).
+
+### What didn't change
+
+- No spec block — D-016 is a Decision-log entry, no new B-NNN.
+- No linter changes; no script changes; no template changes.
+- No changes to existing C4 regions, gate semantics, manifest contents, or any consumer-facing behavior.
+
+### Verified
+
+- All 5 linters green (C4 + C2 doc-ref + C3 placeholders + C5 spec-consistency + manifest).
+- D-016 inserted between D-015 and the "Open project-level decisions" section in `docs/spec.md`.
+- `presets/PRESET_ARCHITECTURE.md` "What's deferred" § now references D-016.
+- `codex improvement plan.md` Phase 4 §4 records the resolution.
+
 ## v1.31.1 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.31.1. **Phase 4.1 + 4.2 of Codex improvement plan — manifest linter (B-033).** Commit 2 of 3 closing Codex Phase 4. Patch bump per WORKFLOW.md (typical linter extension; no behavior change).
