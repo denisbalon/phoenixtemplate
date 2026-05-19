@@ -60,6 +60,7 @@ VIRTUAL_TEMPLATES_FILES=(
   "DEPLOY_BASELINE.md"
   "HARNESS_QUIRKS.md"
   "WORKFLOW.md"
+  "BOOTSTRAP.md"
 )
 
 # All Markdown files except anything under .git/.
