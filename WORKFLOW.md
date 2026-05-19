@@ -300,19 +300,24 @@ Deploy runs on every commit to `main` (i.e., immediately after the rebase-merge 
 
 ### Environment variables (`.env.example` format)
 
-Each var has a comment block above it explaining where to find or generate the value. The block includes "Optional" if the var is not required (the bootstrap script uses this to decide whether to demand a non-empty answer).
+Each var has a comment block declaring its metadata via `@directive` comments (B-020 in `docs/spec.md`) and explaining where to find or generate the value. Both `bootstrap.sh` and `check-env.sh` read the same shared parser (`templates/scripts/_env-schema-parse.sh`) — the directives are the contract, not the prose.
 
 ```sh
 # === Section ===
 
-# Description of what this var is for.
-# Where to find it: <source — e.g. "BotFather → /newbot">
+# @description: Brief one-line description used in bootstrap prompts.
+# @required
+# Where to find it: <source — e.g. "service admin console → API keys">
 # How to generate: <command — e.g. "openssl rand -hex 32">
 VAR_NAME=
 
-# Optional: only set when <condition>.
+# @description: Set when <condition>; service falls back to a default if unset.
+# @optional
+# @validator: ^[a-z0-9-]+$
 OPTIONAL_VAR=
 ```
+
+Recognized directives: `@description` · `@required` · `@optional` · `@default` · `@validator` · `@sensitive`. Free-text comments (lines starting with `#` without `@`) are shown in bootstrap prompts but not parsed as metadata. Default-if-neither-given is `@required`. Full directive vocabulary + parsing rules in B-020.
 
 ### Sensitive value handling
 
