@@ -6,6 +6,49 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.26.1 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.26.1. **Fix the Block finding from PR #2 review on commit `97dbe67`** (v1.25.0 WORKFLOW.md extraction). Pure doc fix — no spec changes; brings WORKFLOW.md into compliance with already-frozen B-020.
+
+### The Block finding (verbatim from the PR review)
+
+> Commit `97dbe67`: **Block.** `WORKFLOW.md` becomes an active canonical doc in this commit, but its `Environment variables (.env.example format)` section still says the comment block includes the word `"Optional"` and that `bootstrap.sh` uses that prose to decide requiredness. That directly contradicts frozen B-020 in `docs/spec.md`, where `.env.example` semantics are declared via `@directive` comments and both `bootstrap.sh` and `check-env.sh` read the shared parser. The split extracted stale pre-v1.14 wording back into an active surface.
+
+### What happened (the staleness history)
+
+The `Environment variables (.env.example format)` section was originally written in early-v1.x PROJECT_STARTER.md §9.1, describing the pre-@directive prose-grep behavior that was in force at the time. **B-020 froze in v1.14.1** (parser swap to `@directive` with shared `_env-schema-parse.sh`; both `bootstrap.sh` and `check-env.sh` use the new contract). That commit should have updated §9.1's wording in PROJECT_STARTER.md but didn't — the staleness lived hidden in the 1100-line monolith.
+
+When **v1.25.0** (`97dbe67`) extracted §9.1 verbatim into WORKFLOW.md as part of the split, the staleness was elevated to an active canonical surface where it now actively contradicts frozen B-020. The PR #2 reviewer caught this cleanly.
+
+This is one of the failure modes the PROJECT_STARTER.md split was supposed to expose, ironically by making each concern's doc small enough that drift becomes visible. Worked as intended — just took an external reviewer to surface it.
+
+### Three edits to `WORKFLOW.md` → "Environment variables (`.env.example` format)"
+
+- **Descriptive paragraph** rewritten:
+  - Was: "Each var has a comment block above it explaining where to find or generate the value. The block includes 'Optional' if the var is not required (the bootstrap script uses this to decide whether to demand a non-empty answer)."
+  - Now: "Each var has a comment block declaring its metadata via `@directive` comments (B-020 in `docs/spec.md`) and explaining where to find or generate the value. Both `bootstrap.sh` and `check-env.sh` read the same shared parser (`templates/scripts/_env-schema-parse.sh`) — the directives are the contract, not the prose."
+- **Code-block example** replaced. Was a pre-@directive layout with prose `Optional:` line + `OPTIONAL_VAR=`. Now uses `@directive`-annotated vars: `VAR_NAME` shows `@description` + `@required`; `OPTIONAL_VAR` shows `@description` + `@optional` + `@validator`. Examples are vendor-neutral per B-019 — "BotFather → /newbot" Telegram example dropped, replaced with "service admin console → API keys" generic placeholder.
+- **Closing sentence added** listing recognized directives (`@description` / `@required` / `@optional` / `@default` / `@validator` / `@sensitive`), noting that free-text comments without `@` are shown in prompts but not parsed, the default-if-neither-given convention (`@required`), and a pointer to B-020 for full vocabulary + parsing rules.
+
+### What didn't change
+
+- **No spec changes.** B-020 already names the `@directive` contract; this commit brings WORKFLOW.md into compliance with the already-frozen behavior.
+- **No script changes.** `bootstrap.sh` + `check-env.sh` + `_env-schema-parse.sh` already work correctly (per v1.14.0–v1.14.1).
+- **No `templates/.env.example` changes.** The ship file already uses `@directive` per v1.14.0 (B-020). The doc inconsistency was only in the WORKFLOW.md description — not in the actual artifact consumers `sed` and `bootstrap.sh` reads.
+
+### Verified
+
+- All three linters green: C4 rule-consistency, C2 doc-references (74 links across 24 files), C3 placeholders (11 files clean).
+- Smoke test passes end-to-end.
+
+### Reviewer credit
+
+Caught by the external reviewer on PR #2 — the propose-and-confirm gate's review-out-of-band model worked as designed (independence beats deepening per B-010). All 12 other commits in `main..HEAD` reviewed cleanly with no Strong or Nit findings.
+
+### Next
+
+- PR #2 auto-updates with this commit. Reviewer can re-walk `97dbe67..HEAD` (or just the new fix commit) to confirm the Block clears. After the PR is clean, user `gogogo!`s a merge proposal.
+
 ## v1.26.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.26.0. **Final commit of the PROJECT_STARTER.md split sequence (3 of 3).** Extracts `BOOTSTRAP.md` and reduces PROJECT_STARTER.md to a thin index. The split sequence that started at v1.22.0 is complete: from a single 1121-line monolith to a thin 75-line index pointing at 5 focused companion files.
