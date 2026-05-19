@@ -6,6 +6,84 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.28.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.28.0. **Gate refinement (D-013): per-option `[change]`/`[info]` classification + scoped `gogogo!`.** User pushback that B-027's always-propose-with-`gogogo!` pattern was diluting the gate's deliberate-state-change signal — applied universally even to navigation and discussion options where nothing mutates state. Minor bump per WORKFLOW.md (notable behavior change in the gate).
+
+### The user critique
+
+> "lets discuss that point of our rules where you always come up with suggestions. Like `gogogo!` was needed to gate suggestions that at the end involves chnages to code documentation or database. you add it everywhere now."
+
+And the proposed shape:
+
+> "i suggest we add `gogogo!` to only items that do code docs database and other changes. if the list has items that are for discussion or like research etc its og to just enter option number."
+
+The diagnosis was sharp: `gogogo!` was designed as a deliberate state-change authorization signal (per B-001/B-026), but v1.24.0's B-027 "every message ends with a proposal" + the trio of invitation forms ended up appending `gogogo!`-shaped invitations to messages where nothing was about to mutate state. Ceremony, not safety.
+
+### The fix (B-028 + refined B-027)
+
+Each numbered option in a "Choose one:" or "Choose any (in order):" proposal is now prefixed with one of two markers:
+
+- **`[change]`** — state-mutating: tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit`/`push`, `gh pr create|merge|comment`, deploy, external POST/PUT/DELETE. **Requires `gogogo!`.**
+- **`[info]`** — read-only, research, discussion, navigation, planning text, memory writes, `.claude/settings.local.json` writes. **Bare `N` only; no `gogogo!` needed.**
+
+Single-suggestion proposals get the same classification (whole-suggestion-level): state-mutating ones still end with `Type \`gogogo!\` to proceed.`; pure-info single suggestions end naturally with no invitation line.
+
+Pure discussion / clarification turns where no list-of-paths fits naturally MAY end without a trailing proposal. B-027's original "every message must propose" is refined to "propose when there's a path to surface; pure discussion can end naturally" — the no-round-trip property is preserved by B-028, because `[info]` picks are single-keystroke regardless.
+
+Example (preview of the new shape):
+
+> **Choose one:**
+> 1. **[change]** Open PR for `improvements-3` (3 commits) → runs `gh pr create ...`. Bumps state.
+> 2. **[info]** Show me what option 1 would post as the PR body, without running it.
+> 3. **[info]** Discuss whether to split the 3 commits across two PRs instead.
+> 4. **[change]** Continue stacking Phase 2.1 work on `improvements-3` → new edits + commit.
+>
+> Type `1 gogogo!` or `4 gogogo!` for [change] options; just `2` or `3` for [info] options.
+
+### Files touched
+
+- **C4 `gate-clause` region** updated byte-exact across `WORKFLOW.md` / `templates/CONTRIBUTING.md` / `templates/CLAUDE.md` — condition (b) now explicitly handles `[change]` vs `[info]` selection. `gogogo!` is required when picking `[change]` options; bare `N` is fine for `[info]`. Mid-execution `[info]` → `[change]` re-classification triggers STOP and re-propose.
+- **C4 `proposal-format` region** updated byte-exact across the trio — describes the `[change]`/`[info]` markers, the three invitation forms in their per-option variants, the no-trailing-proposal-on-pure-discussion-turn relaxation, and the mid-execution re-classification rule.
+- **C4 `bare-gogogo` region** unchanged. The rule "bare `gogogo!` without prior proposal → re-prompt" still holds; the marker convention doesn't change that case.
+- **C4 `env-metadata-contract` region** unchanged (shipped v1.27.0).
+- **`scripts/check-rule-consistency.sh`** REGIONS array unchanged — same 4 named regions, just different content in 2 of them.
+- **WORKFLOW.md supporting prose** — self-check list extended to 6 steps (was 5); decision-tree gains `[change]` and `[info]` branches; refuse-list table gains 3 new rows (force-proposal-in-discussion, bare-N-against-[change], info→change-re-classification).
+- **templates/CONTRIBUTING.md supporting prose** — self-check list extended similarly.
+- **templates/CLAUDE.md** — no supporting-prose changes beyond the C4 region content (the file is the AI session-facing summary; the new rule lives entirely inside the byte-exact regions).
+- **docs/spec.md** — B-027 Rule field rewritten in place ("refined v1.28.0" status note; original D-011 framing preserved as history); B-028 added (frozen); D-013 added with full failure-mode analysis.
+
+### What stays
+
+- **B-026** (the propose-and-confirm gate proper) — unchanged. Conditions a/b/c still apply. The refinement is to WHAT triggers `gogogo!` requirement (per-option, not per-proposal).
+- **B-001's carve-outs** — memory writes + `.claude/settings.local.json` still need no `gogogo!`. B-028 just extends the carve-out logic to `[info]` options of any kind.
+- **C4 linter machinery** — same script, same 4 regions, just updated content in 2.
+- **Multi-select semantics** — multi-digit `N1 N2 ... gogogo!` against "Choose any (in order):" still works. The new wrinkle: one `gogogo!` covers all `[change]` items in the typed sequence; `[info]` items proceed in the same message without separate authorization.
+
+### Failure modes
+
+- **User types bare `N` against a `[change]` option** → re-prompt: "Option N is `[change]` — type `N gogogo!` to authorize."
+- **Claude mis-classifies an option** — `[info]` when reality reveals state mutation → STOP and re-propose with the option re-classified as `[change]`. Conservative-default-`[change]` rule for borderline cases.
+- **Mixed multi-select** — `1 2 3 gogogo!` where 1, 3 are `[change]`, 2 is `[info]` → one `gogogo!` authorizes the `[change]` items; `[info]` item proceeds in the same message.
+- **Discussion turn ends without proposal** → user can pick the moment to switch back to execution mode by saying so; bare `N` against the next proposal proceeds without authorization needed for `[info]`.
+
+### Verified
+
+- All three linters green: C4 (4 regions byte-exact across the trio), C2 (75 link targets, 24 files), C3 (11 files clean).
+- Smoke test irrelevant (no shipped-file changes — `templates/.env.example` is already `@directive`).
+
+### Branch state after this commit
+
+`improvements-3` holds 4 commits stacked on `main` (v1.26.2 Phase 1.2 sweep + v1.27.0 Phase 3.1 env-metadata C4 + v1.27.1 Phase 2.3 D-012 + v1.28.0 this commit — gate refinement). Ready for a PR-open proposal whenever you direct.
+
+### Next
+
+- Open PR for `improvements-3` (4 commits) — would surface a new proposal next turn.
+- Continue stacking remaining Codex plan items (Phase 2.1, 2.2, 3.2, 3.3, 4.x, 5.x).
+- Pause.
+
+User direction will guide. Per the new B-028 rule, those next-step options would surface as a Choose-one with `[change]`/`[info]` markers.
+
 ## v1.27.1 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.27.1. **Phase 2.3 of the Codex improvement plan — D-012 settling PROJECT_STARTER.md's long-term role.** Decision-doc only; no file restructure required. Patch bump (spec-only addition).

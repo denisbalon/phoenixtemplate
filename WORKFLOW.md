@@ -11,7 +11,7 @@ This file is **binding** for every change.
 ## The `gogogo!` passphrase — hard gate
 
 <!-- C4:gate-clause:start -->
-**Do NOT take any state-mutating action unless: (a) Claude's immediately preceding message contained a concrete proposal (specific files/commands/commits, not vague phrasing) ending with one of the canonical invitation lines, AND (b) the user's CURRENT message contains the literal substring `gogogo!`, optionally preceded by one or more whitespace-separated digits — single `N gogogo!` selects option N from a numbered choice; multi-digit `N1 N2 ... gogogo!` authorizes multiple options in the typed order (only valid against a "Choose any (in order):" proposal, never a "Choose one:" proposal).**
+**Do NOT take any state-mutating action unless: (a) Claude's immediately preceding message contained a concrete proposal (specific files/commands/commits, not vague phrasing) ending with one of the canonical invitation lines, classifying each numbered option as `[change]` (state-mutating: tracked-file Edit/Write/NotebookEdit, git commit/push, gh pr create/merge/comment, deploy, external POST/PUT/DELETE) or `[info]` (read-only / research / discussion / navigation / memory writes); AND (b) the user's CURRENT message contains the literal substring `gogogo!`, optionally preceded by one or more whitespace-separated digits selecting `[change]` options — single `N gogogo!` for one `[change]`, multi-digit `N1 N2 ... gogogo!` for multiple `[change]` items in a "Choose any (in order):" list (multi-select against "Choose one:" remains invalid). Picking an `[info]` option needs only bare `N` — no `gogogo!`; state-mutating actions never happen in `[info]` paths. Mid-execution deviation requires a new proposal, including if an option classified `[info]` turns out to need state mutation.**
 <!-- C4:gate-clause:end -->
 
 `gogogo!` confirms a concrete proposal Claude surfaced. The proposal IS the contract — what file gets edited, what commit gets pushed, what command runs. The action Claude executes is exactly what the proposal described. There are no verbs; proposals carry the action description in plain English, and `gogogo!` (or `N gogogo!` for a single pick, or `N1 N2 ... gogogo!` for multi-select against a "Choose any" list) is the authorization signal. Multi-select is a strict extension of single-pick: each selected option was a concrete proposal Claude already surfaced and the user inspected, so safety is preserved — multi-select doesn't pre-authorize unknown future proposals, it batches known ones.
@@ -19,13 +19,20 @@ This file is **binding** for every change.
 ### Proposal format
 
 <!-- C4:proposal-format:start -->
-**Proposal format.** Every assistant message ends with a concrete proposal. There are three invitation forms:
+**Proposal format.** Every assistant message ends with a concrete proposal *when there's an action or navigation path to surface*. Pure discussion / clarification turns where no list-of-paths fits naturally can end without a trailing proposal — the no-round-trip property holds because `[info]`-class options never require `gogogo!`, so navigation is single-keystroke when it does apply.
 
-- **Single suggestion** — a bold "Proposed: <action>" header, a concrete plan (specific files / commands / commits), and a final line inviting `gogogo!` to proceed.
-- **Choose one** — a bold "Choose one:" header, numbered options that are mutually exclusive (alternatives), and a final line inviting `N gogogo!` to pick option N. Multi-digit `N M gogogo!` against this form is invalid → re-prompt.
-- **Choose any (in order)** — a bold "Choose any (in order):" header, numbered options that can run independently or as a batch, and a final line inviting `N gogogo!` for one option or `N1 N2 ... gogogo!` to authorize multiple in the typed order. Skipping is fine (`1 2 4 5 gogogo!` skips option 3).
+Each numbered option in a list is prefixed `**[change]**` or `**[info]**`:
 
-Concrete means specific files, specific commands, specific commits — not "commit the changes." For multi-step actions (5-step feature work), enumerate every step in the proposal. The user's `gogogo!` (or `N gogogo!` / multi-digit) authorizes exactly the proposed plan; mid-execution deviation requires a new proposal. The "every assistant message ends with a proposal" rule applies even for clarification turns — the trailing proposal can be "continue with the next queued item, or describe a different direction"; never leave the user without something to `gogogo!`.
+- `[change]` — state-mutating (tracked-file Edit/Write/NotebookEdit, git commit/push, gh pr create/merge/comment, deploy, external POST/PUT/DELETE). Authorization requires `gogogo!`.
+- `[info]` — read-only, research, discussion, navigation, planning text, or memory writes. Picked with bare `N`; no `gogogo!` needed.
+
+Three invitation forms:
+
+- **Single suggestion** — bold "Proposed: <action>" header + concrete plan (specific files / commands / commits). If state-mutating: ends with `Type \`gogogo!\` to proceed.` If pure info-only: ends naturally with no trailing invitation.
+- **Choose one** — bold "Choose one:" header + mutually exclusive numbered options (each prefixed `[change]` or `[info]`) + final line specifying the gate per option: e.g. `Type \`1 gogogo!\` for the [change] option, or \`2\` / \`3\` for the [info] options.` Multi-digit `N M gogogo!` against this form is invalid → re-prompt.
+- **Choose any (in order)** — bold "Choose any (in order):" header + independent numbered options (each prefixed) + final line accepting `N` (single info pick), `N gogogo!` (single change), `N1 N2 ... gogogo!` (multi-select; one `gogogo!` covers all `[change]` items in the typed sequence; `[info]` items proceed in the same message without separate authorization). Skipping is fine.
+
+Concrete means specific files, specific commands, specific commits — not "commit the changes." For multi-step actions (5-step feature work), enumerate every step in the proposal. The user's authorization signal applies exactly to the proposed plan; mid-execution deviation requires a new proposal. If an option classified `[info]` turns out to need state mutation, STOP and re-propose with the option re-classified as `[change]`.
 <!-- C4:proposal-format:end -->
 
 <!-- C4:bare-gogogo:start -->
@@ -36,21 +43,23 @@ Concrete means specific files, specific commands, specific commits — not "comm
 
 Before any state-mutating tool call (`Edit` / `Write` / `NotebookEdit` / `Bash` running `git commit` / `git push` / deploy / `gh pr create|merge|comment` / `gh issue create` / curl POST/PUT/DELETE):
 
-1. Did MY IMMEDIATELY-PRECEDING assistant message contain a concrete proposal (specific files/commands/commits) ending with one of the canonical invitation lines?
-2. Does THE USER'S CURRENT message contain the literal substring `gogogo!`?
-3. If a numbered choice was offered: did the user select with `N gogogo!` (single pick) or `N1 N2 ... gogogo!` (multi-select)? Does each N match my numbered list?
-4. If multi-select was used: was my proposal a "Choose any (in order):" form (multi-select valid) or "Choose one:" form (multi-select invalid → re-prompt, don't execute)?
-5. Am I about to do exactly what the proposal described, or has something deviated?
+1. Did MY IMMEDIATELY-PRECEDING assistant message contain a concrete proposal (specific files/commands/commits) ending with one of the canonical invitation lines? Were the numbered options classified `[change]` or `[info]`?
+2. Is the user picking a `[change]` option? If so: does THE USER'S CURRENT message contain the literal substring `gogogo!`?
+3. Is the user picking an `[info]` option? If so: bare `N` is sufficient — no `gogogo!` required.
+4. If a numbered choice was offered: did the user select with `N`, `N gogogo!` (single pick), or `N1 N2 ... gogogo!` (multi-select)? Does each N match my numbered list?
+5. If multi-select was used: was my proposal a "Choose any (in order):" form (multi-select valid; one `gogogo!` covers all `[change]` items in the sequence) or "Choose one:" form (multi-select invalid → re-prompt, don't execute)?
+6. Am I about to do exactly what the proposal described, or has something deviated — including: an option I classified `[info]` actually needs state mutation?
 
 - No prior proposal → propose now. Don't execute.
 - Vague prior proposal ("commit the changes") → re-propose concretely. Don't execute.
 - Prior proposal but conversation drifted (questions, clarifications, no re-proposal in my last message) → re-propose before acting.
-- No `gogogo!` in current message → STOP. Even a clarification reply must end with a fresh proposal.
+- User picked a `[change]` option without `gogogo!` → re-prompt: "Option N is `[change]` — type `N gogogo!` to authorize."
 - Bare `gogogo!` without prior proposal → see the canonical prompt above.
-- `N gogogo!` selecting from a list I offered → execute option N exactly as described.
-- `N1 N2 ... gogogo!` against a "Choose any (in order):" list → execute the listed options in the typed order, each one exactly as described in the proposal.
+- `N` against an `[info]` option → proceed with option N (no `gogogo!` needed; the action is non-state-mutating).
+- `N gogogo!` against a `[change]` option → execute option N exactly as described.
+- `N1 N2 ... gogogo!` against a "Choose any (in order):" list → execute `[change]` items as authorized + run `[info]` items in the same message; each one exactly as described.
 - `N1 N2 ... gogogo!` against a "Choose one:" list → invalid; re-prompt and don't execute.
-- Mid-execution deviation from the proposal → STOP and re-propose.
+- Mid-execution deviation, including `[info]` → `[change]` re-classification → STOP and re-propose.
 
 **Auto mode does NOT override this gate.** The check is the FIRST step of every action response — before writing code, before reading files for the change.
 
@@ -88,7 +97,9 @@ Reading files · grep · read-only git (`log` / `status` / `diff`) · web search
 | "Reality deviated from my proposal mid-action; close enough" | STOP and re-propose. The original `gogogo!` only authorized the original plan. |
 | "I proposed concretely several messages ago, the user is following up now" | The proposal must be in the IMMEDIATELY-PRECEDING message. Conversation drift → re-propose. |
 | "User multi-selected against my Choose-one list; running both is close enough" | `Choose one:` means mutually exclusive. Multi-select is invalid → re-prompt. |
-| "I should answer this clarifying question without proposing anything" | Every assistant message ends with a concrete proposal (B-027). For clarification turns the trailing proposal can be "continue with [queued next item] or describe a different direction" — but it must be there. |
+| "I should force a proposal at the end of this pure discussion turn" | B-028 refined B-027: ends-with-proposal binds only when there's an action or navigation path to surface. Pure discussion turns can end naturally. |
+| "User typed bare `N` against a `[change]` option — close enough, just do it" | `[change]` options ALWAYS need `gogogo!`. Bare `N` against `[change]` is invalid → re-prompt. Conversely, `gogogo!` against an `[info]` option is harmless overhead — proceed normally. |
+| "Reality made this `[info]` option need a state change, but it's small — just do it" | Re-classification is a deviation. STOP and re-propose with the option marked `[change]`. |
 
 ---
 

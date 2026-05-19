@@ -193,17 +193,37 @@ The split commits are tracked as separate B blocks in the same numerical range: 
 
 **Decision:** D-010
 
-### Block B-027: every assistant message ends with a concrete proposal
+### Block B-027: every assistant message ends with a concrete proposal *when there's a path to surface*
 
-**Rule:** Every assistant message in this project's Claude Code sessions ends with a concrete proposal — one of the three forms in the C4 `proposal-format` region (Single suggestion / Choose one / Choose any (in order)). This applies even to clarification turns and answers to questions: the trailing proposal can be "continue with [next queued item], or describe a different direction." Never leave the user without something to `gogogo!` (or `N gogogo!` / multi-digit). The trailing proposal MUST end with one of the three canonical invitation lines (`Type \`gogogo!\` to proceed.` / `Type \`N gogogo!\` to pick option N.` / `Type \`N gogogo!\` for one option, or \`N1 N2 ... gogogo!\` for multiple.`). Refines B-026.
+**Rule:** Every assistant message ends with a concrete proposal — one of the three forms in the C4 `proposal-format` region (Single suggestion / Choose one / Choose any (in order)) — **when there's an action or navigation path to surface**. Pure discussion / clarification turns where no list-of-paths fits naturally (e.g. genuine meta-design conversations, free-text Q&A) MAY end without a trailing proposal; the no-round-trip property B-027 originally protected is preserved by B-028, which makes `[info]`-class options single-keystroke (no `gogogo!`), so navigation back into execution mode is one bare `N` away when the user is ready. The trailing proposal, when present, MUST end with one of the canonical invitation lines (per-option gate scope per B-028). Refined v1.28.0 by D-013.
 
-**Rationale:** Under B-026's propose-and-confirm gate, the user's `gogogo!` requires Claude's immediately preceding message to have contained a concrete proposal. If Claude's reply ends with "what would you like next?" or any other question/open-ended invitation, the user can't `gogogo!` anything — they have to first ask Claude to propose, then `gogogo!`. That's an extra round-trip every time. User feedback was direct: *"ALWAYS end with a proposal, don't make user ask for it."* This block makes that explicit in the rules so the always-propose property is part of the spec rather than a soft style preference. For genuinely discussion-mode turns (like the design discussion that produced this block itself), the trailing proposal can be a thinking-mode prompt — "discuss further" or "summarize this into a spec change" — but it MUST be there, and it MUST end with the canonical invitation line so a bare `gogogo!` has a definite referent. The bare-`gogogo!`-without-preceding-proposal failure mode (B-026 condition a) is the explicit asymmetry: the user can always confirm forward motion with one keystroke-worth, but the assistant must always do the work of articulating what that motion is.
+**Rationale:** B-027's original v1.24.0 framing required EVERY assistant message to end with a proposal — driven by user feedback that "ALWAYS end with a proposal, don't make user ask for it" eliminates a costly round-trip in execution mode. In practice, applying that to pure discussion turns (design talks, meta-conversations, info queries) created ceremony without safety benefit: every turn ended with a `gogogo!` invitation even when no state mutation was pending, diluting `gogogo!`'s deliberate-state-change signal. User pushback in v1.28.0 surfaced this dilution explicitly. The refinement preserves B-027's intent (no execution-mode round-trips) while removing the ceremony (no forced proposals in pure discussion). Mechanism: B-028's `[change]` vs `[info]` option classification makes per-option gate scope proportional to actual state-mutation risk — `[info]` picks are bare `N`, so even when proposals appear in discussion turns, they don't impose `gogogo!` ceremony for navigation. The "always" of B-027 becomes a soft default that yields when there's genuinely nothing to surface.
 
-**Test:** manual — review of assistant messages in this repo's session transcripts. Every message's last non-whitespace line matches one of the three canonical invitation patterns. Failure mode: assistant message ends with a question, open-ended invitation, or trailing prose without a proposal → user has to re-elicit. Caught at review/audit time; the C4 linter enforces only the canonical proposal-format region's text, not the at-message-end usage. Automation of the at-message-end check is possible (regex-scan transcripts for assistant-message-final lines) but not currently shipped.
+**Test:** manual — review of assistant messages in this repo's session transcripts. Messages that DO surface a proposal must end with a canonical invitation line classified per B-028. Pure discussion turns may end naturally; failure mode is forcing a `gogogo!` invitation when no path-list applies (ceremony) OR ending without a proposal when there IS an action or navigation path the user could pick from (round-trip cost). Caught at review/audit time; the C4 linter enforces only the canonical proposal-format region's text, not the at-message-end usage.
+
+**Status:** frozen (refined v1.28.0 — was "every message must propose" in v1.24.0; now "every message proposes when there's a path to surface").
+
+**Decision:** D-011 (original framing); refined by D-013.
+
+### Block B-028: `[change]` / `[info]` option classification + per-option gate scope
+
+**Rule:** Numbered options in a "Choose one:" or "Choose any (in order):" proposal are each prefixed with exactly one of two markers: **`[change]`** (state-mutating: tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit`/`push`, `gh pr create|merge|comment`, deploy, external POST/PUT/DELETE) or **`[info]`** (read-only / research / discussion / navigation / memory writes / `.claude/settings.local.json` writes). The gate scope is per-option: `[change]` options require `gogogo!` to authorize (`N gogogo!` for single pick; one `gogogo!` in a multi-digit message covers all `[change]` items in the typed sequence against a "Choose any (in order):" list); `[info]` options need only bare `N` (no `gogogo!`). For single-suggestion proposals (not numbered), the same classification applies to the suggestion as a whole: state-mutating single suggestions end with `Type \`gogogo!\` to proceed.`; pure-info single suggestions end naturally without a trailing invitation line. Classification is Claude's responsibility per proposal; conservative default is `[change]` if in doubt. Mid-execution re-classification (an option labeled `[info]` turns out to need state mutation) → STOP and re-propose with the option marked `[change]`.
+
+**Rationale:** Before B-028 (v1.24.0 through v1.27.1), every numbered option in every proposal required `gogogo!` to select, regardless of whether the option was state-mutating. The same ceremony fired for "open PR" (state-mutating) and "show me the diff" (read-only). User pushback in v1.28.0: this dilutes `gogogo!` from a deliberate state-change signal into procedural ceremony. The refinement preserves the safety property B-026 was designed for (literal `gogogo!` substring required before state-mutating actions) while removing ceremony for navigation. Per-option classification works because it shifts the cognitive load from the user ("remember to type `gogogo!` for everything") to Claude ("classify each option correctly when proposing"). Failure modes:
+
+- **User picks bare `N` against a `[change]` option** (typo or habit) → Claude re-prompts: "Option N is `[change]` — type `N gogogo!` to authorize." Bare digit doesn't slip a state change through. The conservative-default-`[change]` rule means borderline cases stay gated.
+- **Claude mis-classifies an option** as `[info]` when reality reveals it needs state mutation → mid-execution deviation; STOP and re-propose. Caught at execution time, not at proposal time.
+- **Claude mis-classifies an option** as `[change]` when it's actually info-only → harmless overhead; user types unnecessary `gogogo!` but nothing wrong happens.
+- **Multi-select against "Choose one:"** remains invalid (per B-026's original constraint); the `[change]`/`[info]` markers don't change that.
+- **Mixed multi-select** in "Choose any (in order):" — e.g. `1 2 3 gogogo!` where 1 and 3 are `[change]`, 2 is `[info]` — single `gogogo!` covers `[change]` items in the sequence; `[info]` items proceed in the same message. One authorization signal per user turn; preserves simplicity.
+
+The threshold for `[change]` is "any state mutation outside the gate carve-outs B-001 established (memory + local-only settings)." Tracked-file edits, git ops, gh PR ops, deploy, external mutating HTTP calls — all `[change]`. Reading files, grepping, planning text, web search, clarifying questions, memory writes — all `[info]`. Borderline cases (planning text that's intended as a draft for future commit; research output that includes file edits) → `[change]` by conservative default; downgrade only when Claude is certain the action stays read-only.
+
+**Test:** manual — review of assistant messages in this repo's session transcripts. Every numbered option in a "Choose one:" or "Choose any (in order):" proposal is prefixed `**[change]**` or `**[info]**`. The invitation line correctly specifies gate per option (e.g., "Type `1 gogogo!` for the [change] option, or `2` for the [info] option"). Failure modes: (a) unclassified options → re-prompt; (b) bare `N` against `[change]` → re-prompt; (c) mid-execution `[info]` → `[change]` realization → STOP and re-propose. The C4 `proposal-format` region documents the markers byte-exact across the doc trio; the C4 linter (B-022) catches drift in the format-spec text but not in actual usage at message time.
 
 **Status:** frozen
 
-**Decision:** D-011
+**Decision:** D-013
 
 ### Block B-020: `.env.example` schema is declared via `@directive` comments
 
@@ -373,6 +393,38 @@ PROJECT_STARTER.md's settled role:
 - Maintains the historical name for consumers carrying expectations from earlier versions.
 
 **Implemented in:** v1.27.1. Touches: this decision entry; B-025 Rule field gains a sentence noting that PROJECT_STARTER.md's thin-index shape is permanent per D-012 (not transitional). No file restructure required — v1.26.0's structure already matches the chosen permanent state.
+
+### D-013 (2026-05-19) Gate refinement: per-option `[change]`/`[info]` classification + scoped `gogogo!`
+
+**Chose:** Add B-028 (per-option `[change]`/`[info]` classification + per-option gate scope) and refine B-027 (always-propose becomes "propose when there's a path to surface; pure discussion turns can end naturally"). `gogogo!` is required only for `[change]` options; `[info]` options take bare `N`. Single-suggestion proposals get the same classification: state-mutating single suggestions end with `Type \`gogogo!\` to proceed.`; pure-info single suggestions end naturally.
+
+**Considered:** (a) Adopt B-028 + refine B-027 as described (chosen — this option); (b) drop B-027 entirely (no always-propose default; round-trip prevention becomes soft preference); (c) keep B-027 strict, just add per-option markers (no relaxation in discussion mode); (d) different marker syntax — `(action)`/`(info)`, `🔧`/`💬`, or no markers (rely on invitation-line phrasing).
+
+**Why:**
+
+- (a) — chosen. Preserves B-026's safety property (literal `gogogo!` for state changes) without the ceremony tax. The per-option granularity matches real-world ambiguity: a single Choose-one can mix "open PR" (state-mutating) with "pause and think" (read-only); blanket-gating both was over-gating. Refining B-027 acknowledges that always-propose was an over-correction for round-trip pain that only exists in execution mode. Together: B-027 says "propose when the user might want to act"; B-028 says "the proposal's options are per-option-gated by their state-mutation risk."
+
+- (b) — rejected. Dropping B-027 entirely re-opens the round-trip pain in execution mode (user types something, Claude answers with a question, user has to re-elicit a proposal, then `gogogo!` — three turns for one action). The refinement option preserves the no-round-trip property without the ceremony.
+
+- (c) — rejected. Per-option markers without relaxing B-027 still forces `gogogo!`-shaped invitations in pure discussion turns, even if some options become bare-`N`. Doesn't fully address the dilution concern.
+
+- (d) — rejected on marker syntax. `**[change]**` / `**[info]**` is explicit text that the C4 linter can byte-exact-match; visual icons (🔧/💬) are less greppable and harder to anchor in rule regions; parenthetical `(action)`/`(info)` reads more like an annotation than a rule-load-bearing marker. The explicit-text markers also self-document for readers who haven't internalized the convention.
+
+**Failure-mode analysis:**
+
+- D-011's original framing of B-027 prevented round-trips by always-proposing. D-013 preserves that prevention in execution mode (where it matters) and drops it in discussion mode (where it was dilutive ceremony). Net safety: unchanged. Net ergonomics: improved for discussion turns.
+
+- New failure mode B-028 could introduce: Claude mis-classifies an option, treating something state-mutating as `[info]`. Mitigation: conservative-default-`[change]` for borderline cases; mid-execution re-classification rule requires STOP-and-re-propose if reality reveals an `[info]` option actually mutates state. Auditable post-hoc but not preventable at proposal time. Acceptable trade-off — the more common case (user types unnecessary `gogogo!` on a misclassified-as-`[change]` option) is harmless.
+
+- User-side failure: user types bare `N` against a `[change]` option by typo or habit. Mitigation: Claude re-prompts. State mutation requires the literal `gogogo!` substring; bare digit doesn't authorize.
+
+- Edge case: mixed multi-select. `1 2 3 gogogo!` against a "Choose any (in order):" list where 1 and 3 are `[change]`, 2 is `[info]`. One `gogogo!` covers `[change]` items in the typed sequence; `[info]` items proceed in the same message. Maintains "one authorization signal per user turn" simplicity.
+
+User feedback drove the design: *"i suggest we add gogogo! to only items that do code docs database and other changes. if the list has items that are for discussion or like research etc its og to just enter option number."* — the per-option classification operationalizes that intent.
+
+Refines D-011 (which froze B-027's original "always propose" framing). B-026 (the propose-and-confirm gate proper) is unchanged in its conditions — D-013 only refines what kinds of options trigger the `gogogo!` requirement.
+
+**Implemented in:** v1.28.0. Touches: C4 `gate-clause` region updated byte-exact across the doc trio (condition b explicitly handles `[change]` vs `[info]` selection); C4 `proposal-format` region rewritten byte-exact to describe the marker convention + per-option gate scope + discussion-mode relaxation; supporting prose in WORKFLOW.md §2.1 self-check list + refuse-list (gains rows for "force proposal in pure discussion", "bare N against [change]", "info → change re-classification"); supporting prose in `templates/CONTRIBUTING.md` self-check list updated similarly. B-027 content updated in place (status flipped from original "every message must propose" to refined framing); B-028 added (frozen). No C4 region added or removed — same 4 regions (gate-clause / proposal-format / bare-gogogo / env-metadata-contract), just different content in the first two.
 
 ## Open project-level decisions
 
