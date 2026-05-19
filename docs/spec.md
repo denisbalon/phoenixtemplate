@@ -327,6 +327,39 @@ The bar set by B-029 + B-031 ("driven by known failure modes; narrow false-posit
 
 **Decision:** —
 
+### Block B-035: `scripts/render-example.sh` produces an inspectable example instantiation
+
+**Rule:** `scripts/render-example.sh` (repo root, executable, meta-only — not exported by `scripts/export-starter.sh`) produces a deterministic, fully-substituted instantiation of the kit so consumers can see "what does a real project look like once the placeholders are substituted" without invoking `scripts/smoke-test.sh` (which requires `uv` + Python + network for dependency resolution and runs `pytest`/`ruff`/`mypy`).
+
+**Output:** writes to `OUT_DIR` (default `~/Downloads/phoenixproject-example/`); directory is wiped + recreated on every run for clean reruns. Override via env: `OUT_DIR=/tmp/foo ./scripts/render-example.sh`.
+
+**Canonical substitution map** (every B-024 canonical placeholder; values chosen to be unambiguous + obviously-example):
+
+| Placeholder | Replacement |
+|---|---|
+| `<PROJECT_NAME>` | `ExampleProject` |
+| `<PROJECT_SLUG>` | `example-project` |
+| `<PROJECT_DESCRIPTION>` | `An example project rendered from the kit.` |
+| `<package_name>` | `exampleproj` |
+| `<PACKAGE_NAME>` | `EXAMPLEPROJ` |
+| `<GITHUB_USER>` | `example-org` |
+| `<HOST>` | `example.host` |
+| `<DOMAIN>` | `example.com` |
+| `<COPYRIGHT_HOLDER>` | `Example Org` |
+| `<YEAR>` | `$(date +%Y)` |
+
+**Substitution-logic invariant:** the script's substitution logic matches `scripts/smoke-test.sh` phase 3 byte-for-byte — same canonical pattern (one `mv` for the package-dir rename: `src/<package_name>` → `src/exampleproj`; one `sed` across the same multi-extension file set: `*.py` / `*.toml` / `Makefile` / `*.yml` / `*.yaml` / `*.sh` / `*.example`). If the smoke-test substitution logic changes, this script changes in the same commit. The smoke test is the executable-and-tested reference; `render-example.sh` is the inspectable-by-humans companion. Additional substitution scope for the canonical-map application: extends to `*.md` and `LICENSE` (smoke-test phase 3 doesn't apply non-`<package_name>` substitutions because they don't affect tooling correctness — they're cosmetic in the smoke context; this script applies them all because the purpose is humans-reading-output, not tooling-runs-clean).
+
+**Why not a committed `example-project/` directory?** The script-only shape satisfies Phase 5.2's "consumers can compare template form to instantiated form concretely" acceptance at materially lower maintenance cost — anyone can produce the example in one command without it needing to live in the repo. A static-committed snapshot would duplicate ~30 files in the tree and require a CI drift check; the on-demand renderer eliminates both costs while preserving the comparison affordance. Documented in `README.md` and `MIGRATION.md` so consumers know the command exists.
+
+**Rationale:** Phase 5.2 of the Codex improvement plan. The acceptance is "consumers can compare template form to instantiated form concretely." Two shapes satisfy it: (a) static committed `example-project/` directory with CI drift check, (b) on-demand render script. The Codex plan language ("keep one tiny instantiated example or a maintained snapshot") suggests (a), but the maintenance cost of duplicating every templates/ file with placeholders filled in — plus the linter to keep them in sync — is real and recurring. Shape (b) achieves the same comparison affordance with one script + a `README.md` pointer, no committed duplication, no drift surface. The script reuses the smoke-test's substitution logic so there's exactly one canonical implementation of "how a consumer substitutes" (smoke-test is the tested reference; render-example is the human-readable companion). If shape (a) becomes wanted later — for GitHub-browsable example without running anything — adding a committed `example-project/` directory + a CI check that re-renders + diffs is a straightforward extension; the render script becomes the renderer for that CI check.
+
+**Test:** manual — `OUT_DIR=/tmp/rx ./scripts/render-example.sh` exits 0, prints `✓ rendered N files into /tmp/rx`. Post-render, `grep -rE '<(package_name|PACKAGE_NAME|PROJECT_NAME|PROJECT_SLUG|GITHUB_USER|HOST|DOMAIN|COPYRIGHT_HOLDER|YEAR)>' /tmp/rx` returns nothing — every canonical placeholder substituted. `grep -rE '<PROJECT_DESCRIPTION>' /tmp/rx` returns nothing — the bare form substituted (the longer instructional `<PROJECT_DESCRIPTION — one or two sentences.>` meta-syntax in `templates/README.md` is intentionally untouched; instructional meta-syntax in angle brackets is not in the canonical set). `templates/src/<package_name>/` directory rendered as `src/exampleproj/`. Smoke test (`./scripts/smoke-test.sh`) still passes — substitution-logic invariant preserved.
+
+**Status:** frozen
+
+**Decision:** —
+
 ### Block B-030: preset architecture — `_common/` shared layer + `presets/<preset>/` specific layer
 
 **Rule:** When multi-preset support actually ships (not as of v1.30.0 — design only), the meta-repo's currently-flat `templates/` directory will be reorganized into two layers: `_common/` (stack-agnostic content shared across all presets — workflow docs, gate trio with C4 anchored regions, spec-block format, review rubric, env-bootstrap core, Karpathy rules, changelog conventions, meta scaffolding) and `presets/<preset-name>/` (stack-specific content — Makefile, CI workflow, deploy script, runtime pin, project metadata file, sample source tree, sample smoke test, setup-doc prereqs). A bootstrapped project = `_common/` contents flattened with one chosen `presets/<chosen>/` contents at the project root. Constraints: (1) single preset per project — mixed-preset out of scope; (2) no file conflicts between layers — each file has exactly one owner; (3) uniform placeholders — the B-024 canonical placeholder set works the same way across all presets; (4) C4 regions live in `_common/` — the byte-exact rule statements are stack-agnostic and don't get re-declared per preset. Design doc: `presets/PRESET_ARCHITECTURE.md`. **No implementation as of v1.30.0** — `_common/` and `presets/python-uv/` directories don't exist; `templates/` is unchanged; the design is the deliverable. Future implementation commits will create the directories, move files appropriately, update `scripts/export-starter.sh` to compose by preset, and update `scripts/smoke-test.sh` to test per-preset.

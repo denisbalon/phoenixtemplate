@@ -36,6 +36,8 @@ chmod +x scripts/*.sh
 
 Then follow [`BOOTSTRAP.md`](BOOTSTRAP.md) — the "Bootstrap checklist" section — for the rest: placeholder substitution (`<package_name>`, `<PROJECT_NAME>`, `<GITHUB_USER>`, `<HOST>`, `<DOMAIN>`), `uv lock && git add uv.lock`, `gh repo create`, branch protection, first commit.
 
+**Want to see what a rendered project looks like first?** Run `./scripts/render-example.sh` — produces a deterministic example with every placeholder substituted (output at `~/Downloads/phoenixproject-example/`; override via `OUT_DIR=`).
+
 ## Known limitations
 
 What's missing or manual today vs. the polished end state. For the active roadmap see [`docs/spec.md` "Open project-level decisions"](docs/spec.md).
