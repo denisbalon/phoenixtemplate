@@ -6,6 +6,64 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.26.2 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.26.2. **Phase 1.2 of the Codex improvement plan — post-split active-doc consistency sweep.** Patch bump; one Block finding identified and fixed in the same commit.
+
+### Audit scope + method
+
+Per the (working-tree) `codex improvement plan.md` Phase 1.2 acceptance criterion: "No active doc contradicts current frozen behavior in `docs/spec.md`."
+
+The five active root docs (README.md, BOOTSTRAP.md, WORKFLOW.md, PROJECT_STARTER.md, CONTRIBUTING.md) were greped for known stale patterns and inspected for prose that might have been copied forward from older phases:
+
+- §-anchored refs to PROJECT_STARTER.md sections that moved during the split (§0 + §1 + §5 → BOOTSTRAP.md, §2 + §9 + §10 + §11 → WORKFLOW.md, §3 + §4 / §6 + §7 + §13 / §12 + §14 → TEMPLATE_INVENTORY / DEPLOY_BASELINE / HARNESS_QUIRKS in v1.22.0).
+- Stale `<verb> gogogo!` patterns from the pre-v1.23.0 gate model (already swept v1.23.1, re-confirmed clean).
+- "Action verb" / "verb table" / "verb-table" prose.
+- "`PROJECT_STARTER.md §2` canonical" claims (post-v1.25.0 canonical is WORKFLOW.md).
+- "Optional" prose for env-metadata (post-v1.14.1 the contract is `@directive` per B-020; v1.26.1 fixed WORKFLOW.md; re-confirmed no occurrences elsewhere).
+- Markdown URL fragments pointing at PROJECT_STARTER.md anchors that no longer exist.
+- Review-flow stale claims (post-v1.7.0 review is out-of-band per B-010).
+- 5-step references (all current).
+
+### The Block finding
+
+**WORKFLOW.md line 236**, in the `## Merge` section, linked to a now-dead anchor:
+
+> With branch protection on (`[PROJECT_STARTER.md §1.6](PROJECT_STARTER.md#16-branch-protection-on-main)`), the canonical merge path is `gh pr merge --rebase --delete-branch`...
+
+After v1.26.0's BOOTSTRAP.md extract, §1 (including §1.6 "Branch protection on `main`") moved into BOOTSTRAP.md. PROJECT_STARTER.md became a thin index without §1.6 content; the `#16-branch-protection-on-main` anchor goes nowhere. The file-level link still resolved (PROJECT_STARTER.md exists), which is why the v1.20.0 doc-reference linter (B-023) didn't catch it — that linter strips URL fragments before the existence check (it only validates file/dir existence, not anchor presence).
+
+### The fix
+
+WORKFLOW.md `## Merge` section's parenthetical updated to:
+
+> With branch protection on (set up per [`BOOTSTRAP.md` → "Branch protection on `main`"](BOOTSTRAP.md#branch-protection-on-main)), ...
+
+The new URL anchor matches BOOTSTRAP.md's actual heading (`### Branch protection on \`main\``, which GitHub slugs to `#branch-protection-on-main`).
+
+### Gap surfaced for Phase 3.2
+
+The B-023 doc-reference linter validates file existence but strips `#anchor` and `?query` before checking. URL fragment validity is currently a manual concern. This is exactly the kind of semantic-consistency gap Phase 3.2 of the Codex plan targets — extending automation to catch active-doc-vs-spec drift the current linters miss. Specifically: extend `scripts/check-doc-references.sh` to verify that `<file>.md#<anchor>` targets resolve to a real heading anchor in `<file>.md`. Will be addressed in a future commit (out of scope for this Phase 1.2 fix).
+
+### What stayed (intentional historical context, not stale claims)
+
+- **BOOTSTRAP.md preamble** ("Extracted from `PROJECT_STARTER.md` §0 + §1 + §5 in v1.26.0...") — historical attribution of where this file's content came from. Reads like a stale §-ref but isn't; it documents the extraction. OK to keep.
+- **WORKFLOW.md preamble** ("Extracted from `PROJECT_STARTER.md` §2 + §9 + §10 + §11 in v1.25.0...") — same pattern. OK.
+- **CONTRIBUTING.md line 21** ("`WORKFLOW.md` is canonical for the rule + rationale (was `PROJECT_STARTER.md §2` before v1.25.0)") — audit-trail in parens. OK.
+- **Template changelog rows in PROJECT_STARTER.md** — historical version diary; references §-numbers and pre-v1.23.0 verb model intentionally. OK.
+- **WORKFLOW.md example commit message** at line 458 (`drop legacy admin user from runbook §4`) — example commit subject inside a code block, not a real §-ref. OK.
+- **WORKFLOW.md "Recommended auto-memory seed" table** row `gogogo_gate_workflow.md` (description: "The `gogogo!` passphrase gate + 5-step workflow rules") — suggested memory filename; description says "gate + 5-step workflow" which is current; the filename itself is just a slug. OK.
+
+### Verified
+
+- All three linters green: C4 (3 regions byte-exact), C2 (74 link targets, 24 files), C3 (11 files placeholder-clean).
+- Smoke test irrelevant (no shipped-file changes).
+
+### Next
+
+- Commit 2 of 3 in this `improvements-3` branch sequence: **Phase 3.1 — extend C4 to env-metadata wording** (v1.27.0). Addresses the structural prevention of regressions like v1.26.1's WORKFLOW.md `.env.example` Block.
+- Commit 3 of 3: **Phase 2.3 — D-012 settling PROJECT_STARTER.md's long-term role** (v1.27.1).
+
 ## v1.26.1 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.26.1. **Fix the Block finding from PR #2 review on commit `97dbe67`** (v1.25.0 WORKFLOW.md extraction). Pure doc fix — no spec changes; brings WORKFLOW.md into compliance with already-frozen B-020.
