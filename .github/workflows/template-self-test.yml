@@ -18,5 +18,7 @@ jobs:
         run: ./scripts/check-doc-references.sh
       - name: check placeholders (B-024)
         run: ./scripts/check-placeholders.sh
+      - name: check spec consistency (B-029)
+        run: ./scripts/check-spec-consistency.sh
       - name: template smoke test (B-014)
         run: ./scripts/smoke-test.sh
