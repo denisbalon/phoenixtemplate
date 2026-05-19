@@ -6,6 +6,62 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.36.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.36.0. **Fourth feature on `improvements-4` — onboarding bootstrap prompt for newbies (B-039 + D-021).** First commit of the website-rollout sequence; ships the kit-side artifact that the future `phoenixprojecttemplate.com` landing page will direct users to. Minor bump per WORKFLOW.md (new artifact + new spec block).
+
+### Motivation
+
+Target audience for the kit is "Claude vibe-code developers, many young and not enough overall experience." Current first-contact surface (BOOTSTRAP.md / WORKFLOW.md / TEMPLATE_INVENTORY.md / etc.) is excellent reference material but assumes the reader knows what to look for. Newbies bounce on "read all this before you can start." Solution: a structured prompt-document Claude reads and executes, walking the user through six setup questions and scaffolding the project. Newbie → working project in ~5 minutes; the doc-set becomes reference AFTER bootstrap, not the entry point.
+
+### What shipped
+
+**`ONBOARDING_PROMPT.md`** at kit meta-repo root — structured four-step guide Claude follows when a user invokes the bootstrap flow:
+
+- **Step 0 — WebFetch sanity check.** Opportunistic; non-blocking. If WebFetch is disabled, the bootstrap proceeds via paste-on-demand; Steps 1–4 are self-contained.
+- **Step 1 — Greet + introduce + ask Q1.** One assistant turn: greeting + one-paragraph kit introduction + Q1 (project description) as `👀 [info]`.
+- **Step 2 — Ask remaining 5 questions, one per turn.** Q2 display name → Q3 URL slug (validated) → Q4 Python package name (validated) → Q5 GitHub repo? (`Choose one:` with 3 options) → Q6 VPS deploy? (host + domain or skip).
+- **Step 3 — Propose the concrete bootstrap as `✏️ [change]`.** Single proposal with the substitution map + every file (sourced from `templates/manifest.yaml`) + `git init` + first commit. After `gogogo!`: reuse `scripts/render-example.sh` substitution logic. If Q5 = create-now: `gh repo create` flow surfaced as separate follow-up `✏️ [change]`.
+- **Step 4 — Hand off to normal session conduct.** Summary + suggested first-feature task + one final concrete proposal (no null-action options per B-038).
+
+**`README.md` Quickstart section refactored** — now opens with the bootstrap path (paste-into-Claude-Code prompt + WebFetch troubleshooting), references `phoenixprojecttemplate.com` (not yet live; will land in next step of the website-rollout sequence). Existing "Already have a project?" pointer at MIGRATION.md retained below.
+
+**`templates/manifest.yaml`** gets the ONBOARDING_PROMPT.md entry: `tier: meta-only`, `placeholders: []`, `exported_by_starter: false`. Total: 45 entries (was 44).
+
+### Spec
+
+- **B-039 added** (frozen) — four-step structure, Q1–Q6 question shape, WebFetch fallback at Step 0, substitution-logic-reuse from render-example.sh, manifest-driven file list, test recipe.
+- **D-021 added** — Considered/Why covering: mechanism (WebFetch+landing-page hybrid chosen over raw-URL / curl-pipe-bash / MCP-server alternatives); website-repo location (separate `denisbalon/phoenixprojecttemplate.com` chosen over kit-`web/` subdirectory — strict kit governance is overkill for a static page); ONBOARDING_PROMPT.md export status (`meta-only`/`exported_by_starter: false` chosen over `common`/exported — file is bootstrap-time-only, exporting would litter every new project's root with a "what's this?" artifact); question count (6 chosen over 3 / 10+); WebFetch fallback shape (opportunistic non-blocking chosen over hard-blocking-on-enablement). Failure-mode analysis: newbie WebFetch confusion, mid-flow abandonment, substitution-map sync with render-example.sh, website downtime, branch-vs-main URL pinning, manifest drift (self-healing — Step 3 reads manifest as source-of-truth).
+
+### Wiring
+
+- **`scripts/export-starter.sh` `ROOT_DOCS`** — NOT touched. ONBOARDING_PROMPT.md is bootstrap-time-only; doesn't ship in archive.
+- **`scripts/check-doc-references.sh` `VIRTUAL_TEMPLATES_FILES`** — NOT touched. No links from `templates/*` reference ONBOARDING_PROMPT.md (only kit root README.md does; root README isn't bundled in the templates archive).
+- **`templates/manifest.yaml`** — one new entry as described above.
+
+### Kit cleanliness
+
+Per the user's explicit caution ("be sure that current template repo does not have signs of website etc."): this commit adds **zero website source code** to the kit. No HTML, no CSS, no `web/` directory, no landing-page assets. Only mention of `phoenixprojecttemplate.com` is as a URL pointer in README + ONBOARDING_PROMPT + D-021 prose — references to an external resource, not embedded site. The actual website lives in the separate repo `denisbalon/phoenixprojecttemplate.com` (next commit / next step of rollout).
+
+### What didn't change
+
+- No C4 region edits (ONBOARDING_PROMPT.md is not gate-related; it's a bootstrap procedure, not a workflow rule).
+- No `WORKFLOW.md` / `templates/CONTRIBUTING.md` / `templates/CLAUDE.md` edits — these are post-bootstrap docs; bootstrap procedure lives in its own file.
+- No script changes; no linter changes beyond the new manifest entry.
+- No edits to other docs (BOOTSTRAP.md / MIGRATION.md / etc.) — they remain reference material for post-bootstrap reading.
+
+### Verified
+
+- All 5 linters green (C4 + C2 doc-ref + C3 placeholders + C5 spec-consistency + manifest).
+- `templates/manifest.yaml` now 45 entries; no orphans, no stale paths, placeholders match content.
+- `ONBOARDING_PROMPT.md` internal links resolve (`templates/CLAUDE.md`, `templates/manifest.yaml`, `scripts/render-example.sh`, `docs/spec.md`).
+- `README.md` Quickstart references `phoenixprojecttemplate.com` (not yet live; intentional — site comes in the next step).
+
+### Next
+
+- **User-side actions for website rollout:** `gh repo create denisbalon/phoenixprojecttemplate.com --public` + clone to sibling directory `~/github/phoenixprojecttemplate.com/` + I drop the 5 site files (index.html / style.css / CNAME / README.md / LICENSE) via Edit/Write + commit + push + enable Pages + buy domain + DNS config.
+- **PR open + merge for `improvements-4`** after website rollout completes (bundles B-036 + B-037 + B-038 + B-039 into one PR).
+
 ## v1.35.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.35.0. **Third feature on `improvements-4` — forbid null-action options in proposals (B-038 + D-020).** Gate-rule refinement removing the silly-and-redundant "stop here / wait / pick up later / wrap up / do nothing" trailing options from numbered proposal lists. Baked into the C4 `proposal-format` region across the trio. Minor bump per WORKFLOW.md (notable behavior change to gate; new spec block).

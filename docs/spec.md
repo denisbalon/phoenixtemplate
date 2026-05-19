@@ -438,6 +438,32 @@ The forbidden-phrasings list is non-exhaustive deliberately — the test isn't "
 
 **Decision:** D-020
 
+### Block B-039: `ONBOARDING_PROMPT.md` — structured bootstrap guide for new projects
+
+**Rule:** `ONBOARDING_PROMPT.md` (kit meta-repo root; `tier: meta-only` in `templates/manifest.yaml`; NOT exported by `scripts/export-starter.sh`) is a structured prompt-document Claude reads and follows verbatim when a new user invokes the bootstrap flow. Frozen four-step structure:
+
+- **Step 0 — WebFetch sanity check** (only fires if Claude reached the doc via `WebFetch`). Opportunistically informs the user about `/permissions` if WebFetch is disabled, but does NOT block bootstrap on enabling it; Steps 1–4 are self-contained and complete via paste-on-demand if WebFetch is unavailable.
+- **Step 1 — Greet + introduce + ask Q1.** One assistant turn: short greeting + one-paragraph kit introduction + the first of six setup questions (project description) as a `👀 [info]` proposal per B-037 / B-028.
+- **Step 2 — Ask remaining 5 questions, one per turn.** Q2 display name → Q3 URL slug (validated `^[a-z0-9][a-z0-9-]*$`) → Q4 Python package name (validated `^[a-z][a-z0-9_]*$`) → Q5 GitHub repo? (`Choose one:` with 3 options) → Q6 VPS deploy? (host + domain or skip). Each as its own turn with one-line acknowledgment of the prior answer. Re-prompt on invalid input.
+- **Step 3 — Propose the concrete bootstrap as `✏️ [change]`.** Single proposal listing the canonical substitution map (all 10 B-024 placeholders with the user's values) + every file created/modified (sourced from `templates/manifest.yaml` entries where `exported_by_starter: true`) + `git init` + first commit. After `gogogo!`, reuse `scripts/render-example.sh` substitution logic for the `mv` + `sed` passes. If Q5 = create-now: detect `gh auth status` and surface `gh repo create` + branch protection + push as a SEPARATE follow-up `✏️ [change]` (split keeps interactivity awkwardness contained).
+- **Step 4 — Hand off to normal session conduct.** One final summary message ("project bootstrapped; what you have; next reads") + one final concrete proposal — either a `👀 [info]` to discuss the suggested first feature or a `✏️ [change]` to start spec-ing it. **No null-action options per B-038** ("stop here" / "wrap up" forbidden).
+
+The doc lives at meta-repo root, not in `templates/`, and is intentionally **not exported by `scripts/export-starter.sh`** — it's a bootstrap-time artifact, useful only until Step 4 hands off. Manifested as `tier: meta-only` to capture the "lives in the kit, doesn't ship to consumers" semantic (same pattern as `scripts/check-*.sh` and `scripts/render-example.sh`). Claude fetches it via `WebFetch` from the meta-repo's raw URL when a user pastes the canonical bootstrap prompt (typically discovered via [phoenixprojecttemplate.com](https://phoenixprojecttemplate.com), see D-021).
+
+**Rationale:** Newbie adoption surface. The kit ships a lot of doc (BOOTSTRAP.md, WORKFLOW.md, TEMPLATE_INVENTORY.md, DEPLOY_BASELINE.md, HARNESS_QUIRKS.md, MIGRATION.md, templates/CLAUDE.md, templates/CONTRIBUTING.md, docs/spec.md), and "read all this before you can start" is the failure mode for less-experienced developers (the kit's actual target audience per the user's framing). ONBOARDING_PROMPT.md collapses the first-contact surface to a single paste-into-Claude-Code action: Claude reads it, asks six questions, scaffolds the project. The user gets a working project in ~5 minutes without having to read any doc themselves first; the doc-set becomes reference material AFTER bootstrap, not the entry point.
+
+Four-step structure chosen over single-prompt or longer step counts: single-prompt-with-six-batched-questions would overwhelm a newbie and reduce iteration quality; longer step counts (8–10 micro-steps) would add ceremony without adding clarity. Four steps map cleanly to a mental model — greet, ask, propose, hand off — and align with the kit's existing 5-step `gogogo!` workflow shape (proposal-confirm-execute-verify-handoff is the analog).
+
+Q5 split into a three-option `Choose one:` (create-now / not-yet / never) instead of a binary yes/no because the "create-now" path triggers `gh repo create` + branch protection + push (interactive `gh auth` may be involved); the "not-yet" path is the common case for developers who want to scaffold locally and decide GitHub later; "never" exists for local-only projects (POCs, scripts, throwaways). Three options surface the real lifecycle distinction.
+
+Q6 (VPS deploy) made optional because not every project deploys to a VPS (many projects use Vercel / Fly / fly / Cloudflare Workers / etc., or are CLI tools with no deploy at all). The current preset bundles a `deploy.sh` aimed at VPS; future presets may differ per B-030's layer model.
+
+**Test:** manual (this commit) — `ONBOARDING_PROMPT.md` exists at meta-repo root; `templates/manifest.yaml` lists it as `tier: meta-only` / `exported_by_starter: false`; manifest linter (B-033) passes; `scripts/check-doc-references.sh` (B-023) resolves all internal links from ONBOARDING_PROMPT.md (`templates/CLAUDE.md`, `templates/manifest.yaml`, `scripts/render-example.sh`, `docs/spec.md`); kit `README.md` Quickstart section references `phoenixprojecttemplate.com` + the canonical paste-into-Claude prompt + WebFetch troubleshooting. Live-flow test (deferred — happens after Step 2 of the website rollout): paste the canonical prompt into a fresh Claude Code session in an empty directory and verify Steps 1–4 execute as described.
+
+**Status:** frozen
+
+**Decision:** D-021
+
 ### Block B-030: preset architecture — `_common/` shared layer + `presets/<preset>/` specific layer
 
 **Rule:** When multi-preset support actually ships (not as of v1.30.0 — design only), the meta-repo's currently-flat `templates/` directory will be reorganized into two layers: `_common/` (stack-agnostic content shared across all presets — workflow docs, gate trio with C4 anchored regions, spec-block format, review rubric, env-bootstrap core, Karpathy rules, changelog conventions, meta scaffolding) and `presets/<preset-name>/` (stack-specific content — Makefile, CI workflow, deploy script, runtime pin, project metadata file, sample source tree, sample smoke test, setup-doc prereqs). A bootstrapped project = `_common/` contents flattened with one chosen `presets/<chosen>/` contents at the project root. Constraints: (1) single preset per project — mixed-preset out of scope; (2) no file conflicts between layers — each file has exactly one owner; (3) uniform placeholders — the B-024 canonical placeholder set works the same way across all presets; (4) C4 regions live in `_common/` — the byte-exact rule statements are stack-agnostic and don't get re-declared per preset. Design doc: `presets/PRESET_ARCHITECTURE.md`. **No implementation as of v1.30.0** — `_common/` and `presets/python-uv/` directories don't exist; `templates/` is unchanged; the design is the deliverable. Future implementation commits will create the directories, move files appropriately, update `scripts/export-starter.sh` to compose by preset, and update `scripts/smoke-test.sh` to test per-preset.
@@ -881,6 +907,60 @@ Refines / extends B-016 (live doc references resolve to shipped files or are exp
 - **No linter coverage.** Like B-036 (web-search-before-iterate), this is an agent-behavior runtime rule with no static-analysis surface. Mitigation: spec-consistency linter could grow an Invariant that flags forbidden phrasings in active docs that describe the proposal format (e.g., catch a regression that re-adds "stop here for now" as an example to the C4 region). Deferred — D-014 bar ("we've shipped this exact bug already") would need to be met first by a regression that actually shipped.
 
 **Implemented in:** v1.35.0. Touches: C4 `proposal-format` region across WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md (byte-exact; B-022 linter verified green); `docs/spec.md` (B-038 added — frozen; this D-020 entry added). No script changes; no linter changes; no manifest changes. Refines B-027 (proposal-when-path-to-surface) + B-028 (per-option classification).
+
+### D-021 (2026-05-19) Onboarding mechanism — separate website repo + `ONBOARDING_PROMPT.md` in the kit (B-039)
+
+**Chose:** (a) **separate website repo** `denisbalon/phoenixprojecttemplate.com` (cloned to sibling directory `~/github/phoenixprojecttemplate.com/`), not website source in the kit repo; (b) **`ONBOARDING_PROMPT.md` lives in the kit's meta-repo root as `tier: meta-only`**, fetched by Claude via `WebFetch` at bootstrap time, NOT exported by `scripts/export-starter.sh` (doesn't ship to bootstrapped projects); (c) **four-step structure** (greet+Q1 / Q2–Q6 / propose-bootstrap / hand-off) for ONBOARDING_PROMPT.md; (d) **six setup questions** (description, display name, slug, package, GitHub, VPS); (e) **WebFetch fallback at Step 0** — opportunistic, non-blocking, allows paste-on-demand when WebFetch is disabled.
+
+**Considered (mechanism):**
+- **(i) Raw repo URL** — user pastes `github.com/denisbalon/phoenixprojecttemplate` and hopes Claude infers what to do. Fragile; relies on Claude having the right context with no explicit guidance.
+- **(ii) Repo URL + canned prompt** — landing page with both. Better than (i) but requires Claude to know what to do with the URL.
+- **(iii) WebFetch a single onboarding doc** (chosen, combined with ii) — landing page shows one copy-paste prompt that tells Claude to `WebFetch` the canonical `ONBOARDING_PROMPT.md` and follow it verbatim. Document IS the guide; website is discovery + branding.
+- **(iv) `curl | bash` install script** — `curl -sSL phoenixprojecttemplate.com/init.sh | bash`. Standard pattern but bypasses Claude entirely; loses the guided-interaction value that's the whole point.
+- **(v) MCP server** — structured tool-use server. Heavy infrastructure; users need to configure MCP per-session; not "drop a URL" simple.
+
+**Considered (website repo location):**
+- **(a) Separate repo `denisbalon/phoenixprojecttemplate.com`** (chosen) — repo name = domain name = folder name; three-way 1:1 mapping. Sibling directory layout `~/github/phoenixprojecttemplate.com/` next to `~/github/phoenixprojecttemplate/`. Independent governance (no `VERSION`, no `docs/spec.md`, no kit linters, no manifest, no B-NNN discipline).
+- **(b) `web/` subdirectory in the kit repo** — single repo for everything. Simpler in some sense but couples site iteration to kit's version discipline; landing-page typo fix would trigger a v1.X.Y bump per B-002 + need to pass all 5 kit linters + spec-block review. Wrong governance for a marketing page.
+
+**Considered (ONBOARDING_PROMPT.md export):**
+- **(α) `exported_by_starter: true` / `tier: common`** — file ships in every bootstrapped project's root. Pro: local audit trail of "this is how Claude bootstrapped me"; useful if developer bootstraps another project later from the local archive. Con: noise in every new project's root — file describes bootstrapping a NEW project, not working in this one; developers might re-read it confusedly or attempt to run it again against the already-bootstrapped project.
+- **(β) `exported_by_starter: false` / `tier: meta-only`** (chosen) — file lives in the kit meta-repo only; Claude fetches via `WebFetch` from the raw URL at bootstrap time. Clean — new project's root has no "what's this?" confusion. Matches the file's actual use (bootstrap-time, not post-bootstrap). Same pattern as `scripts/check-*.sh` and `scripts/render-example.sh`. "Audit trail" argument addressed by Step 3's CHANGELOG entry ("bootstrapped from phoenixprojecttemplate vX.Y.Z").
+
+**Considered (question count):**
+- **3 questions** (display name, slug, package only) — too thin; misses GitHub + VPS deploy context that affects what gets scaffolded.
+- **6 questions** (chosen) — description + display name + slug + package + GitHub + VPS deploy. Covers all 10 canonical placeholders + the two main lifecycle decisions (GitHub presence + deploy target). About the right amount of friction for a 5-minute setup.
+- **10+ questions** — over-asks for newbies; reduces conversion. The kit's spec.md / BOOTSTRAP.md cover the rest as post-bootstrap reads.
+
+**Considered (WebFetch fallback shape):**
+- **Block on WebFetch enablement** — Claude refuses to proceed until user enables WebFetch. High friction; some users will bounce.
+- **Opportunistic Step 0** (chosen) — Claude notes WebFetch is disabled and explains how to enable it for future reference, but the bootstrap proceeds via paste-on-demand if needed. Steps 1–4 are self-contained; everything the user needs to bootstrap is in the prompt doc itself. No friction, graceful degradation.
+
+**Why (a) — separate repo:** strict kit governance is overkill for a static landing page. Different audience (developers using bootstrap vs. site visitors), different lifecycle (kit changes per spec block; site changes per copy fix), different deployment (kit ships via export-starter archive; site is just a static page). Repo-name = domain-name is a clean discoverability convention. The mental model "kit lives here, site lives there" is unambiguous when the directories are siblings with matching names.
+
+**Why (b) — meta-only / not exported:** the file is for Claude's use at bootstrap time, not for the developer to read post-bootstrap. Exporting it would litter every adopter's project with a meta-repo artifact — the same pollution problem we just decided to avoid by keeping the website out of the kit repo. The "audit trail" benefit is weak (CHANGELOG entry covers it); the noise cost is real.
+
+**Why (c) — four steps:** clean mental model (greet / ask / propose / hand-off). Aligns with the kit's 5-step `gogogo!` workflow shape (propose-confirm-execute-verify-handoff is the analog). Single-prompt-with-batched-questions would overwhelm a newbie; longer step counts (8–10 micro-steps) would add ceremony without clarity.
+
+**Why (d) — six questions:** covers all 10 canonical B-024 placeholders + the two main lifecycle decisions (GitHub presence + VPS deploy). Calibrated friction — about right for a 5-minute setup. The kit's other docs (BOOTSTRAP.md / WORKFLOW.md) cover the rest as post-bootstrap reads.
+
+**Why (e) — opportunistic WebFetch fallback:** blocking on WebFetch enablement would bounce users who don't want to grant the permission; the doc itself is small enough to paste manually as a fallback. Graceful degradation matches the kit's broader stance ("the manual path is acceptable").
+
+**Failure-mode analysis:**
+
+- **Newbie pastes the prompt with no clue what `WebFetch` is.** Step 0 explains in plain language; the bootstrap proceeds via paste-on-demand. Worst case: one extra paste during Step 3 (the doc itself).
+
+- **User abandons mid-flow.** Bootstrap state is partial; might have rendered some files but no `git init` yet. Mitigation: Step 3's `✏️ [change]` proposal makes the commit atomic — files appear in working tree before the commit, but the commit + push are gated; if user bails before `gogogo!`, working tree has the rendered files but no git history; user can either `rm -rf` to abort or `git init && git add . && git commit` manually to resume.
+
+- **Substitution map gets out of sync with `scripts/render-example.sh`.** B-039 explicitly says "reuse `scripts/render-example.sh` substitution logic" — same canonical mv + sed pattern; same multi-extension scope. If render-example.sh's logic changes, ONBOARDING_PROMPT.md's Step 3 description should change in the same commit (same convention as the substitution-logic invariant between render-example and smoke-test phase 3, per B-035).
+
+- **Website goes down / domain expires.** The fallback bootstrap prompt uses the raw GitHub URL (`raw.githubusercontent.com/denisbalon/phoenixprojecttemplate/main/ONBOARDING_PROMPT.md`); website only adds discovery + branding. Even if the website is unreachable, paste-the-raw-URL still works.
+
+- **WebFetch fetches the wrong version** (e.g., a feature branch instead of main). Raw URL pins to `/main/` explicitly; should always pull the merged-to-main version. If the user discovers the kit via a non-main branch (e.g., reviewing a PR), they need to use that branch's URL instead — documented as advanced case, not in the canonical prompt.
+
+- **Manifest drift.** ONBOARDING_PROMPT.md's Step 3 references `templates/manifest.yaml` as the source-of-truth for what files ship. If the manifest gains/loses entries, the bootstrap covers them automatically — no ONBOARDING_PROMPT.md edit needed. Self-healing.
+
+**Implemented in:** v1.36.0. Touches: new `ONBOARDING_PROMPT.md` at kit meta-repo root; `README.md` Quickstart section refactored to surface the bootstrap path + WebFetch troubleshooting + reference to `phoenixprojecttemplate.com`; `templates/manifest.yaml` gets the ONBOARDING_PROMPT.md entry as `tier: meta-only` / `exported_by_starter: false`; `docs/spec.md` adds B-039 (frozen) + this D-021 entry. NOT touched: `scripts/export-starter.sh` `ROOT_DOCS` (file isn't exported); `scripts/check-doc-references.sh` `VIRTUAL_TEMPLATES_FILES` (no links from `templates/*` reference ONBOARDING_PROMPT.md). Separate work tracked outside this commit: actual website repo creation (`denisbalon/phoenixprojecttemplate.com`) + Pages config + DNS — those are user-side actions guided after this commit lands.
 
 ## Open project-level decisions
 
