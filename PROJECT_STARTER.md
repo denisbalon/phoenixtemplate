@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.21.0
+**Template version:** v1.22.0
 **Last updated:** 2026-05-19
 
 A reusable bootstrap kit for new software projects worked on with Claude Code. Captures the workflow, file structure, conventions, and decision framework so each new project starts from a known-good baseline instead of re-deriving them.
@@ -28,11 +28,13 @@ If you're starting a project in a **different stack** today, you can still adopt
 
 1. **Read §1 once** — the bootstrap checklist, zero to first commit.
 2. **Read §2 once** — the binding workflow you'll follow on every change.
-3. **Skim §3** — file/folder layout you'll be reproducing.
-4. **Use §4 as a reference** — copy the listed templates into the new project, replace placeholders.
-5. **Answer §5 in chat with Claude** before writing any feature code — these are the decisions that shape everything.
-6. **Customize §6 if deploying to a VPS**, otherwise replace it with your platform's deploy procedure.
-7. **§7–§10 are reference material** — read when relevant.
+3. **Skim [`TEMPLATE_INVENTORY.md`](TEMPLATE_INVENTORY.md)** — file/folder layout you'll be reproducing + the copy-paste references in `templates/`.
+4. **Answer §5 in chat with Claude** before writing any feature code — these are the decisions that shape everything.
+5. **Customize [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) if deploying to a VPS**, otherwise replace it with your platform's deploy procedure. It also covers the CI/CD baseline and credential handling.
+6. **§8–§11 are reference material** — read when relevant.
+7. **[`HARNESS_QUIRKS.md`](HARNESS_QUIRKS.md)** — Claude Code operational gotchas + `bootstrap.sh` internals. Read when something behaves unexpectedly or before modifying the bootstrap script.
+
+This document was split in v1.22.0 (Codex Phase 4 #2) — three companion files now own the file-layout, deploy-baseline, and harness-quirks content that previously lived in §3+§4, §6+§7+§13, and §12+§14 respectively. The sections retain their numbers as stubs pointing at the new files.
 
 When this document changes (template version bump), update the template version at the top and add a row to its own changelog at the bottom.
 
@@ -451,83 +453,13 @@ Deploy runs on every commit to `main` (i.e., immediately after the rebase-merge 
 
 ## 3. Structure (file/folder layout)
 
-Standard tree for a new project. Stack-specific files (`pyproject.toml`, `package.json`, `Cargo.toml`, etc.) replace one another based on language.
-
-```
-<project-slug>/
-├── README.md                       # 30-second pitch + table of doc links
-├── CLAUDE.md                       # Claude Code session conventions
-├── CONTRIBUTING.md                 # process rules (gate, branching, etc.)
-├── PROJECT_STARTER.md              # this template (kept for reference); update its version when modified
-├── VERSION                         # plain text, e.g. "0.1.0\n"
-├── CHANGELOG.md                    # per-version diary (v0.1.0 entry → v...)
-├── .env.example                    # var declarations with comment-block-per-var
-├── .gitignore                      # ignore .env, build artifacts, etc.
-├── Makefile                        # dev / test / lint / fix / deploy targets
-│
-├── docs/
-│   ├── setup.md                    # first-time machine setup procedure
-│   ├── spec.md                     # product behavior — the contract
-│   ├── architecture.md             # data flow + components + DB schema
-│   ├── integration.md              # external system contracts (APIs, webhooks)
-│   ├── runbook.md                  # day-2 ops: deploy, logs, incidents
-│   └── pr_review_instructions.md   # for review automation / external reviewers
-│
-├── scripts/
-│   ├── check-env.sh                # diff .env against .env.example
-│   ├── bootstrap.sh                # interactive .env populator
-│   └── deploy.sh                   # deploy to target host
-│
-├── src/<package_name>/             # source code (flat layout for v1)
-│   ├── __init__.py | index.ts | mod.rs
-│   ├── ...
-│
-├── tests/                          # one file per source module is a fine starting point
-│   └── conftest.py | setup.ts
-│
-├── .claude/
-│   ├── settings.json               # gate permissions, SessionStart hook (committed)
-│   └── settings.local.json         # per-machine overrides (gitignored)
-│
-└── .github/
-    └── workflows/
-        └── ci.yml                  # lint + typecheck + test gates per PR
-```
-
-**Folder ownership:**
-- `docs/` is for written-down decisions and procedures. Keep it small; one file per concern.
-- `scripts/` is for shell scripts. Don't grow this; complexity belongs in source.
-- `src/` is the only place runtime code lives.
-- `tests/` mirrors `src/` structure.
-- `.claude/` is for Claude Code harness configuration only.
+**Moved to [`TEMPLATE_INVENTORY.md`](TEMPLATE_INVENTORY.md) in v1.22.0** as part of the doc split (Codex Phase 4 #2).
 
 ---
 
 ## 4. Templates (copy-paste references)
 
-The companion `templates/` directory holds skeleton files. When bootstrapping a new project, copy the relevant ones, then search-and-replace the `<placeholders>`.
-
-| Template file | Purpose | Placeholders to fill |
-|---|---|---|
-| `templates/README.md` | Project entry point — pitch + doc-table | `<PROJECT_NAME>`, `<PROJECT_DESCRIPTION>` |
-| `templates/CLAUDE.md` | Session conventions for Claude Code; auto-loaded every session | `<PROJECT_NAME>`, `<STACK>`, `<HOST>`, sensitive context |
-| `templates/CONTRIBUTING.md` | Process rules — verbatim copy of §2 of this doc with project specifics filled in | `<PROJECT_NAME>`, version-marker list |
-| `templates/CHANGELOG.md` | Per-version diary skeleton | initial v0.1.0 entry |
-| `templates/.env.example` | Env-var declarations skeleton | category headers; vars per project |
-| `templates/.gitignore` | Sensible default ignores | language-specific lines if needed |
-| `templates/.python-version` | Python version pin (if Python) | `3.12` typical |
-| `templates/Makefile` | Dev/test/lint/deploy targets | command bodies per stack |
-| `templates/.claude/settings.json` | Permission allowlist + SessionStart hook running `check-env.sh` | absolute paths |
-| `templates/.github/workflows/ci.yml` | CI pipeline: lint + typecheck + test | tool versions per stack |
-| `templates/scripts/check-env.sh` | Verifies `.env` against `.env.example` | none — generic |
-| `templates/scripts/bootstrap.sh` | Interactive `.env` populator with masking + validators | none — generic |
-| `templates/scripts/deploy.sh` | Skeleton deploy script | `<HOST>`, `<REMOTE_DIR>` |
-| `templates/docs/setup.md` | First-time setup procedure skeleton | per project |
-| `templates/docs/spec.md` | Product spec skeleton with Process & versioning section | per project |
-| `templates/docs/architecture.md` | Data flow + components skeleton | per project |
-| `templates/docs/integration.md` | External integrations skeleton | per project |
-| `templates/docs/runbook.md` | Day-2 ops skeleton | per project |
-| `templates/docs/pr_review_instructions.md` | PR review checklist skeleton | per project |
+**Moved to [`TEMPLATE_INVENTORY.md`](TEMPLATE_INVENTORY.md) in v1.22.0.**
 
 ---
 
@@ -605,147 +537,13 @@ How does the service run on the host?
 
 ## 6. VPS deploy baseline
 
-For projects deploying to a Linux VPS (Hetzner / OVH / DigitalOcean / similar). Skip if using PaaS or serverless.
-
-Adapt to your VPS specifics. The procedure assumes Debian/Ubuntu/CentOS-family; commands like `useradd` / `firewall-cmd` are RHEL-family — translate as needed.
-
-### 6.1 DNS
-
-In your DNS provider (Cloudflare / Route 53 / etc.):
-- Add an `A` record: `<subdomain>` → `<vps-ipv4>`
-- Proxy/CDN setting depends on the use case:
-  - **DNS-only ("gray cloud" in Cloudflare)** for webhook receivers and other endpoints where an upstream is sensitive to TLS termination or header rewriting at the CDN edge (a frequent issue for some bot/notification platforms — verify with your upstream's docs)
-  - **Proxied ("orange cloud")** for general web traffic that benefits from CDN/DDoS
-
-Verify propagation: `dig <subdomain>.<domain> +short` should return the VPS IP.
-
-### 6.2 TLS
-
-Pick one:
-- **Caddy** — auto-issues + auto-renews via Let's Encrypt. Easiest. `caddy run` on the host, point at your service.
-- **Let's Encrypt via certbot** — `certbot --nginx -d <subdomain>` once, cron-renews.
-- **Existing reverse proxy** (e.g., another control panel) — use its TLS issuance flow.
-
-### 6.3 Reverse proxy
-
-If you already have nginx / Caddy fronting other services, add a vhost for the new subdomain that proxies to your service's loopback port:
-
-```nginx
-# /etc/nginx/conf.d/<subdomain>.conf
-server {
-    server_name <subdomain>.<domain>;
-    listen 443 ssl;
-    # ssl_certificate / ssl_certificate_key as issued in §6.2
-
-    location / {
-        proxy_pass http://127.0.0.1:8080;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $remote_addr;
-    }
-}
-```
-
-If the VPS is fresh, install Caddy as the simplest option — `Caddyfile` syntax handles TLS + proxy in 3 lines.
-
-### 6.4 Service user (optional)
-
-If running the service as a dedicated user (not root):
-
-```sh
-useradd -m -s /bin/bash <service-user>
-loginctl enable-linger <service-user>   # for systemd --user services to persist
-```
-
-If running as root, skip this step.
-
-### 6.5 systemd unit
-
-```ini
-# /etc/systemd/system/<project-name>.service        (system unit, runs as root)
-# OR ~/.config/systemd/user/<project-name>.service  (user unit)
-[Unit]
-Description=<Project description>
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/root/<project-name>
-EnvironmentFile=/root/<project-name>/.env
-ExecStart=/root/.local/bin/uv run uvicorn <package_name>.app:app --host 127.0.0.1 --port 8080
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target   # for system units
-# WantedBy=default.target    # for user units
-```
-
-Install + enable:
-
-```sh
-systemctl daemon-reload
-systemctl enable --now <project-name>
-journalctl -u <project-name> -n 50 -f   # tail logs
-```
-
-### 6.6 Firewall
-
-For RHEL-family with firewalld:
-
-```sh
-firewall-cmd --list-all   # check current
-firewall-cmd --permanent --add-port=443/tcp
-firewall-cmd --permanent --add-port=80/tcp
-firewall-cmd --reload
-```
-
-For Debian/Ubuntu with ufw:
-
-```sh
-ufw allow 80/tcp
-ufw allow 443/tcp
-```
+**Moved to [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) in v1.22.0** as part of the doc split (Codex Phase 4 #2).
 
 ---
 
 ## 7. CI/CD baseline
 
-GitHub Actions, three gates per PR. Configure these to pass before allowing merge by ticking "Require status checks to pass" in branch protection (§1.6) once the workflow exists.
-
-`.github/workflows/ci.yml` template — adapt the tools to your stack:
-
-```yaml
-name: ci
-on:
-  pull_request:
-    branches: [main]
-  push:
-    branches: [main]
-
-jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv run ruff check .
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv run mypy src
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv run pytest
-```
-
-Auto-deploy: leave for a separate workflow once staging exists. Manual deploy via `make deploy` from a clean `main` is fine for v1.
+**Moved to [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) in v1.22.0.**
 
 ---
 
@@ -951,128 +749,19 @@ Interactive reviewers (Codex CLI, manual human at the keyboard) naturally satisf
 
 ## 12. Claude Code harness quirks
 
-Operational gotchas observed during real use. Save future-you the discovery cost.
-
-### Permissions / file write gating
-
-- **`.claude/settings.json` write blocked when authorizing a yet-uncreated script.** The harness treats "self-granting permission to a path that doesn't exist on disk" as a privilege-escalation pattern. Workaround: create the script first (so the path is real), then write `settings.json` referencing it. The reverse order fails.
-- **Self-granting permissions** (writing `permissions.allow` for new tools) is gated as privilege escalation even when scripts exist. Surface the proposed rule to the user; let them either approve via `/permissions` UI or paste the JSON themselves.
-
-### SSH / production interactions
-
-- **Ad-hoc `ssh root@host '<arbitrary command>'` is gated** as "production reconnaissance" requiring explicit user approval, even with key auth working. Workaround: wrap read-only operations in a reviewable script (e.g. `scripts/<service>-inspect.sh`) and add it to `.claude/settings.json` `permissions.allow`. Don't try wildcard SSH allow rules.
-- **Mutating commands on production** (creating users, restarting services, modifying config) need user `!`-prefix execution unless wrapped in a similarly-reviewable script.
-
-### TTY-bound commands fail in `!`-prefix shell
-
-- `sudo`, `ssh-copy-id`, and any command that prompts interactively for a password fails when invoked via Claude Code's `!`-prefix shell — there's no TTY. The user has to run those in a separate real terminal once. Once SSH key auth is in place, subsequent SSH calls work in `!`-prefix.
-
-### `gh` CLI quirks
-
-- **`gh pr edit --body` errors on Projects-classic deprecation.** Known bug. Workaround: use `gh api -X PATCH /repos/<owner>/<repo>/pulls/<N> -f body=...` directly (REST, bypasses the broken GraphQL query).
-- **`gh pr merge --rebase` recomputes commit SHAs.** Original branch SHAs (e.g. `5920974`) become new SHAs on `main` (e.g. `20584ae`). Functional content is identical; SHA-based references in PR descriptions become slightly stale.
-
-### Memory and settings carve-outs
-
-- **Memory writes (`~/.claude/projects/.../memory/`) are allowed without `gogogo!`.** This is the carved-out exception — memory is local-only and can capture lessons learned even when no code edits are authorized.
-- **`.claude/settings.local.json` is gitignored and per-machine** — also out of the gate. `.claude/settings.json` (the committed one) IS gated.
-
-### Branch protection vs. local merge
-
-- With "Require pull request before merging" + "Require linear history" branch protection enabled on `main`, **local `git merge --ff-only && git push origin main` is rejected**. The canonical merge becomes `gh pr merge --rebase --delete-branch` (server-side).
-- **Squash-merge auto-appends `(#N)` to commit subjects; rebase-merge does not.** To trace rebase-merged commits to their PR: `gh pr list --search <sha>`, or include `Refs #N` in the commit body manually before merging.
-
-### Auto mode and the gate
-
-- **Auto mode does NOT override the `gogogo!` gate.** A `system-reminder` saying "execute autonomously" is not a license to skip the literal-substring check. The check is the FIRST step of every code-change response, every turn.
+**Moved to [`HARNESS_QUIRKS.md`](HARNESS_QUIRKS.md) in v1.22.0** as part of the doc split (Codex Phase 4 #2).
 
 ---
 
 ## 13. Credential handling
 
-### Never paste credentials in chat
-
-The chat transcript is logged. Once a token / password / secret appears in a message, assume it must be rotated. Get values into `.env` via the bootstrap script's interactive prompts, which write directly to disk without echoing through chat output.
-
-### When a credential leaks into chat
-
-1. **Flag the leak once**, with the recommended action (revoke + regenerate at the source service). Be specific about *where* the user revokes — point at the exact admin UI path. *Example:* "<provider> admin console → Settings → API keys → revoke + create new".
-2. **Do not repeat the warning** in subsequent messages of the same session. The user manages rotation on their own schedule. Repeated reminders erode trust without improving security.
-3. If a *different* credential leaks, that's a new incident — flag it once.
-4. Continue normal work; the user's response to credential leaks is their call alone.
-
-### Setting sensitive `.env` values via tool path
-
-If the user explicitly authorizes setting a sensitive value into `.env` from chat content (e.g., "copy the X token from the spec doc to my .env for me"), use the **Read + Edit tool path** — the value travels through tool I/O, not chat output. Confirm via masked summary (`(set, N chars, ends …xyz)`); never echo the cleartext back. The Edit tool's old/new strings are part of the transcript but they don't appear as visible chat output.
-
-### Sensitive-value masking pattern
-
-When displaying values matching `TOKEN | SECRET | KEY | DSN | PASSWORD` (case-insensitive) in any tool output, log, or chat message, mask them: `(set, N chars, ends …xyz)`. Never echo cleartext. The bootstrap script implements this pattern; replicate it in any internal logging the project does.
-
-### Don't ask for credentials in chat
-
-When walking the user through `bootstrap.sh` or any setup that needs a token, instruct them to paste the value **into the script's prompt**, never into the conversation. Phrasing: "Run `./scripts/bootstrap.sh` and paste the token into prompt N when it asks." Never: "Paste your token here so I can put it in `.env`."
+**Moved to [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) in v1.22.0** (credential handling belongs with deploy concerns).
 
 ---
 
 ## 14. Bootstrap.sh design principles
 
-The interactive `.env` populator (`scripts/bootstrap.sh`) embodies several patterns worth understanding before modifying it. The reference implementation lives in `templates/scripts/bootstrap.sh`.
-
-### Five modes, one entry point
-
-- **`./scripts/bootstrap.sh`** (no args) → opens an interactive menu listing every variable with current value (sensitive masked), letting the user pick by number. The default mode means non-technical contributors don't need to remember flags.
-- **`./scripts/bootstrap.sh VAR_NAME`** → edits one variable and exits. Fast for typo fixes.
-- **`./scripts/bootstrap.sh --all`** → walks every variable in order. Best for fresh setup.
-- **`./scripts/bootstrap.sh --export [path]`** → writes a portable snapshot of the current creds (same `KEY=VALUE` shape as `.env.example`, comments preserved) to `path`, or to `/tmp/<reponame>-creds-<YYYYMMDD-HHMMSS>.env` if no path is given. `chmod 600`. Prints the path on stdout so callers can capture it (`f=$(./scripts/bootstrap.sh --export)`). Status messages go to stderr — stdout is path-only.
-- **`./scripts/bootstrap.sh --import <path>`** → reads `KEY=VALUE` pairs from `path` and writes them into `.env` for every var the importing repo recognizes (i.e., present in its `.env.example`). Vars in the file but absent from `.env.example` are skipped with a warning. Validators do not block import — the source file is trusted.
-
-After every edit (any mode), the menu re-renders and saves to `.env` immediately.
-
-### Migration via `--export` / `--import`
-
-The export/import pair is the primary mechanism for moving credentials between machines (dev box → VPS, machine A → machine B) without typing each value twice. The flow:
-
-1. On the source host: `f=$(./scripts/bootstrap.sh --export)` — yields a `chmod 600` file under `/tmp`.
-2. Transfer it: `scp "$f" user@target:/tmp/` (or any other secure channel).
-3. On the target host: `./scripts/bootstrap.sh --import /tmp/<file>` — populates `.env` and runs `check-env.sh`.
-4. Delete the transferred file on both ends.
-
-The export file has the same shape as `.env`, so it can also be hand-edited or diffed before import.
-
-The interactive menu also has `e` (export, prints the path) and `i` (import, prompts for a path) so a contributor walking through `bootstrap.sh` for the first time can do the migration without leaving the TUI or remembering flag spelling.
-
-On WSL hosts, the export additionally prints the Windows-style path (via `wslpath -w`) so Windows-side tooling (Explorer, scp.exe, WinSCP) can pick the file up directly without the user having to translate `\\wsl.localhost\<distro>\tmp\...` by hand. On macOS and native Linux the POSIX path is already the local path, so nothing extra is printed.
-
-### Comment-block-per-variable
-
-Every var in `.env.example` has a comment block above it explaining where to find or generate the value. The bootstrap script reads `.env.example` as the source of truth: it parses the comment block, the variable name, and the default value, and uses them in prompts.
-
-To add a new var: edit `.env.example` only; the script picks it up automatically.
-
-### Optional vs required
-
-Vars whose preceding comment block contains the literal word "Optional" (case-insensitive) are not required. Required vars demand a non-empty answer; optional vars accept empty input or `-` to clear an existing value.
-
-### Sensitive-value masking on redisplay
-
-When showing a current value (during edit or in the menu list), variables matching `TOKEN | SECRET | KEY | DSN | PASSWORD` display as `(set, N chars, ends …xyz)` instead of cleartext. Protects against shoulder-surfing during paired sessions and screen sharing.
-
-### Format validators with override
-
-Each known var name maps to a regex (e.g., bot tokens match `^[0-9]{8,12}:[A-Za-z0-9_-]{30,}$`, hex secrets match `^[A-Za-z0-9_-]{8,256}$`). Mismatches warn the user with "Use anyway? [y/N]" — they can override when they're sure but they're forced to look at it. Catches typos at input time without being rigid.
-
-### Input normalization
-
-Pasted values get their leading/trailing whitespace stripped, surrounding quotes (single or double) removed, and control characters dropped. Most paste artifacts (terminal-border characters, leading spaces, accidental quotes) get cleaned silently; pathological cases get caught by the format validator.
-
-### Atomic save per edit
-
-Each edit commits to `.env` immediately on Enter (writes to a tempfile + rename, chmod 600). No batched "save at end" — if the user Ctrl-Cs halfway through, what they've entered so far is preserved.
-
-### Why no GUI
-
-A TUI-style menu in pure bash works in any terminal (SSH, WSL, mosh, tmux), survives interruptions cleanly, and has zero deps. A GUI would require platform-specific tools and break the "this works on the VPS too" promise.
+**Moved to [`HARNESS_QUIRKS.md`](HARNESS_QUIRKS.md) in v1.22.0.**
 
 ---
 
@@ -1082,6 +771,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.22.0 | 2026-05-19 | First of three commits splitting `PROJECT_STARTER.md` (Codex Phase 4 #2). Three companion docs shipped at meta-repo root: `TEMPLATE_INVENTORY.md` (extracted §3 + §4 — file/folder layout + `templates/` reference table), `DEPLOY_BASELINE.md` (extracted §6 + §7 + §13 — VPS deploy + CI/CD baseline + credential handling), `HARNESS_QUIRKS.md` (extracted §12 + §14 — Claude Code harness gotchas + `bootstrap.sh` design principles). PROJECT_STARTER.md drops from 1121 to ~810 lines; the extracted sections retain their heading + a one-line pointer for stable mental anchors. §0.2 Reading order rewritten to reference the new files. `scripts/export-starter.sh` gains a `ROOT_DOCS` array and copies all four root docs into the archive stage so cross-links resolve in the consumer's extracted layout; `scripts/check-doc-references.sh` `VIRTUAL_TEMPLATES_FILES` extended to match. README.md "Known limitations" updated to reflect split progress + linter trio. Spec: B-025 added (frozen — captures the three-commit split rationale and stub-with-pointer convention); B-015 archive-layout rule updated in place to name `ROOT_DOCS` instead of just PROJECT_STARTER.md; B-023's `VIRTUAL_TEMPLATES_FILES` mention updated. Next: v1.22.1 ships WORKFLOW.md (extracts §2 + §9 + §10 + §11, coordinates B-022 C4-linter target relocation); v1.22.2 ships BOOTSTRAP.md (extracts §0 + §1 + §5) and reduces PROJECT_STARTER.md to a thin index. |
 | 1.21.0 | 2026-05-19 | C3 placeholder linter (Codex Phase 8 #3). `scripts/check-placeholders.sh` walks meta-repo `*.md` files (excluding `templates/` and the external Codex plan), strips fenced code blocks and inline code spans, and fails non-zero if any canonical substitution placeholder (`<package_name>` / `<PACKAGE_NAME>` / `<PROJECT_NAME>` / `<PROJECT_SLUG>` / `<GITHUB_USER>` / `<HOST>` / `<DOMAIN>` / `<PROJECT_DESCRIPTION>` / `<COPYRIGHT_HOLDER>` / `<YEAR>`) appears in plain prose. Catches the failure mode where an unresolved placeholder leaks from the template-bootstrap surface into a user-facing meta-doc, making the docs read as if they ship with TODO markers. Mentions inside backticks like `<package_name>` stay fine — code spans are a clear signal the writer is referencing the placeholder concept rather than waiting for substitution. Scope is meta-repo `*.md` only (not `*.sh` / `*.py` / `*.toml`, where placeholder strings appear as docstrings or comments that don't render to users); generic angle-bracket meta-syntax (`<verb>`, `<file>`, `<X.Y.Z>`) is not flagged because it isn't in the canonical set. Wired into `.github/workflows/template-self-test.yml` after the doc-reference linter (B-023) and before the smoke test (B-014). Six meta-repo files currently pass clean. Completes the linter trio (B-022 / B-023 / B-024) that gates the upcoming safe `PROJECT_STARTER.md` split. Spec: B-024 added. |
 | 1.20.0 | 2026-05-19 | C2 doc-reference linter (Codex Phase 8 #2). `scripts/check-doc-references.sh` walks every Markdown file in the repo, extracts `[label](target)` link targets (skipping URLs, anchors, autolinks), strips `#anchor` and `?query`, resolves relative to the linking file's directory, and fails non-zero if any target file or directory is missing on disk. 50 Markdown link targets across 19 files currently pass. Knows about the export layout: links inside `templates/` that target `PROJECT_STARTER.md` resolve via `VIRTUAL_TEMPLATES_FILES` because `scripts/export-starter.sh` flattens templates contents alongside `PROJECT_STARTER.md` in the archive. Wired into `.github/workflows/template-self-test.yml` as a step between rule-consistency and the smoke test. Closes the "manual until C2 linter ships" caveat in B-016. Spec: B-023 added. |
 | 1.19.0 | 2026-05-19 | C4 rule-consistency linter (Codex Phase 8 #4). `scripts/check-rule-consistency.sh` extracts three named rule regions — `gate-clause` / `verb-table` / `bare-gogogo` — bracketed by `<!-- C4:<region>:start/end -->` HTML-comment anchors from `PROJECT_STARTER.md` §2, `templates/CONTRIBUTING.md`, `templates/CLAUDE.md`; diffs them pairwise; exits non-zero with a unified diff on drift. Wired into `.github/workflows/template-self-test.yml` as a step before the existing smoke test, so drift fails CI. Pre-linter alignment commit: `templates/CLAUDE.md` gate clause `Never` → `Do NOT`; PROJECT_STARTER §2 verb table simplified from 3-column (Phrase/Action/Workflow) to 2-column shared form, with the dropped Workflow column's section refs moved to a prose sentence below the table; bare-`gogogo!` prompt unified across all three files to a standalone bold paragraph with trailing "Review is out-of-band — no verb for it." Resolves B-021's "manual until C4 linter ships" caveat. Spec: B-022 added. |
