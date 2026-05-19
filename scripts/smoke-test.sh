@@ -33,6 +33,47 @@ echo "   workdir: $WORK"
 echo "   package: $PKG"
 echo
 
+echo "-- 0. Pre-flight integrity checks (B-031, v1.29.3) --"
+
+echo "   0a: .env.example parses cleanly via _env-schema-parse.sh"
+(
+  cd "$ROOT"
+  export EXAMPLE="$ROOT/templates/.env.example"
+  # shellcheck source=/dev/null
+  source "$ROOT/templates/scripts/_env-schema-parse.sh"
+  if [ "${#VARS[@]}" -eq 0 ]; then
+    echo "   ✗ _env-schema-parse.sh sourced clean but VARS array is empty" >&2
+    exit 1
+  fi
+  echo "      ✓ parsed ${#VARS[@]} vars from templates/.env.example"
+)
+
+echo "   0b: C4 trio regions all carry substantive content"
+C4_REGIONS=(gate-clause proposal-format bare-gogogo env-metadata-contract)
+C4_FILES=(WORKFLOW.md templates/CONTRIBUTING.md templates/CLAUDE.md)
+MIN_CHARS=100  # non-blank char threshold per region per file
+C4_FAIL=0
+for region in "${C4_REGIONS[@]}"; do
+  for f in "${C4_FILES[@]}"; do
+    chars=$(awk -v start="<!-- C4:${region}:start -->" -v end="<!-- C4:${region}:end -->" '
+      index($0, start) { capture = 1; next }
+      index($0, end)   { capture = 0; next }
+      capture          { gsub(/[[:space:]]/, ""); print }
+    ' "$ROOT/$f" | wc -c)
+    if [ "$chars" -lt "$MIN_CHARS" ]; then
+      echo "   ✗ region '$region' in $f has only $chars non-blank chars (< $MIN_CHARS)" >&2
+      C4_FAIL=1
+    fi
+  done
+done
+if [ "$C4_FAIL" -ne 0 ]; then
+  echo "   ✗ pre-flight C4-content check failed" >&2
+  exit 1
+fi
+echo "      ✓ all ${#C4_REGIONS[@]} C4 regions ≥ $MIN_CHARS non-blank chars across ${#C4_FILES[@]} trio files"
+
+echo
+
 echo "-- 1. Export starter --"
 OUT_DIR="$WORK" "$ROOT/scripts/export-starter.sh"
 

@@ -6,6 +6,44 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.29.3 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.29.3. **Phase 3.3 of the Codex improvement plan — two pre-flight smoke checks (B-031)** (commit 4 of 5 in the `improvements-3` sequence). Patch bump.
+
+### What shipped
+
+Two new pre-flight integrity checks added to `scripts/smoke-test.sh` as Phase 0 — runs BEFORE the existing 7-phase template-instantiation flow.
+
+**Check 0a — `.env.example` parses cleanly via `_env-schema-parse.sh`.** Sources the parser with `EXAMPLE=templates/.env.example`, verifies the `VARS` array is populated. Currently parses 6 vars. Catches a near-miss class: a malformed `.env.example` would silently break `bootstrap.sh` + `check-env.sh` in consumer projects, with no automated check between the source file and the B-020 parser contract today. The B-020 spec describes the contract; this smoke check verifies the source actually conforms.
+
+**Check 0b — C4 trio regions carry substantive content (≥ 100 non-blank chars per region per file).** For each of the 4 named regions (gate-clause / proposal-format / bare-gogogo / env-metadata-contract) × 3 trio files (WORKFLOW.md / templates/CONTRIBUTING.md / templates/CLAUDE.md), extracts content between anchors, strips whitespace, counts chars. Fails if any of the 12 (region, file) pairs has < 100 non-blank chars.
+
+Catches the vandalism / accidental-emptying class: B-022's byte-exact-match linter checks regions match each other but matches between three empty regions would PASS — silent loss of rule content. The existing `[[ ! -s "$out" ]]` check in `check-rule-consistency.sh` only fires on zero-byte; whitespace-only or near-empty content passes that check.
+
+### Why these two specifically (the Phase 3.3 bar)
+
+Per Phase 3.3's acceptance from the Codex plan: "Added test coverage is driven by known failure modes, not by checklist completion." Both checks correspond to concrete near-miss / failure classes:
+
+- **0a** — the v1.14.x parser-swap commits could have shipped a parsing regression in `_env-schema-parse.sh` interpreting `.env.example`; no test caught the parser-output↔source relationship until now. Live regression risk is low (the parser is stable) but the gap was real.
+- **0b** — the v1.23.0 + v1.24.0 + v1.27.0 commits all edited C4 regions byte-exact across the trio. An accidental near-empty edit (just delete the prose, leave the anchors) would be caught by the byte-exact linter only if SOME files have content and others don't — but if all 3 are vandalized to whitespace simultaneously, the linter passes. Defense-in-depth: 0b adds a per-region minimum-content threshold the byte-exact check can't enforce.
+
+The check-list won't grow speculatively. New checks added per shipped regression.
+
+### Spec
+
+- **B-031 added** (frozen) — both checks + per-check rationale + per-check failure modes + 100-char threshold reasoning.
+- No new D entry — B-031 is execution under the B-014 / B-029 framework, not a new architectural decision.
+
+### Verified
+
+- All 4 linters green: C4 (3 regions) + C2 doc-ref (74 link targets, 5 fragments) + C3 placeholders (11 files) + C5 spec-consistency (10 invariant patterns).
+- Smoke test passes end-to-end with the new pre-flight checks: `✓ parsed 6 vars from templates/.env.example` + `✓ all 4 C4 regions ≥ 100 non-blank chars across 3 trio files`.
+- Planted-violation tests: Check 0a fails when `EXAMPLE=/tmp/nonexistent` (parser aborts with `not found`); Check 0b fails when a region is emptied (`✗ region 'gate-clause' in templates/CLAUDE.md has only 1 non-blank chars (< 100)`).
+
+### Next in 5-commit sequence
+
+Commit 5 of 5 (v1.30.0) — Phase 4.3: preset-architecture design doc (`presets/PRESET_ARCHITECTURE.md` + B-030 + D-015). Design only, no implementation.
+
 ## v1.29.2 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.29.2. **Phase 2.2 of the Codex improvement plan — conservative trim of duplication outside C4 regions** (commit 3 of 5 in the `improvements-3` sequence). Patch bump.
