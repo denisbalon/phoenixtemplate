@@ -1,39 +1,38 @@
 # Claude Code session guidance
 
-**Canonical scope (per B-021 in `docs/spec.md`):** this file is the **session-facing summary the AI loads every session**. The rule statements below (gate clause, verb table, bare-gogogo handling) are **inline and verbatim** — not pointers — because the AI needs them in working context to apply them. Stripping these to pointers was observed historically to make the AI miss the rules. The full rationale (*why* the gate is `gogogo!`, *why* verbs are required, alternatives considered) lives canonically in `PROJECT_STARTER.md §2`. The per-project operational doc with project-specific commands and sequences is `CONTRIBUTING.md`. All three tiers carry the rule statements as deliberate AI-safety redundancy — the C4 consistency linter (Codex plan Phase 3 #3, pending) keeps them mechanically in sync once shipped. **Editing any rule here means editing it in `CONTRIBUTING.md` + `PROJECT_STARTER.md §2` too, in the same commit.**
+**Canonical scope (per B-021 in `docs/spec.md`):** this file is the **session-facing summary the AI loads every session**. The rule statements below (gate clause, proposal format, bare-gogogo handling) are **inline and verbatim** — not pointers — because the AI needs them in working context to apply them. Stripping these to pointers was observed historically to make the AI miss the rules. The full rationale (*why* the gate is `gogogo!`, *why* propose-and-confirm replaced verbs, alternatives considered) lives canonically in `PROJECT_STARTER.md §2`. The per-project operational doc with project-specific commands and sequences is `CONTRIBUTING.md`. All three tiers carry the rule statements as deliberate AI-safety redundancy — the C4 consistency linter (`scripts/check-rule-consistency.sh`) keeps them mechanically in sync. **Editing any rule here means editing it in `CONTRIBUTING.md` + `PROJECT_STARTER.md §2` too, in the same commit.**
 
 ## `gogogo!` passphrase — read this first (HARD GATE)
 
 <!-- C4:gate-clause:start -->
-**Do NOT take any state-mutating action unless the user's CURRENT message contains the literal substring `gogogo!`.**
+**Do NOT take any state-mutating action unless: (a) Claude's immediately preceding message contained a concrete proposal (specific files/commands/commits, not vague phrasing), AND (b) the user's CURRENT message contains the literal substring `gogogo!`, optionally preceded by a digit (e.g. `2 gogogo!`) selecting one option from a numbered list.**
 <!-- C4:gate-clause:end -->
 
-Reading files, grepping, planning in chat, clarifying questions, and writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
+Reading files, grepping, planning in chat, clarifying questions, surfacing proposals, and writes to local-only memory/settings (`~/.claude/projects/.../memory/`, `.claude/settings.local.json`) are fine without the gate. Tracked-file `Edit`/`Write`/`NotebookEdit`, `git commit` / `push`, `gh pr` actions, and deploys are all gated.
 
-`gogogo!` is the **execute trigger**. It must be preceded by an **action verb** in the same message — the verb specifies *what* to execute.
+`gogogo!` confirms a concrete proposal Claude surfaced. There are no verbs — the proposal carries the action description in plain English, and `gogogo!` (or `N gogogo!` for a numbered choice) is the authorization signal. The action executed is exactly what the proposal described.
 
-### Verb → action
+### Proposal format
 
-<!-- C4:verb-table:start -->
-| Phrase | Action |
-|---|---|
-| `code gogogo!` · `feat gogogo!` · `fix gogogo!` · `chore gogogo!` · `docs gogogo!` · `refactor gogogo!` · `test gogogo!` · `perf gogogo!` · `ship gogogo!` | Full 5-step workflow (spec → bump+CHANGELOG → code → commit+push → deploy) |
-| `commit gogogo!` | Commit current work + push (still bumps version + CHANGELOG; skips deploy) |
-| `PR gogogo!` · `ready gogogo!` · `open PR gogogo!` | Open pull request |
-| `merge gogogo!` | `gh pr merge --rebase --delete-branch` |
-| `deploy gogogo!` | Run the project's deploy command |
-| `revert gogogo!` | Revert last commit + redeploy |
-<!-- C4:verb-table:end -->
+<!-- C4:proposal-format:start -->
+**Proposal format.** Every state-mutating action Claude takes is preceded by a proposal in its own assistant message, ending with one of two invitation forms:
+
+- **Single suggestion** — a bold "Proposed: <action>" header, a concrete plan (specific files / commands / commits), and a final line inviting `gogogo!` to proceed.
+- **Numbered choice** — a bold "Choose:" header, numbered options (each one concrete), and a final line inviting `N gogogo!` to pick option N.
+
+Concrete means specific files, specific commands, specific commits — not "commit the changes." For multi-step actions (5-step feature work), enumerate every step. The user's `gogogo!` authorizes exactly the proposed plan; mid-execution deviation requires a new proposal.
+<!-- C4:proposal-format:end -->
 
 <!-- C4:bare-gogogo:start -->
-**Bare `gogogo!` (no verb) is ambiguous** → reply *"Which action? code / commit / PR / merge / deploy / revert?"* and STOP. Review is out-of-band — no verb for it.
+**Bare `gogogo!` with no preceding proposal** → reply *"I haven't proposed anything concrete yet. Describe what you'd like and I'll surface options."* and STOP.
 <!-- C4:bare-gogogo:end -->
 
-**Review is out-of-band.** No `review gogogo!` verb, no skill, no Makefile target — review happens in a separate session with whatever reviewer the user prefers, pointed at `docs/pr_review_instructions.md` and the open PR. Claude does not dispatch or prepare reviewers.
-**Verb without `gogogo!` does not authorize** → `merge` alone, `PR` alone, etc. never trigger anything. Plan-text + "Send `<verb> gogogo!`".
-**`<verb-A> gogogo!` doesn't authorize action B** → one verb, one action.
+**Review is out-of-band.** Review happens in a separate session with whatever reviewer the user prefers, pointed at `docs/pr_review_instructions.md` and the open PR. Claude does not dispatch or prepare reviewers — no proposal flow for review exists Claude-side.
+**Imperatives without `gogogo!` do not authorize** → "do that", "merge it", "ship it" etc. never trigger anything on their own. Respond with a concrete proposal + invitation line.
+**Mid-execution deviation from the proposal** → STOP and re-propose. The original `gogogo!` only authorized the original plan.
+**Conversation drift** → if my last message was clarification rather than a fresh proposal, re-propose before acting.
 
-When the verb maps to the 5-step workflow, the atomic sequence is: spec (incl. decision log if architectural) → bump versions + CHANGELOG entry → code → commit (push immediately) → deploy. Subject ends `v<X.Y.Z>`. Every change bumps `VERSION` AND adds a `CHANGELOG.md` entry. Every commit is pushed to origin in the same turn — no local-only commits.
+When the proposed action is a 5-step feature workflow, the atomic sequence is: spec (incl. decision log if architectural) → bump versions + CHANGELOG entry → code → commit (push immediately) → deploy. Subject ends `v<X.Y.Z>`. Every change bumps `VERSION` AND adds a `CHANGELOG.md` entry. Every commit is pushed to origin in the same turn — no local-only commits.
 
 `.claude/settings.json` (committed) IS gated; `.claude/settings.local.json` (gitignored) is not.
 
