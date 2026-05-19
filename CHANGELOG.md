@@ -6,6 +6,47 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.31.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.31.0. **Phase 4.1 + 4.2 of the Codex improvement plan — machine-readable template manifest (B-032).** First commit of three closing Codex Phase 4 (4.3 already shipped v1.30.0 as design; this trio handles 4.1 manifest, 4.2 tier classification, 4.4 bootstrap-mode deferral). Minor bump per WORKFLOW.md (new artifact + new spec block).
+
+### What shipped
+
+A new `templates/manifest.yaml` declaring every file the kit ships or maintains, with per-entry `path` / `purpose` / `tier` / `placeholders` / `exported_by_starter`. Covers three categories: (a) the six root docs in `scripts/export-starter.sh`'s `ROOT_DOCS` array; (b) every file under `templates/` (28 entries); (c) every meta-only script under `scripts/` (the four current linters + export-starter + smoke-test). Total: 40 entries.
+
+**Tier vocabulary** matches B-030's layer model exactly so the future `_common/` + `presets/python-uv/` file move is mechanical:
+
+- `common` — stack-agnostic content; lands in future `_common/`. Includes the workflow + gate trio (CONTRIBUTING.md, CLAUDE.md), the spec-block skill, env-bootstrap core, Karpathy rules, review rubric, meta scaffolding.
+- `python-preset` — stack-specific to Python/uv/FastAPI/VPS; lands in future `presets/python-uv/`. Includes Makefile, pyproject.toml, .python-version, CI workflow, deploy.sh, src/ + tests/ sample tree, docs/setup.md (Python prereqs), DEPLOY_BASELINE.md (VPS baseline).
+- `meta-only` — lives only in the meta-repo; never exported. The four linter scripts plus export-starter + smoke-test.
+
+**Placeholder tracking** lists canonical B-024 names (without angle brackets) per file. Illustrative angle-bracket syntax in prose (`<METHOD>`, `<N>`, `<CMD>`, `<DEPLOY_CMD>`, `<TARGET>`, `<VAR>`, `<IP>`, `<NAME>`, `<DB_PATH>`, `<URL>`, `<ERE>`, `<PRE_MVP_CAVEAT_OR_OMIT>` — anything outside the B-024 set scanned by `scripts/check-placeholders.sh`) is intentionally NOT tracked.
+
+### Spec
+
+- **B-032 added** (frozen) — manifest format + tier vocabulary + scope + the YAML-but-flat parsing constraint. Inserted in the active section right after B-031.
+
+### Docs
+
+- `TEMPLATE_INVENTORY.md` gains a one-paragraph header pointing at the manifest as the machine-readable source of truth. The human-prose table below remains for narrative orientation; the manifest is authoritative for tooling.
+
+### What didn't change
+
+- No linter yet — the manifest is a data file in this commit. `scripts/check-manifest.sh` ships in the next commit (v1.31.1, B-033) and wires into CI.
+- No file moves — `templates/` flat structure unchanged; `_common/` and `presets/python-uv/` directories still don't exist (per B-030 v1.30.0 deferral).
+- No bootstrap-mode decision yet — that's commit 3 of this trio (v1.31.2, D-016).
+- No changes to existing C4 regions, gate semantics, or any shipped script behavior.
+
+### Verified
+
+- `python -c "import yaml; yaml.safe_load(open('templates/manifest.yaml'))"` round-trips clean (40 entries).
+- Every `path` in the manifest resolves to an existing file (`for p in $(grep '^  - path:' templates/manifest.yaml | awk '{print $3}'); do [ -e "$p" ] || echo "MISSING: $p"; done` is silent).
+- All four existing linters green: C4 (3 regions × 3 trio files) + C2 doc-ref (76 link targets, 6 URL fragments validated across 25 files now adds manifest.yaml as a non-Markdown asset) + C3 placeholders (12 files) + C5 spec-consistency (10 invariant patterns).
+
+### Next
+
+Commit 2 of 3: `scripts/check-manifest.sh` + CI wiring (v1.31.1, B-033). Commit 3 of 3: D-016 bootstrap-mode deferral decision (v1.31.2).
+
 ## v1.30.1 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.30.1. **Fix stale `<feature-verb> gogogo!` meta-syntax in `templates/CONTRIBUTING.md` heading** — flagged-not-fixed during Commit 3 (v1.29.2) of the improvements-3 sequence; addressed now as a quick follow-up before PR-open. Patch bump.
