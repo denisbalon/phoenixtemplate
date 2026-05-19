@@ -3,7 +3,8 @@
 #
 # Verifies that named "rule regions" appear byte-for-byte identically across
 # the three canonical doc tiers (B-021):
-#   - PROJECT_STARTER.md  (canonical for core workflow rules + rationale)
+#   - WORKFLOW.md  (canonical for core workflow rules + rationale; was
+#     PROJECT_STARTER.md §2 before v1.25.0 — extracted in that release)
 #   - templates/CONTRIBUTING.md  (canonical for per-project operational concretization)
 #   - templates/CLAUDE.md  (session-facing summary for the AI)
 #
@@ -29,7 +30,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
 FILES=(
-  "PROJECT_STARTER.md"
+  "WORKFLOW.md"
   "templates/CONTRIBUTING.md"
   "templates/CLAUDE.md"
 )

@@ -6,6 +6,67 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.25.0 — 2026-05-19
+
+Mirrors `PROJECT_STARTER.md` template v1.25.0. **Extract `WORKFLOW.md` from PROJECT_STARTER.md** — the 2-of-3 commit of the original split sequence (third one is the BOOTSTRAP.md extraction queued as v1.26.0). The risky one: this is the commit that moves the C4-anchored rule regions, so the linter retarget had to land in the same commit.
+
+### What shipped
+
+A new top-level `WORKFLOW.md` (~530 lines) containing:
+
+- The gate clause + proposal format + bare-gogogo handling (the three C4 byte-exact regions — moved with `§2.1`).
+- The full self-check / refuse-list / allowed-without-gogogo content from `§2.1`.
+- The 5-step atomic sequence, version-bump rule, branching, commit mechanics + message quality + template, PR open / review / address feedback / merge / cleanup / deploy timing / after-violation / phase frequency (was `§2.2`–`§2.13`).
+- Conventions (was `§9.1`–`§9.5`): `.env.example` format, sensitive value handling, naming, comments in code, document boundary.
+- Recommended auto-memory seed table (was `§10`).
+- PR review heuristics (was `§11`) — output contract, Block/Strong/Nit rubric, don't-flag list, cross-cutting concerns.
+
+Section numbers inside `WORKFLOW.md` are dropped (everything was renumbered to bare top-level `##` or `###` headings since the file is its own top-level concern now). Internal `§N.X` cross-references updated to either inline names ("see 'PR review heuristics' below") or explicit `PROJECT_STARTER.md` URL links where the target stayed in the index file.
+
+### PROJECT_STARTER.md changes
+
+Drops from 821 to 435 lines. The four extracted sections (§2, §9, §10, §11) become stub pointers preserving their `## N. <title>` headings + a one-line `**Moved to [WORKFLOW.md](WORKFLOW.md) in v1.25.0.**` line. Same pattern as v1.22.0's three stubs.
+
+`§0.2 Reading order` rewritten: step 2 now says "Read [`WORKFLOW.md`](WORKFLOW.md) once" instead of "Read §2 once"; step 6 simplified to "§8 (audit trail + decision log) lives in this file"; the closing paragraph names both v1.22.0 + v1.25.0 split rounds and notes v1.26.0 as the final reduction to a thin index.
+
+### Linter + tooling coordination (all in this commit)
+
+- **`scripts/check-rule-consistency.sh`** — `FILES[0]` changes from `"PROJECT_STARTER.md"` to `"WORKFLOW.md"`. The C4 regions move with the content; the linter's first target follows. Verified byte-exact match across WORKFLOW.md / templates/CONTRIBUTING.md / templates/CLAUDE.md after the move. Header comment updated to name `WORKFLOW.md` with an audit-trail note about the pre-v1.25.0 state.
+- **`scripts/export-starter.sh`** — `ROOT_DOCS` array grows from 4 entries to 5 (adds `"WORKFLOW.md"`). Archive now ships 5 root docs alongside flattened templates contents.
+- **`scripts/check-doc-references.sh`** — `VIRTUAL_TEMPLATES_FILES` mirrors `ROOT_DOCS` (same addition). Future templates/-side links to `WORKFLOW.md` resolve correctly under the export-layout fallback.
+
+### Cross-reference updates (outside the doc trio)
+
+- **`CONTRIBUTING.md` (meta root)** — workflow pointer "Read `PROJECT_STARTER.md §2`" → "Read `WORKFLOW.md`"; doc tier description updated to name WORKFLOW.md as canonical with audit-trail note.
+- **`templates/CONTRIBUTING.md`** canonical-scope marker — "live canonically in `PROJECT_STARTER.md §2`" → "live canonically in `WORKFLOW.md`" (twice, for rules-live-here and rule-statements-also-in-here).
+- **`templates/CLAUDE.md`** canonical-scope marker — same retarget; "Editing any rule here means editing it in `CONTRIBUTING.md` + `PROJECT_STARTER.md §2` too" → "...in `CONTRIBUTING.md` + `WORKFLOW.md` too".
+- **`README.md`** Known Limitations — updated to "four of five companion files ship at repo root"; lists WORKFLOW.md as the v1.25.0 addition. Docs table gains a WORKFLOW.md row between the PROJECT_STARTER.md row and the TEMPLATE_INVENTORY.md row.
+
+### Spec updates
+
+- **B-021 tier table** drops the `(post-split: WORKFLOW.md)` parenthetical from the first row's File column — the post-split state is now reality. First-row file becomes `WORKFLOW.md (was \`PROJECT_STARTER.md\` §2 before v1.25.0)`.
+- **B-022 Rule** updated to name `WORKFLOW.md` as the first canonical-doc tier with an audit-trail note: "the first tier was `PROJECT_STARTER.md` §2 before v1.25.0's extraction into `WORKFLOW.md`."
+- **B-025 status note** updated to "four of five planned files shipped"; rule body extended to name WORKFLOW.md with `extracted v1.25.0`; rationale section's "v1.22.1 handles WORKFLOW.md and the coordinated B-022 linter retarget" updated to past tense ("v1.25.0 handled..."); test field's tar-grep regex extended from 4-file to 5-file match (adds `WORKFLOW`); status updated to "frozen (v1.25.0 — four of five planned files shipped)"; will reach final state in v1.26.0.
+- **B-025 audit-trail note** explains the v1.22.1 → v1.25.0 renumber: VERSION is monotonically increasing, so the originally-planned label of "v1.22.1" wasn't usable once v1.23/v1.24 intervened.
+
+No new B blocks (this is execution of D-009's roadmap continuation under B-025's split framework).
+
+### What's NOT in this commit (deliberately)
+
+- §1 (Bootstrap checklist) and §5 (Decisions to answer) — both stay in PROJECT_STARTER.md until v1.26.0's BOOTSTRAP.md extraction.
+- §8 (Audit trail) + Decision log + Template changelog — stay in PROJECT_STARTER.md (these are about THIS template's audit trail; not consumer-project content).
+- New linter machinery — same three C4 regions, new file target, otherwise unchanged.
+
+### Verified
+
+- All three linters green: C4 rule-consistency (3 regions byte-exact across `WORKFLOW.md` / templates/CONTRIBUTING.md / templates/CLAUDE.md), C2 doc-references (74 links across 23 files, up from 66/22), C3 placeholders (10 files clean, up from 9).
+- Smoke test passes (template instantiates end-to-end; archive now ships WORKFLOW.md alongside the other 4 root docs).
+- Archive `tar -tzf` confirms WORKFLOW.md at the staged top level.
+
+### Next
+
+- **v1.26.0 (a future `gogogo!`-authorized proposal):** Extract `BOOTSTRAP.md` (§0 + §1 + §5). Reduce PROJECT_STARTER.md to a thin ~50-line index pointing at all 5 companion files. Final commit of the split sequence.
+
 ## v1.24.0 — 2026-05-19
 
 Mirrors `PROJECT_STARTER.md` template v1.24.0. **Gate refinements (D-011): keep `gogogo!`, always-propose, multi-select.** Three changes to the v1.23.0 propose-and-confirm model, driven by user feedback after living with it for a day.

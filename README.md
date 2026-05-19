@@ -40,7 +40,7 @@ What's missing or manual today vs. the polished end state. For the active roadma
 
 - **Placeholder substitution is manual.** After unpacking the kit, you need to run one `mv` (rename `src/<package_name>/` to your actual package name) plus one `sed` across `.py` / `.toml` / `Makefile` / `.yml` / `.sh` / `.example` files for `<package_name>`, plus similar manual edits for `<PROJECT_NAME>`, `<GITHUB_USER>`, `<HOST>`, `<DOMAIN>`, `<PROJECT_DESCRIPTION>`, `<COPYRIGHT_HOLDER>`, `<YEAR>`. `bootstrap.sh` only handles `.env` credential prompting today — it does **not** do placeholder substitution. Open item #3 (`scripts/new-project.sh`) automates this.
 - **Single language preset.** Only Python/uv/FastAPI/VPS ships today. Multi-preset (Node/pnpm, Go, no-runtime) is roadmap per D-009 — not shipped.
-- **`PROJECT_STARTER.md` split is in progress.** As of v1.22.0 three companion files ship at repo root — [`TEMPLATE_INVENTORY.md`](TEMPLATE_INVENTORY.md) (was §3+§4), [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) (was §6+§7+§13), [`HARNESS_QUIRKS.md`](HARNESS_QUIRKS.md) (was §12+§14). Still to come: `WORKFLOW.md` (workflow + conventions, v1.22.1) and `BOOTSTRAP.md` (zero-to-first-commit, v1.22.2). PROJECT_STARTER.md remains the entry point + canonical authoring source until then.
+- **`PROJECT_STARTER.md` split is in progress.** Four of five companion files ship at repo root: [`TEMPLATE_INVENTORY.md`](TEMPLATE_INVENTORY.md) (was §3+§4, v1.22.0), [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) (was §6+§7+§13, v1.22.0), [`HARNESS_QUIRKS.md`](HARNESS_QUIRKS.md) (was §12+§14, v1.22.0), and [`WORKFLOW.md`](WORKFLOW.md) (was §2+§9+§10+§11, v1.25.0 — now canonical for the gate + workflow rules per B-021). Still to come: `BOOTSTRAP.md` (zero-to-first-commit, v1.26.0). PROJECT_STARTER.md is now ~435 lines and shrinks to a thin index in v1.26.0.
 - **Drift detection is mostly mechanical now.** Three linters guard the canonical docs: rule-consistency (B-022), doc-reference (B-023), and placeholder (B-024). All three run on every push/PR via `template-self-test.yml`. The smoke test (B-014) covers runtime drift. Remaining manual-audit territory: the "explicit example" / "prescriptive recommendation" sub-categories of B-016 that no machine check covers cleanly.
 - **Windows requires WSL.** The shipped `src/<package_name>/` directory has angle-bracket characters that aren't valid Windows filenames; bash scripts everywhere assume POSIX shell. Per D-009 the target deployment is Linux/VPS — Windows isn't a first-class target.
 
@@ -48,7 +48,8 @@ What's missing or manual today vs. the polished end state. For the active roadma
 
 | Topic | Doc |
 |---|---|
-| **Start here** — bootstrap checklist, workflow, conventions, decisions | [`PROJECT_STARTER.md`](PROJECT_STARTER.md) |
+| **Start here** — bootstrap checklist, decisions, audit trail | [`PROJECT_STARTER.md`](PROJECT_STARTER.md) |
+| Workflow + gate + propose-and-confirm contract + conventions + PR review rubric | [`WORKFLOW.md`](WORKFLOW.md) |
 | File layout + `templates/` reference | [`TEMPLATE_INVENTORY.md`](TEMPLATE_INVENTORY.md) |
 | VPS deploy baseline + CI/CD + credential handling | [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) |
 | Claude Code harness gotchas + `bootstrap.sh` design | [`HARNESS_QUIRKS.md`](HARNESS_QUIRKS.md) |
