@@ -6,6 +6,26 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.39.0 — 2026-05-20
+
+Mirrors `PROJECT_STARTER.md` template v1.39.0. **Negative handlers live in the loaded C4 region, not stranded in spec blocks (B-041 + D-024).** Seventh feature on `improvements-4`. Minor bump per WORKFLOW.md (new spec block + C4 region edit).
+
+### What shipped
+
+Consolidates three proposal-time negative handlers that existed in spec blocks but were absent from the C4 `proposal-format` region Claude loads each session — folded byte-exact into the region across WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md (synced + B-022-enforced):
+
+1. **Marker placement is exclusive (B-037 negative scope).** `✏️`/`👀` markers appear ONLY at the start of numbered options — never on status lines, section headers, the invitation line, single-suggestion proposals, or running prose.
+2. **Conservative classification default (B-028).** When in doubt classifying an option, default to `✏️ [change]` (the gated side).
+3. **Bare-`N`-against-`[change]` re-prompt (B-028 failure-mode handler).** A bare digit never executes a state change — re-prompt for `N gogogo!`. (The inverse of the bare-`gogogo!` handler, which was already a loaded region.)
+
+### Why
+
+Two shipped failures this session shared one root cause: the `proposal-format` region taught Claude what to *do* (positive shape) but stranded what to *refuse* (negative handlers) in unloaded spec blocks. B-040 fixed one orphan (imperatives); an audit prompted by the user ("we need to fix your rules so this does not happen") found three total — including the emoji-on-a-status-line slip that B-037's own failure-mode note had *predicted*. B-041 fixes the pattern, not just the instances, and freezes the standing invariant: any "never here / re-prompt on misuse / default conservatively" clause belongs in the loaded C4 region. No CI can validate chat-shaped proposals (they aren't tracked files); loaded-region presence IS the enforcement, so relocation is the fix.
+
+### What stayed
+
+- **B-037 / B-028 spec blocks** remain the canonical rationale/audit home; the handlers are now *also* in the loaded region (deliberate B-021-style redundancy). No script/manifest/linter changes. All 5 linters green.
+
 ## v1.38.0 — 2026-05-20
 
 Mirrors `PROJECT_STARTER.md` template v1.38.0. **Gate hardening: natural-language imperatives do not discharge the gate (B-040 + D-023).** Sixth feature on `improvements-4`. Minor bump per WORKFLOW.md (new spec block + C4 region edit).
