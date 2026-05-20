@@ -1,8 +1,8 @@
-# ONBOARDING_PROMPT — phoenixprojecttemplate
+# ONBOARDING_PROMPT — phoenixtemplate
 
-You are guiding a new user through bootstrapping a phoenixprojecttemplate project. Follow these steps in order. Use the propose-and-confirm gate per the kit's [`templates/CLAUDE.md`](templates/CLAUDE.md) (the user authorizes state-mutating actions with `gogogo!`; numbered options carry `✏️ [change]` or `👀 [info]` markers per B-037; null-action options like "stop here" are forbidden per B-038).
+You are guiding a new user through bootstrapping a phoenixtemplate project. Follow these steps in order. Use the propose-and-confirm gate per the kit's [`templates/CLAUDE.md`](templates/CLAUDE.md) (the user authorizes state-mutating actions with `gogogo!`; numbered options carry `✏️ [change]` or `👀 [info]` markers per B-037; null-action options like "stop here" are forbidden per B-038).
 
-This document is the structured guide Claude follows when a user invokes the bootstrap flow (typically by pasting the canonical prompt from [phoenixprojecttemplate.com](https://phoenixprojecttemplate.com) into Claude Code). Frozen contract: **B-039** in [`docs/spec.md`](docs/spec.md). Deviations should be proposed as B-NNN spec changes, not casual edits.
+This document is the structured guide Claude follows when a user invokes the bootstrap flow (typically by pasting the canonical prompt from [phoenixtemplate.com](https://phoenixtemplate.com) into Claude Code). Frozen contract: **B-039** in [`docs/spec.md`](docs/spec.md). Deviations should be proposed as B-NNN spec changes, not casual edits.
 
 ---
 
@@ -23,7 +23,7 @@ In one assistant turn, do all three:
 1. **Greet briefly** (one sentence, friendly).
 2. **Introduce in one paragraph:**
 
-   > "You're bootstrapping a project from the phoenixprojecttemplate kit. This gives you a working Python/uv/FastAPI/VPS starter plus a propose-and-confirm gate (`gogogo!`) that keeps me from taking any state-mutating action without your explicit authorization. Setup takes about 5 minutes — I'll ask 6 quick questions, then scaffold everything."
+   > "You're bootstrapping a project from the phoenixtemplate kit. This gives you a working Python/uv/FastAPI/VPS starter plus a propose-and-confirm gate (`gogogo!`) that keeps me from taking any state-mutating action without your explicit authorization. Setup takes about 5 minutes — I'll ask 6 quick questions, then scaffold everything."
 
 3. **Ask the first question** as a `👀 [info]` proposal:
 
@@ -82,10 +82,10 @@ Files to create in current directory:
   • .env.example, .gitignore, .python-version, pyproject.toml
   • .github/workflows/ci.yml
   • .claude/settings.json + skills/spec-block/
-  • CHANGELOG.md initial v0.1.0 entry mentioning "bootstrapped from phoenixprojecttemplate vX.Y.Z"
+  • CHANGELOG.md initial v0.1.0 entry mentioning "bootstrapped from phoenixtemplate vX.Y.Z"
 
 Then:
-  • git init && git add . && git commit -m "feat: initial commit from phoenixprojecttemplate vX.Y.Z"
+  • git init && git add . && git commit -m "feat: initial commit from phoenixtemplate vX.Y.Z"
 
 [if Q5 = create-now] Then (separate ✏️ [change] proposal after this lands):
   • gh repo create <PROJECT_SLUG> --public (or --private; ask)
@@ -98,7 +98,7 @@ Type `gogogo!` to proceed.
 After `gogogo!`:
 
 - Reuse the substitution logic from [`scripts/render-example.sh`](scripts/render-example.sh) (one `mv` for `src/<package_name>` rename; one `sed` across `*.py` / `*.toml` / `Makefile` / `*.yml` / `*.sh` / `*.example` / `*.md` / `LICENSE`).
-- Run `git init && git add . && git commit -m "feat: initial commit from phoenixprojecttemplate vX.Y.Z"`.
+- Run `git init && git add . && git commit -m "feat: initial commit from phoenixtemplate vX.Y.Z"`.
 - If Q5 = create-now: detect `gh auth status`; if not authed, propose `gh auth login` as a separate `✏️ [change]`; once authed, propose the `gh repo create` + branch-protection + push sequence as a separate `✏️ [change]`. Splitting these means the user can pause after local bootstrap if `gh auth login` interactivity is awkward.
 
 ---

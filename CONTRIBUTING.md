@@ -1,4 +1,4 @@
-# Contributing to phoenixprojecttemplate
+# Contributing to phoenixtemplate
 
 This file is for working on **this meta repo** — the template kit itself. For working on a consumer project bootstrapped from this template, see `templates/CONTRIBUTING.md` (the per-project operational doc that ships with each bootstrap).
 
