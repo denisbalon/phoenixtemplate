@@ -85,7 +85,7 @@ Files to create in current directory:
   • CHANGELOG.md initial v0.1.0 entry mentioning "bootstrapped from phoenixtemplate vX.Y.Z"
 
 Then:
-  • git init && git add . && git commit -m "feat: initial commit from phoenixtemplate vX.Y.Z"
+  • git init -b main && uv lock && git add . && git commit -m "feat: initial commit from phoenixtemplate vX.Y.Z"
 
 [if Q5 = create-now] Then (separate ✏️ [change] proposal after this lands):
   • gh repo create <PROJECT_SLUG> --public (or --private; ask)
@@ -98,7 +98,7 @@ Type `gogogo!` to proceed.
 After `gogogo!`:
 
 - Reuse the substitution logic from [`scripts/render-example.sh`](scripts/render-example.sh) (one `mv` for `src/<package_name>` rename; one `sed` across `*.py` / `*.toml` / `Makefile` / `*.yml` / `*.sh` / `*.example` / `*.md` / `LICENSE`).
-- Run `git init && git add . && git commit -m "feat: initial commit from phoenixtemplate vX.Y.Z"`.
+- Run `git init -b main && uv lock && git add . && git commit -m "feat: initial commit from phoenixtemplate vX.Y.Z"` (`-b main` so the branch matches the later `git push -u origin main` and branch protection regardless of the host's `init.defaultBranch`; `uv lock` after the substitution so the committed lockfile satisfies CI's `uv sync --frozen`).
 - If Q5 = create-now: detect `gh auth status`; if not authed, propose `gh auth login` as a separate `✏️ [change]`; once authed, propose the `gh repo create` + branch-protection + push sequence as a separate `✏️ [change]`. Splitting these means the user can pause after local bootstrap if `gh auth login` interactivity is awkward.
 
 ---
