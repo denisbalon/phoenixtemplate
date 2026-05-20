@@ -6,6 +6,19 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.39.1 — 2026-05-20
+
+Mirrors `PROJECT_STARTER.md` template v1.39.1. **Fixes two Codex review findings on the B-039 bootstrap flow (`ONBOARDING_PROMPT.md`).** Patch bump per WORKFLOW.md (bug fix — no new behavior).
+
+### What shipped
+
+`ONBOARDING_PROMPT.md` Step 3 (lines 88 + 101) changed `git init && git add . && git commit ...` → `git init -b main && uv lock && git add . && git commit ...`:
+
+- **Block (Codex):** the flow never ran `uv lock`, but shipped CI uses `uv sync --frozen` and `BOOTSTRAP.md:85-92` makes the lockfile mandatory — a project bootstrapped exactly per this flow would fail its first push/PR. `uv lock` now runs after the `mv`/`sed` substitution so the committed lockfile reflects the renamed package.
+- **Strong (Codex):** bare `git init` left the user on `master` on hosts where `init.defaultBranch` is unchanged, breaking the later `git push -u origin main` + branch protection. `git init -b main` aligns with the `BOOTSTRAP.md:45-51` invariant.
+
+Spec: B-039 Step 3 bullet updated to match the corrected flow (`git init -b main` + `uv lock`). No code/script/manifest/linter changes. All 5 linters green; CI smoke test green.
+
 ## v1.39.0 — 2026-05-20
 
 Mirrors `PROJECT_STARTER.md` template v1.39.0. **Negative handlers live in the loaded C4 region, not stranded in spec blocks (B-041 + D-024).** Seventh feature on `improvements-4`. Minor bump per WORKFLOW.md (new spec block + C4 region edit).
