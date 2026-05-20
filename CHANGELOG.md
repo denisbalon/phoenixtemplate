@@ -6,6 +6,24 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.38.0 — 2026-05-20
+
+Mirrors `PROJECT_STARTER.md` template v1.38.0. **Gate hardening: natural-language imperatives do not discharge the gate (B-040 + D-023).** Sixth feature on `improvements-4`. Minor bump per WORKFLOW.md (new spec block + C4 region edit).
+
+### What shipped
+
+- **B-040 (frozen)** — a direct natural-language instruction to perform a `[change]` action ("create the PR", "commit this", "push it", "merge it", "delete X") does NOT by itself satisfy B-026's gate conditions (a)/(b); it's a request to be restated as a concrete proposal and confirmed with `gogogo!`. The token is the only authorization channel for state mutation; **confidence in the interpretation never substitutes for it** — a correct guess is indistinguishable from a lucky one until after the irreversible action.
+- **C4 `gate-clause` region edit** — the clause is folded byte-exact into the canonical region across WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md, so it's synced and B-022-enforced like the rest of the gate.
+- **D-023 added** — records the Chose/Considered/Why, including that the rule already existed in weaker, orphaned form.
+
+### Why
+
+Shipped failure earlier this session: user said "create a PR for this branch and I will do review" (bare imperative, no `gogogo!`); Claude ran `gh pr create` directly, publishing self-authored title/body prose to GitHub without surfacing it for confirmation first. The read was correct — which is the trap. The gate is an anti-misread mechanism; treating natural language as the token reopens the channel the token was built to close. The rule had existed as a single un-enforced one-liner in templates/CLAUDE.md (outside every C4 region, absent from the other two tiers) — an orphan, which is why it didn't hold. B-040 promotes it into the enforced canonical region.
+
+### What stayed
+
+- **templates/CLAUDE.md line-39 one-liner** (`Imperatives without gogogo! do not authorize`) kept as session-facing reinforcement (Option A) — matches B-021's redundancy pattern for the bare-`gogogo!` and mid-execution-deviation rules. No script/manifest/linter changes. All 5 linters green.
+
 ## v1.37.0 — 2026-05-20
 
 Mirrors `PROJECT_STARTER.md` template v1.37.0. **Project rename: `phoenixprojecttemplate` → `phoenixtemplate` (D-022), Phase A (in-repo text).** Fifth feature on `improvements-4`. Minor bump per WORKFLOW.md (notable identity change).
