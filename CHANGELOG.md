@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.40.0 — 2026-05-20
+
+**Kit made public + onboarding validated end-to-end; spec housekeeping (D-025).** Decision/record + doc hygiene; no behavior-rule change.
+
+### What shipped
+
+- **Kit repo flipped to public.** Required for the B-039/D-021 onboarding to work: the canonical bootstrap prompt and the website's "For Claude" block both fetch `raw.githubusercontent.com/denisbalon/phoenixtemplate/main/ONBOARDING_PROMPT.md`, which 404s anonymously while the repo is private. Private was an oversight for an adoption-oriented kit.
+- **Onboarding validated end-to-end.** First live test of `Start a project with phoenixtemplate.com` surfaced two infra prerequisites — (1) kit must be public; (2) the apex domain must carry no dead `AAAA`/IPv6 record (an unserved IPv6 made `WebFetch` fail `ECONNREFUSED` even though IPv4 served fine). Both fixed; the full fetch → follow-to-raw-prompt → Steps 1–4 chain now works.
+- **D-025 added** recording the above; the website itself ships from the separate `denisbalon/phoenixtemplate.com` repo on cPanel over FTPS (see that repo's D-001), superseding the GitHub-Pages assumption in D-021's prose.
+- **B-039 Test field** updated: live-flow marked validated, names the two prerequisites.
+- **Spec housekeeping:** moved two already-resolved items out of "Open project-level decisions" — the PROJECT_STARTER.md split (resolved v1.22–v1.26, B-025) and its cloned-project role (settled v1.27.1, D-012) — and checked the fully-resolved "De-personalize the template" item.
+
+No B-block, no code/script/linter changes. All 5 linters green.
+
 ## v1.39.1 — 2026-05-20
 
 Mirrors `PROJECT_STARTER.md` template v1.39.1. **Fixes two Codex review findings on the B-039 bootstrap flow (`ONBOARDING_PROMPT.md`).** Patch bump per WORKFLOW.md (bug fix — no new behavior).
