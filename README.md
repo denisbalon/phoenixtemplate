@@ -1,4 +1,4 @@
-# phoenixprojecttemplate
+# phoenixtemplate
 
 A reusable bootstrap kit for new software projects worked on with **Claude Code**. Each new project starts from a known-good baseline instead of re-deriving workflow, structure, and conventions every time.
 
@@ -17,9 +17,9 @@ Plus meta tooling: `scripts/export-starter.sh` (portable kit archive), `scripts/
 
 ## Quickstart
 
-**Brand new to the kit?** The fastest path is via [phoenixprojecttemplate.com](https://phoenixprojecttemplate.com) — paste one prompt into Claude Code, answer six questions, get a working project. Or paste this directly into Claude Code in an empty directory:
+**Brand new to the kit?** The fastest path is via [phoenixtemplate.com](https://phoenixtemplate.com) — paste one prompt into Claude Code, answer six questions, get a working project. Or paste this directly into Claude Code in an empty directory:
 
-> Read https://raw.githubusercontent.com/denisbalon/phoenixprojecttemplate/main/ONBOARDING_PROMPT.md and follow it exactly to bootstrap a new project for me here. If you can't fetch URLs, ask me to enable WebFetch via `/permissions` first.
+> Read https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/ONBOARDING_PROMPT.md and follow it exactly to bootstrap a new project for me here. If you can't fetch URLs, ask me to enable WebFetch via `/permissions` first.
 
 Claude reads [`ONBOARDING_PROMPT.md`](ONBOARDING_PROMPT.md), asks six setup questions, scaffolds the project, and optionally creates the GitHub repo. ~5 minutes end-to-end. **WebFetch not enabled?** Type `/permissions` in Claude Code, add `WebFetch` to the allow list, then try the paste again.
 

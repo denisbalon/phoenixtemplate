@@ -6,9 +6,44 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.37.0 — 2026-05-20
+
+Mirrors `PROJECT_STARTER.md` template v1.37.0. **Project rename: `phoenixprojecttemplate` → `phoenixtemplate` (D-022), Phase A (in-repo text).** Fifth feature on `improvements-4`. Minor bump per WORKFLOW.md (notable identity change).
+
+### What shipped
+
+Global text rename across the 8 files that referenced the old name — 50 occurrences total (25 bare `phoenixprojecttemplate` + 25 `phoenixprojecttemplate.com`), all converted via one `sed s/phoenixprojecttemplate/phoenixtemplate/g`:
+
+- `CHANGELOG.md` (7), `docs/spec.md` (14), `ONBOARDING_PROMPT.md` (7), `README.md` (3), `presets/PRESET_ARCHITECTURE.md` (2), `PROJECT_STARTER.md` (2), `MIGRATION.md` (1), `CONTRIBUTING.md` (1).
+- Includes the `github.com/denisbalon/phoenixprojecttemplate` + `raw.githubusercontent.com/.../phoenixprojecttemplate/main/...` bootstrap-prompt URLs (now point at `…/phoenixtemplate/...`).
+- Historical CHANGELOG + spec entries rewritten too (per D-022's "rewrite all" decision — consistency over audit-purity; git history + merged-PR titles preserve the old name as provenance).
+
+### What stayed
+
+- **`phoenixtgstat_bot`** — the original source-project name in audit trail (4 occurrences) — untouched. Different string; the rename sed didn't match it.
+- **`templates/`** — uses placeholders, not the literal name; zero occurrences, untouched.
+- **No code/script/linter changes** — pure text rename in docs.
+
+### Spec
+
+- **D-022 added** — rename decision (Chose / Considered / Why; decision-only, no B-block — follows the D-001 `code!`→`gogogo!` precedent). Documents the three-phase rollout: Phase A (this commit, in-repo text); Phase B (GitHub repo rename + git remote); Phase C (local dir + auto-memory dir rename at session boundary).
+
+### Verified
+
+- `grep -rc phoenixprojecttemplate` → 0 across the repo.
+- `phoenixtgstat_bot` → 4 (provenance intact).
+- New mentions: 25 `phoenixtemplate` + 25 `phoenixtemplate.com`.
+- All 5 linters green.
+
+### Still to do (separately authorized)
+
+- **Phase B:** `gh repo rename phoenixtemplate` (GitHub auto-redirects old URLs) + `git remote set-url origin …/phoenixtemplate.git`. Shared-infrastructure action — needs explicit authorization.
+- **Phase C:** rename `~/github/phoenixprojecttemplate/` → `~/github/phoenixtemplate/` + the auto-memory project dir, at session boundary (invalidates cwd mid-session).
+- Website rollout then uses `phoenixtemplate.com` from the start (no rename needed — repo + domain not created yet).
+
 ## v1.36.0 — 2026-05-19
 
-Mirrors `PROJECT_STARTER.md` template v1.36.0. **Fourth feature on `improvements-4` — onboarding bootstrap prompt for newbies (B-039 + D-021).** First commit of the website-rollout sequence; ships the kit-side artifact that the future `phoenixprojecttemplate.com` landing page will direct users to. Minor bump per WORKFLOW.md (new artifact + new spec block).
+Mirrors `PROJECT_STARTER.md` template v1.36.0. **Fourth feature on `improvements-4` — onboarding bootstrap prompt for newbies (B-039 + D-021).** First commit of the website-rollout sequence; ships the kit-side artifact that the future `phoenixtemplate.com` landing page will direct users to. Minor bump per WORKFLOW.md (new artifact + new spec block).
 
 ### Motivation
 
@@ -24,14 +59,14 @@ Target audience for the kit is "Claude vibe-code developers, many young and not 
 - **Step 3 — Propose the concrete bootstrap as `✏️ [change]`.** Single proposal with the substitution map + every file (sourced from `templates/manifest.yaml`) + `git init` + first commit. After `gogogo!`: reuse `scripts/render-example.sh` substitution logic. If Q5 = create-now: `gh repo create` flow surfaced as separate follow-up `✏️ [change]`.
 - **Step 4 — Hand off to normal session conduct.** Summary + suggested first-feature task + one final concrete proposal (no null-action options per B-038).
 
-**`README.md` Quickstart section refactored** — now opens with the bootstrap path (paste-into-Claude-Code prompt + WebFetch troubleshooting), references `phoenixprojecttemplate.com` (not yet live; will land in next step of the website-rollout sequence). Existing "Already have a project?" pointer at MIGRATION.md retained below.
+**`README.md` Quickstart section refactored** — now opens with the bootstrap path (paste-into-Claude-Code prompt + WebFetch troubleshooting), references `phoenixtemplate.com` (not yet live; will land in next step of the website-rollout sequence). Existing "Already have a project?" pointer at MIGRATION.md retained below.
 
 **`templates/manifest.yaml`** gets the ONBOARDING_PROMPT.md entry: `tier: meta-only`, `placeholders: []`, `exported_by_starter: false`. Total: 45 entries (was 44).
 
 ### Spec
 
 - **B-039 added** (frozen) — four-step structure, Q1–Q6 question shape, WebFetch fallback at Step 0, substitution-logic-reuse from render-example.sh, manifest-driven file list, test recipe.
-- **D-021 added** — Considered/Why covering: mechanism (WebFetch+landing-page hybrid chosen over raw-URL / curl-pipe-bash / MCP-server alternatives); website-repo location (separate `denisbalon/phoenixprojecttemplate.com` chosen over kit-`web/` subdirectory — strict kit governance is overkill for a static page); ONBOARDING_PROMPT.md export status (`meta-only`/`exported_by_starter: false` chosen over `common`/exported — file is bootstrap-time-only, exporting would litter every new project's root with a "what's this?" artifact); question count (6 chosen over 3 / 10+); WebFetch fallback shape (opportunistic non-blocking chosen over hard-blocking-on-enablement). Failure-mode analysis: newbie WebFetch confusion, mid-flow abandonment, substitution-map sync with render-example.sh, website downtime, branch-vs-main URL pinning, manifest drift (self-healing — Step 3 reads manifest as source-of-truth).
+- **D-021 added** — Considered/Why covering: mechanism (WebFetch+landing-page hybrid chosen over raw-URL / curl-pipe-bash / MCP-server alternatives); website-repo location (separate `denisbalon/phoenixtemplate.com` chosen over kit-`web/` subdirectory — strict kit governance is overkill for a static page); ONBOARDING_PROMPT.md export status (`meta-only`/`exported_by_starter: false` chosen over `common`/exported — file is bootstrap-time-only, exporting would litter every new project's root with a "what's this?" artifact); question count (6 chosen over 3 / 10+); WebFetch fallback shape (opportunistic non-blocking chosen over hard-blocking-on-enablement). Failure-mode analysis: newbie WebFetch confusion, mid-flow abandonment, substitution-map sync with render-example.sh, website downtime, branch-vs-main URL pinning, manifest drift (self-healing — Step 3 reads manifest as source-of-truth).
 
 ### Wiring
 
@@ -41,7 +76,7 @@ Target audience for the kit is "Claude vibe-code developers, many young and not 
 
 ### Kit cleanliness
 
-Per the user's explicit caution ("be sure that current template repo does not have signs of website etc."): this commit adds **zero website source code** to the kit. No HTML, no CSS, no `web/` directory, no landing-page assets. Only mention of `phoenixprojecttemplate.com` is as a URL pointer in README + ONBOARDING_PROMPT + D-021 prose — references to an external resource, not embedded site. The actual website lives in the separate repo `denisbalon/phoenixprojecttemplate.com` (next commit / next step of rollout).
+Per the user's explicit caution ("be sure that current template repo does not have signs of website etc."): this commit adds **zero website source code** to the kit. No HTML, no CSS, no `web/` directory, no landing-page assets. Only mention of `phoenixtemplate.com` is as a URL pointer in README + ONBOARDING_PROMPT + D-021 prose — references to an external resource, not embedded site. The actual website lives in the separate repo `denisbalon/phoenixtemplate.com` (next commit / next step of rollout).
 
 ### What didn't change
 
@@ -55,11 +90,11 @@ Per the user's explicit caution ("be sure that current template repo does not ha
 - All 5 linters green (C4 + C2 doc-ref + C3 placeholders + C5 spec-consistency + manifest).
 - `templates/manifest.yaml` now 45 entries; no orphans, no stale paths, placeholders match content.
 - `ONBOARDING_PROMPT.md` internal links resolve (`templates/CLAUDE.md`, `templates/manifest.yaml`, `scripts/render-example.sh`, `docs/spec.md`).
-- `README.md` Quickstart references `phoenixprojecttemplate.com` (not yet live; intentional — site comes in the next step).
+- `README.md` Quickstart references `phoenixtemplate.com` (not yet live; intentional — site comes in the next step).
 
 ### Next
 
-- **User-side actions for website rollout:** `gh repo create denisbalon/phoenixprojecttemplate.com --public` + clone to sibling directory `~/github/phoenixprojecttemplate.com/` + I drop the 5 site files (index.html / style.css / CNAME / README.md / LICENSE) via Edit/Write + commit + push + enable Pages + buy domain + DNS config.
+- **User-side actions for website rollout:** `gh repo create denisbalon/phoenixtemplate.com --public` + clone to sibling directory `~/github/phoenixtemplate.com/` + I drop the 5 site files (index.html / style.css / CNAME / README.md / LICENSE) via Edit/Write + commit + push + enable Pages + buy domain + DNS config.
 - **PR open + merge for `improvements-4`** after website rollout completes (bundles B-036 + B-037 + B-038 + B-039 into one PR).
 
 ## v1.35.0 — 2026-05-19
@@ -1699,7 +1734,7 @@ Manual until the C4 consistency linter ships (Codex Phase 3 #3 in current plan).
 
 ### Plus: thin root CONTRIBUTING.md for the meta repo
 
-Until now we worked on `phoenixprojecttemplate` (the meta repo) by reading `templates/CONTRIBUTING.md` mentally. Added a minimal root `CONTRIBUTING.md` (~30 lines) that points at `PROJECT_STARTER.md §2` for the canonical workflow + names meta-specific overrides (deploy is no-op per B-005; version markers are just `VERSION`; meta repo's CI is `.github/workflows/template-self-test.yml`, not `templates/.github/workflows/ci.yml`). The meta repo now follows its own published workflow honestly.
+Until now we worked on `phoenixtemplate` (the meta repo) by reading `templates/CONTRIBUTING.md` mentally. Added a minimal root `CONTRIBUTING.md` (~30 lines) that points at `PROJECT_STARTER.md §2` for the canonical workflow + names meta-specific overrides (deploy is no-op per B-005; version markers are just `VERSION`; meta repo's CI is `.github/workflows/template-self-test.yml`, not `templates/.github/workflows/ci.yml`). The meta repo now follows its own published workflow honestly.
 
 ### Spec
 

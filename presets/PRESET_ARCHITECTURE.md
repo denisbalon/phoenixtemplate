@@ -1,6 +1,6 @@
 # Preset Architecture
 
-The design for how `phoenixprojecttemplate` will support multiple language presets — Python/uv/FastAPI/VPS today (per D-009); Node/pnpm, Go, no-runtime as roadmap. **Design only as of v1.30.0; no `_common/` or `presets/python-uv/` directory implementation yet.** Adding actual presets is separate work gated by this architecture (B-030 + D-015 in `docs/spec.md`).
+The design for how `phoenixtemplate` will support multiple language presets — Python/uv/FastAPI/VPS today (per D-009); Node/pnpm, Go, no-runtime as roadmap. **Design only as of v1.30.0; no `_common/` or `presets/python-uv/` directory implementation yet.** Adding actual presets is separate work gated by this architecture (B-030 + D-015 in `docs/spec.md`).
 
 ## Goal
 
@@ -59,7 +59,7 @@ Constraints (frozen by B-030):
 ## Alternatives considered
 
 - **A: Two-layer composed model** (`_common/` + `presets/<preset>/`) — chosen. See "Why" below.
-- **B: Branched template repos** — each preset is a separate repo (e.g., `phoenixprojecttemplate-python`, `phoenixprojecttemplate-node`). Maximum isolation but maximum drift — each repo re-derives workflow / gate / spec-format content. Loses the AI-safety benefit of B-021's three-tier model (each branch would need its own C4 regions with no cross-branch sync).
+- **B: Branched template repos** — each preset is a separate repo (e.g., `phoenixtemplate-python`, `phoenixtemplate-node`). Maximum isolation but maximum drift — each repo re-derives workflow / gate / spec-format content. Loses the AI-safety benefit of B-021's three-tier model (each branch would need its own C4 regions with no cross-branch sync).
 - **C: Single tree with stack-conditional rendering** — keep one `templates/` tree, use Jinja-style placeholders like `{% if stack == 'python' %}pyproject.toml{% endif %}` for stack-specific blocks. Lower file count but harder to reason about; "view the Python preset" becomes a filtering operation; templates mixing 3+ conditional stacks notoriously hard to maintain.
 - **D: Inverted naming — `_python-uv/` + `<core>/`.** Same architecture as A, naming swapped. Rejected on user-facing semantics: `presets/<name>/` matches `cookiecutter` / `copier` conventions and reads more naturally for the variable part.
 

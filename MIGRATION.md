@@ -1,6 +1,6 @@
 # Migration
 
-Adopting `phoenixprojecttemplate` into an **existing** project — selectively or incrementally — rather than bootstrapping a greenfield project from scratch. Read this when you already have a repo and want to pull in specific pieces of the kit without rewriting everything you have.
+Adopting `phoenixtemplate` into an **existing** project — selectively or incrementally — rather than bootstrapping a greenfield project from scratch. Read this when you already have a repo and want to pull in specific pieces of the kit without rewriting everything you have.
 
 **Spec:** B-034 in [`docs/spec.md`](docs/spec.md) — the kit is consumable as a toolkit, not only as a fresh-start template; this doc is the canonical guide for that path.
 
