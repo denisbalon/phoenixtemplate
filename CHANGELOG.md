@@ -6,6 +6,32 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.40.1 — 2026-05-25
+
+**Reviewer rubric: `gh`-CLI invocation discipline added to the template (`templates/docs/pr_review_instructions.md`), generalized per B-019.** Patch bump per WORKFLOW.md (additive operational rules to an existing rubric — no behavior block, no script/linter changes).
+
+### What shipped
+
+New `### Invoking \`gh\` directly` subsection inserted right after the output-contract numbered list, with five operational rules adapted from the phoenixcnc project's evolution of the rubric and rewritten in vendor-neutral terms per B-019:
+
+1. **Direct command shapes.** Prefer bare `gh api ...` / `gh pr ...` over `bash -lc`, helper scripts, pipes, redirections, command substitution — wrappers obscure the actual command, complicate retry and debugging, and may interfere with environment-specific command-approval or auditing mechanisms.
+2. **Retry transient failures once.** A `gh` call failing with `error connecting to api.github.com` retries once before being treated as a persistent network/credential/environment failure.
+3. **Batch related writes after a confirmed failure.** If the retry still fails, batch the remaining related writes so any required human/operator intervention happens once rather than per-command.
+4. **Read-back verification of state-mutating writes.** After `gh api` review/comment posts, `gh pr create`, `gh pr merge`, edits — query GitHub and confirm the expected result is visible. Local command success ≠ landed.
+5. **Verification reads are separate and direct.** Use distinct `gh pr view ...` / `gh api ...` reads — no wrappers — so the output proving the write landed is quotable on its own.
+
+The output-contract closing sentence was narrowed to `(items 1–4)` so it no longer implicitly extends to the CLI-only subsection (was previously self-contradictory: "applies to every reviewer" sat directly above a shell-CLI-scoped subsection).
+
+### Why subsection (not items 5–9 in the main list)
+
+Items 1–4 of the output contract are reviewer-agnostic — they apply to a human reading the diff in the web UI, to `/ultrareview`, to any reviewer with a native PR-comment integration. The CLI invocation rules are scoped to shell-driven `gh` usage. Folding them into the same numbered list muddied the rubric's reviewer-agnostic framing the doc opens with. Scoping them under `### Invoking \`gh\` directly` with an explicit "When the reviewer is running `gh` from a shell" preamble keeps the headline output contract short and preserves universal applicability.
+
+### Why generic (B-019)
+
+The phoenixcnc source rules were harness-specific (Codex CLI vocabulary: *already-approved* `gh` *prefixes*, *approval prompts*, *sandbox/network restriction*, *escalate*). B-019 requires active template docs to stay vendor-neutral by default. The rules were rewritten in neutral terms — wrappers "obscure the actual command and may interfere with environment-specific command-approval or auditing mechanisms" rather than "bypass approved prefixes"; transient retry framed against any persistent failure cause rather than "sandbox/network restriction"; "escalate" replaced by "batch so any required human/operator intervention happens once". The underlying retry-once / batch-once / verify-on-GitHub principles are preserved unchanged. Surfaced during the first reviewer pass against the new rubric — the rubric exercised its own contract on its own first PR (PR #7 Block).
+
+The `docs/pr_review_instructions.md` pointer file is unchanged (it just resolves to the template file). No spec block, no `PROJECT_STARTER.md` mirror needed (template-doc-only).
+
 ## v1.40.0 — 2026-05-20
 
 **Kit made public + onboarding validated end-to-end; spec housekeeping (D-025).** Decision/record + doc hygiene; no behavior-rule change.

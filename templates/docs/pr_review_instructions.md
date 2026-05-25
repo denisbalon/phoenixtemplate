@@ -16,7 +16,17 @@ Review happens **out-of-band**: Claude opens the PR after a `gogogo!`-authorized
 3. **Plus one overall summary review at the end** with findings rolled up by severity (Block / Strong / Nit per the rubric below).
 4. **Never produce instead of comments:** local files (`review.md`, `findings.txt`, etc. — don't even draft them locally), chat-only summaries (ephemeral), Slack/email/PR-description edits (the description belongs to the author).
 
-The rest of this document is the rubric for *what* to look for. The contract above is *where the output goes* — non-negotiable, applies to every reviewer (interactive CLI, slash-command, CI-driven, manual).
+### Invoking `gh` directly
+
+When the reviewer is running `gh` from a shell (rather than a native PR-comment integration):
+
+1. **Prefer direct command shapes.** Run `gh api ...` / `gh pr ...` directly instead of wrapping GitHub operations in `bash -lc`, shell helper scripts, pipes, redirections, or command substitution. Wrappers obscure the actual command, complicate retry and debugging, and may interfere with environment-specific command-approval or auditing mechanisms that match against literal command prefixes.
+2. **Retry transient failures once before escalating.** If a task-critical `gh` command fails with a transient-looking connection error (`error connecting to api.github.com` or similar), retry once in the current environment before concluding the failure is persistent (network down, credentials expired, environment restrictions).
+3. **Batch related writes after a confirmed failure.** If the retry still fails and the task requires GitHub access, batch the remaining related `gh` writes so any required human/operator intervention (network fix, credential refresh, approval) happens once instead of per-command.
+4. **Verify state-mutating writes landed on GitHub.** After any state-mutating `gh` command (`gh api` review/comment posts, `gh pr create`, `gh pr merge`, issue/PR edits, or similar), query GitHub and confirm the expected result is actually visible. Do not claim success based only on local command output. If the expected state is not visible after a write, treat the operation as not completed and re-apply the retry / batch-and-intervene flow above.
+5. **Keep verification reads separate and direct.** Do follow-up verification with distinct `gh pr view ...` or `gh api ...` read commands rather than bundling write+verify logic inside shell wrappers. The reviewer should be able to point to the specific read-back output that proves the write landed on GitHub.
+
+The rest of this document is the rubric for *what* to look for. The output contract above (items 1–4) is *where the output goes* — non-negotiable, applies to every reviewer (interactive CLI, slash-command, CI-driven, manual).
 
 ## Block (must fix before merge)
 
