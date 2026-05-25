@@ -6,6 +6,26 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.40.1 — 2026-05-25
+
+**Reviewer rubric: `gh`-CLI invocation discipline added to the template (`templates/docs/pr_review_instructions.md`).** Patch bump per WORKFLOW.md (additive operational rules to an existing rubric — no behavior block, no script/linter changes).
+
+### What shipped
+
+New `### Invoking \`gh\` directly` subsection inserted right after the output-contract numbered list, with five operational rules ported verbatim from the phoenixcnc project's own evolution of the rubric:
+
+1. **Direct command shapes.** Prefer bare `gh api ...` / `gh pr ...` over `bash -lc`, helper scripts, pipes, redirections, command substitution — those bypass already-approved `gh` prefixes and trigger fresh approval prompts.
+2. **Retry transient failures once.** A `gh` call failing with `error connecting to api.github.com` retries in the current environment before being treated as a sandbox/network block.
+3. **Batched escalation after the retry.** If the retry still fails, escalate once for the remaining related `gh` operations rather than per-command.
+4. **Read-back verification of state-mutating writes.** After `gh api` review/comment posts, `gh pr create`, `gh pr merge`, edits — query GitHub and confirm the expected result is visible. Local command success ≠ landed.
+5. **Verification reads are separate and direct.** Use distinct `gh pr view ...` / `gh api ...` reads — no wrappers — so the output proving the write landed is quotable on its own.
+
+### Why subsection (not items 5–9 in the main list)
+
+Items 1–4 of the output contract are reviewer-agnostic — they apply to a human reading the diff in the web UI, to `/ultrareview`, to any reviewer with a native PR-comment integration. Items 5–9 from the source project are CLI-specific (approved `gh` prefixes, `gh` retry semantics, shell-wrapper avoidance). Folding them into the same numbered list muddies the rubric's reviewer-agnostic framing the doc opens with. Scoping them under `### Invoking \`gh\` directly` with an explicit "When the reviewer is running `gh` from a shell" preamble keeps the headline output contract short and preserves universal applicability.
+
+The `docs/pr_review_instructions.md` pointer file is unchanged (it just resolves to the template file). No spec block, no `PROJECT_STARTER.md` mirror needed (template-doc-only).
+
 ## v1.40.0 — 2026-05-20
 
 **Kit made public + onboarding validated end-to-end; spec housekeeping (D-025).** Decision/record + doc hygiene; no behavior-rule change.
