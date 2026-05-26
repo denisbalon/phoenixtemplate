@@ -4,11 +4,12 @@ This file is for working on **this meta repo** — the template kit itself. For 
 
 ## Workflow
 
-Read [`WORKFLOW.md`](WORKFLOW.md) — it's the canonical source for the workflow rules (the propose-and-confirm `gogogo!` gate, 5-step, version-bump, branching, PR/merge flow, review flow, conventions). This meta repo follows the same rules as any consumer project, with the meta-specific overrides below.
+Read [`WORKFLOW.md`](WORKFLOW.md) — it's the canonical source for the workflow rules (the propose-and-confirm `gogogo!` gate, on-branch 6-step, version-bump, branching, PR/merge flow, review flow, conventions). This meta repo follows the same rules as any consumer project, with the meta-specific overrides below.
 
 ## Meta-repo specifics (overrides vs. consumer projects)
 
-- **Deploy is a no-op** (per B-005 in `docs/spec.md`). The "deploy" step of the 5-step workflow is skipped here because this repo ships docs + templates, not a running service. The "release" is `main` being up to date.
+- **Deploy is a no-op** (per B-005 in `docs/spec.md`). The merge `gogogo!` is still atomic over three sub-steps (`gh pr merge --rebase --delete-branch` → `git pull --ff-only` → deploy) but the deploy sub-step is documented-as-no-op rather than skipped, because this repo ships docs + templates, not a running service. The "release" is `main` being up to date.
+- **Pre-push hook activation** — run `git config core.hooksPath .githooks` once per fresh clone of this meta-repo to enable the `.githooks/pre-push` block on direct pushes to `main`. (The kit has no top-level `Makefile`; consumer projects get a `make install-hooks` target via `templates/Makefile`.)
 - **Version markers:** just `VERSION` at the repo root. There's no `pyproject.toml` or `src/<package>/__init__.py` at meta level — those are template content shipped under `templates/`.
 - **CI:** the meta repo's CI is [`.github/workflows/template-self-test.yml`](.github/workflows/template-self-test.yml), which runs `scripts/smoke-test.sh` on every push/PR. Don't confuse with `templates/.github/workflows/ci.yml` — that's the CI workflow shipped to consumer projects.
 - **Review:** out-of-band per B-010 — same as consumer projects. User runs Codex (or any reviewer) in a separate terminal against the open PR + `docs/pr_review_instructions.md` (resolves to `templates/docs/pr_review_instructions.md` for this repo per the `docs/pr_review_instructions.md` pointer file).

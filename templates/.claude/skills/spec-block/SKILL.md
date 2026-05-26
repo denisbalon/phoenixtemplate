@@ -36,7 +36,7 @@ The format is fixed. Don't invent new fields per block — drift kills the navig
 4. **Insert** into `docs/spec.md`:
    - Under `## Frozen behavior` (or `## Blocks` if that's the project's heading)
    - Preserve `B-NNN` ordering — append at the end of the section
-5. **Stop.** Do not commit. Do not bump VERSION. The Block insert is one piece of step 1 of the next `gogogo!` 5-step workflow; the user will trigger the full sequence when ready.
+5. **Stop.** Do not commit. Do not bump VERSION. The Block insert is one piece of step 2 of the next `gogogo!` on-branch 6-step workflow; the user will trigger the full sequence when ready.
 
 ## When NOT to use this skill
 

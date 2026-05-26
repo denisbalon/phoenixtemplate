@@ -1,7 +1,7 @@
 # <PROJECT_NAME> — make targets
 # Customize the command bodies for your stack (Python/uv shown).
 
-.PHONY: dev test lint fix deploy bootstrap check-env
+.PHONY: dev test lint fix deploy bootstrap check-env install-hooks
 
 ## dev: run the service in development mode (with auto-reload)
 dev:
@@ -32,3 +32,8 @@ bootstrap:
 ## check-env: verify .env is complete
 check-env:
 	./scripts/check-env.sh
+
+## install-hooks: activate local git hooks (pre-push blocks direct pushes to main)
+install-hooks:
+	git config core.hooksPath .githooks
+	@echo "✓ git hooks activated from .githooks/ (pre-push blocks direct pushes to main)"

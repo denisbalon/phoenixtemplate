@@ -1,8 +1,8 @@
 # Workflow + Gate
 
-The canonical source for this project's process: the `gogogo!` propose-and-confirm gate, the 5-step atomic release sequence, branching/commit/PR/merge/deploy mechanics, conventions, the recommended auto-memory seed, and the PR review rubric. Extracted from `PROJECT_STARTER.md` §2 + §9 + §10 + §11 in v1.25.0 as part of the doc split (Codex Phase 4 #2). Read this when you need to know how this project's process works.
+The canonical source for this project's process: the `gogogo!` propose-and-confirm gate, the on-branch 6-step atomic feature sequence, branching/commit/PR/merge/deploy mechanics, conventions, the recommended auto-memory seed, and the PR review rubric. Extracted from `PROJECT_STARTER.md` §2 + §9 + §10 + §11 in v1.25.0 as part of the doc split (Codex Phase 4 #2). Read this when you need to know how this project's process works.
 
-**Canonical scope (per B-021):** this file is the canonical source for the **core workflow + rationale** — gate semantics, propose-and-confirm contract, 5-step structure, version-bump rule, branching, PR/merge/review flow, plus the *why* behind each. `templates/CONTRIBUTING.md` carries the per-project operational concretization (commands, sequences, project-specific bits) and references this file for rationale. `templates/CLAUDE.md` carries the session-facing summary the AI needs in working context (rule statements inline, not pointers). **Rule statements** (gate clause, proposal format, bare-gogogo prompt, allowed-without-gate list, refuse-list) are **deliberately duplicated** across all three tiers — defensive AI-safety redundancy that earned its keep historically. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (`scripts/check-rule-consistency.sh`) catches drift automatically.
+**Canonical scope (per B-021):** this file is the canonical source for the **core workflow + rationale** — gate semantics, propose-and-confirm contract, on-branch 6-step structure, version-bump rule, branching, PR/merge/review flow, plus the *why* behind each. `templates/CONTRIBUTING.md` carries the per-project operational concretization (commands, sequences, project-specific bits) and references this file for rationale. `templates/CLAUDE.md` carries the session-facing summary the AI needs in working context (rule statements inline, not pointers). **Rule statements** (gate clause, proposal format, bare-gogogo prompt, allowed-without-gate list, refuse-list) are **deliberately duplicated** across all three tiers — defensive AI-safety redundancy that earned its keep historically. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (`scripts/check-rule-consistency.sh`) catches drift automatically.
 
 This file is **binding** for every change.
 
@@ -32,7 +32,7 @@ Three invitation forms:
 - **Choose one** — bold "Choose one:" header + mutually exclusive numbered options (each prefixed `[change]` or `[info]`) + final line specifying the gate per option: e.g. `Type \`1 gogogo!\` for the [change] option, or \`2\` / \`3\` for the [info] options.` Multi-digit `N M gogogo!` against this form is invalid → re-prompt.
 - **Choose any (in order)** — bold "Choose any (in order):" header + independent numbered options (each prefixed) + final line accepting `N` (single info pick), `N gogogo!` (single change), `N1 N2 ... gogogo!` (multi-select; one `gogogo!` covers all `[change]` items in the typed sequence; `[info]` items proceed in the same message without separate authorization). Skipping is fine.
 
-Concrete means specific files, specific commands, specific commits — not "commit the changes." **Every option must represent a real action** — code change, information lookup, navigation, or continued discussion. Null-action options ("stop here," "wait," "pick up later," "wrap up," "do nothing") are forbidden; the user can simply not respond. Null options dilute the gate signal and add visual clutter without surfacing real choice. An option to continue discussion or surface more information IS a real action and stays. For multi-step actions (5-step feature work), enumerate every step in the proposal. The user's authorization signal applies exactly to the proposed plan; mid-execution deviation requires a new proposal. If an option classified `[info]` turns out to need state mutation, STOP and re-propose with the option re-classified as `[change]`. The `✏️`/`👀` markers appear ONLY at the start of numbered options — never on status lines, section headers, the invitation line, single-suggestion proposals, or running prose that references a type. Classifying each option is Claude's job; when in doubt, default to `✏️ [change]` (the conservative, gated side). If the user picks a bare `N` for a `✏️ [change]` option, re-prompt ("Option N is [change] — type `N gogogo!` to authorize") — never let a bare digit execute a state change.
+Concrete means specific files, specific commands, specific commits — not "commit the changes." **Every option must represent a real action** — code change, information lookup, navigation, or continued discussion. Null-action options ("stop here," "wait," "pick up later," "wrap up," "do nothing") are forbidden; the user can simply not respond. Null options dilute the gate signal and add visual clutter without surfacing real choice. An option to continue discussion or surface more information IS a real action and stays. For multi-step actions, enumerate every step in the proposal — specifically: **the on-branch feature workflow is 6 steps: branch → spec → bump+CHANGELOG → code → commit+push (to feature branch) → open PR**, all six must appear as explicit items in the proposal when starting fresh work. One `gogogo!` authorizes the entire on-branch sequence end-to-end. **Direct pushes to `main` are forbidden** (rule + local `.githooks/pre-push` hook block them; server-side branch protection is deferred — requires GitHub Pro on private repos); every change goes via a `<type>/<slug>-v<X.Y.Z>` branch. PR review is **out-of-band** — Claude opens the PR (ready, not draft) and stops; the user points their chosen reviewer at it via `docs/pr_review_instructions.md`. **Merge is a separate proposal + `gogogo!`**, authorized only after review has cleared. The merge `gogogo!` is atomic over three sub-steps: `gh pr merge --rebase --delete-branch <PR#>` → `git checkout main && git pull --ff-only origin main` → deploy; the deploy step must NOT be surfaced as a separate `gogogo!` after the merge. Address-review iterations (more commits on the same branch after findings) follow the standard `gogogo!` flow but skip steps 1 (branch already exists) and 6 (PR already open). The user's authorization signal applies exactly to the proposed plan; mid-execution deviation requires a new proposal. If an option classified `[info]` turns out to need state mutation, STOP and re-propose with the option re-classified as `[change]`. The `✏️`/`👀` markers appear ONLY at the start of numbered options — never on status lines, section headers, the invitation line, single-suggestion proposals, or running prose that references a type. Classifying each option is Claude's job; when in doubt, default to `✏️ [change]` (the conservative, gated side). If the user picks a bare `N` for a `✏️ [change]` option, re-prompt ("Option N is [change] — type `N gogogo!` to authorize") — never let a bare digit execute a state change.
 <!-- C4:proposal-format:end -->
 
 <!-- C4:bare-gogogo:start -->
@@ -103,19 +103,20 @@ Reading files · grep · read-only git (`log` / `status` / `diff`) · web search
 
 ---
 
-## The 5-step atomic sequence (on `gogogo!`)
+## The on-branch 6-step atomic sequence (on `gogogo!`)
 
-Atomic. Missing or reordering any step is a failure.
+Atomic. Missing or reordering any step is a failure. The full sequence runs on a single `gogogo!` when starting fresh feature work; address-review iterations on an existing branch skip steps 1 and 6 (branch already exists, PR already open) and keep steps 2–5.
 
-1. **Update the spec** — `docs/spec.md` reflects the change BEFORE any code is written. Spec-first keeps intent explicit. For architectural decisions, also add an entry to the **Decision log** section in `docs/spec.md` (oldest first; format: `D-NNN (YYYY-MM-DD) <title>` with Chose / Considered / Why / Implemented in lines). Decisions live forever in the repo; chat history that produced them does not.
-2. **Bump versions + add CHANGELOG entry** — bump `VERSION` (and any language-specific markers — see "Recommended auto-memory seed" below for what each project tracks), then add a `CHANGELOG.md` entry under the new version heading with the user-facing summary. Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by area. The CHANGELOG entry rides in the same commit, so the commit subject can reference `v<X.Y.Z>` with full context.
-3. **Write the code** — touch implementation files now and only now.
-4. **Commit + push** — single commit per concern, subject ends with `v<X.Y.Z>`. HEREDOC for the message. Push to origin in the same turn. No `--no-verify`. No `--amend` unless explicit.
-5. **Deploy** — run the project's deploy command. If pre-MVP / no deployable yet, step 5 is a no-op; resume on every commit to `main` once deployable. Surface deploy errors loudly; do NOT silently skip.
+1. **Create the feature branch** — `git checkout main && git pull --ff-only origin main && git checkout -b <type>/<slug>-v<X.Y.Z>` where `<type>` is one of `feat`/`fix`/`chore`/`docs`/`refactor`/`test`/`perf`. Direct pushes to `main` are forbidden (rule + local `.githooks/pre-push` hook block them; server-side branch protection is preferred but on GitHub Free private repos returns 403 — see BOOTSTRAP.md §"Branch protection on `main`").
+2. **Update the spec** — `docs/spec.md` reflects the change BEFORE any code is written. Spec-first keeps intent explicit. For architectural decisions, also add an entry to the **Decision log** section in `docs/spec.md` (oldest first; format: `D-NNN (YYYY-MM-DD) <title>` with Chose / Considered / Why / Implemented in lines). Decisions live forever in the repo; chat history that produced them does not.
+3. **Bump versions + add CHANGELOG entry** — bump `VERSION` (and any language-specific markers — see "Recommended auto-memory seed" below for what each project tracks), then add a `CHANGELOG.md` entry under the new version heading with the user-facing summary. Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by area. The CHANGELOG entry rides in the same commit, so the commit subject can reference `v<X.Y.Z>` with full context.
+4. **Write the code** — touch implementation files now and only now.
+5. **Commit + push to the feature branch** — single commit per concern, subject ends with `v<X.Y.Z>`. HEREDOC for the message. Push to origin (to the feature branch — never to `main`) in the same turn. No `--no-verify`. No `--amend` unless explicit.
+6. **Open the PR ready** — `gh pr create --base main --head <branch> --title "<concise title>" --body "$(cat <<'BODY' ... BODY)"`. **No `--draft` flag** — the PR opens ready for review. Claude stops here.
 
-**The sequence ENDS at step 5.** Do not auto-open a PR. Do not auto-merge. Stay on the topic branch. The next user message will either be another `gogogo!` (more commits), or a PR/merge trigger (separate phase).
+**The sequence ENDS at step 6.** Do not start review. Do not auto-merge. The next user message is either a fix `gogogo!` (address-review iteration — skips steps 1 + 6) or a separate merge `gogogo!`. **The merge `gogogo!` is atomic over three sub-steps:** `gh pr merge <PR#> --rebase --delete-branch` → `git fetch origin && git checkout main && git pull --ff-only origin main && git fetch --prune` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; the merge `gogogo!` covers all three atomically.
 
-If a step fails (spec unclear, deploy errors, push rejected), stop and surface — do not fake-complete the sequence.
+If a step fails (spec unclear, push rejected, `gh pr create` errors), stop and surface — do not fake-complete the sequence.
 
 ---
 
@@ -134,11 +135,11 @@ Increment policy:
 
 ## Branching
 
-- **Never commit to `main`.** Every change lives on a feature branch. `main` only receives explicit fast-forward merges via PR.
-- Topic branches use kebab-case prefix per type — `feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `perf/`. Example: `feat/api-handler`, `fix/auth-retry-401`.
-- Branch from `main`, push immediately on `git checkout -b`, deleted after merge. No `develop`, `release/*`, environment-named branches.
+- **Never commit to `main`.** Every change lives on a feature branch. `main` only receives explicit fast-forward merges via PR. Direct pushes to `main` are blocked by the local `.githooks/pre-push` hook (and by server-side branch protection where available — see BOOTSTRAP.md).
+- Branch names: kebab-case `<type>/<slug>-v<X.Y.Z>` — `<type>` is one of `feat`/`fix`/`chore`/`docs`/`refactor`/`test`/`perf`. The `-v<X.Y.Z>` suffix names the version the branch first ships. Example: `feat/api-handler-v0.4.0`, `fix/auth-retry-401-v0.4.1`.
+- Branch from `main`, push the first commit + open the PR in the same `gogogo!`-authorized sequence (step 6); deleted after merge (`gh pr merge --delete-branch`). No `develop`, `release/*`, environment-named branches.
 - **Never `git checkout` / `git switch` without explicit instruction.** "Check the latest stuff" ≠ checkout — fetch + report, then ask.
-- **Topic branches accumulate many commits.** A single branch normally hosts dozens of `gogogo!`s before a PR is opened. Don't open a new branch per `gogogo!`. Don't open a PR after each commit.
+- **One PR per branch, opened with the first commit.** The PR opens in step 6 of the on-branch 6-step `gogogo!` sequence; subsequent commits push to the existing branch (review-feedback fixes). Don't open a new branch per `gogogo!`. Don't accumulate many commits before opening the PR — review starts as soon as the first commit lands and feedback iterations push to the same branch.
 
 ---
 
@@ -192,9 +193,9 @@ If a push is rejected (rebase needed, etc.), surface it loudly — never `--forc
 
 ## Pull requests
 
-**User-triggered only.** The 5-step sequence does NOT auto-open a PR. PR opens when the user `gogogo!`s a PR-open proposal Claude surfaced — typically after the branch has accumulated many commits across many `gogogo!`s. The bare word "PR" without `gogogo!` does NOT authorize, and Claude surfacing a proposal does NOT authorize either — both halves must be present.
+**PR opens with the first commit on a fresh branch** — step 6 of the on-branch 6-step `gogogo!` sequence. One `gogogo!` authorizes branch → spec → bump+CHANGELOG → code → commit+push → open PR end-to-end. PRs open **ready** (not draft); review starts immediately, and address-review iterations push more commits to the same branch (skipping steps 1 + 6 of the sequence). The bare word "PR" without `gogogo!` does NOT authorize a separate PR-open action, and Claude surfacing a proposal does NOT authorize either — both halves of the gate must be present, but in fresh-work mode the PR-open is bundled into the same `gogogo!` as the first commit.
 
-Generate the title + body from the actual commit log. Group commits by area; call out reverts.
+Generate the title + body from the actual commit log. On the first PR-open the body summarizes step-2 spec + step-3 CHANGELOG entry. Group commits by area; call out reverts.
 
 ```sh
 gh pr create --base main --head <branch> --title "<concise title under 70 chars>" --body "$(cat <<'BODY'
@@ -244,7 +245,7 @@ Each round of fixes follows the full `gogogo!` workflow. New commits go on the s
 
 Only after the user `gogogo!`s a merge proposal Claude surfaced. Never implicit. The bare word "merge" without `gogogo!` does NOT authorize, and a proposal without `gogogo!` doesn't either.
 
-With branch protection on (set up per [`BOOTSTRAP.md` → "Branch protection on `main`"](BOOTSTRAP.md#branch-protection-on-main)), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked.
+**The merge `gogogo!` is atomic over three sub-steps** — `gh pr merge --rebase --delete-branch` → `git pull --ff-only origin main` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; one merge `gogogo!` covers all three atomically. With branch protection on (set up per [`BOOTSTRAP.md` → "Branch protection on `main`"](BOOTSTRAP.md#branch-protection-on-main)), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked by the local `.githooks/pre-push` hook (and by server-side protection where available).
 
 ```sh
 gh pr merge <PR#> --rebase --delete-branch
@@ -252,6 +253,7 @@ git fetch origin
 git checkout main
 git pull --ff-only origin main
 git fetch --prune
+<deploy-cmd>   # project's deploy command; no-op for pre-MVP or for this meta-repo per B-005
 ```
 
 If `--rebase` refuses (because main advanced and the branch needs rebasing first):
@@ -280,7 +282,7 @@ Use `-d` (safe), not `-D` (force).
 
 ## Deploy timing
 
-Deploy runs on every commit to `main` (i.e., immediately after the rebase-merge lands). Topic-branch commits do not deploy. If the project has separate dev/stage/live environments, document the alternative timing in the project's `CONTRIBUTING.md`.
+**Deploy is bundled with merge.** The merge `gogogo!` is atomic over three sub-steps (`gh pr merge --rebase --delete-branch` → `git pull --ff-only origin main` → deploy); deploy fires once per merged PR, not once per topic-branch commit. Topic-branch commits do not deploy. If the project has separate dev/stage/live environments, document the alternative timing in the project's `CONTRIBUTING.md`. For meta-repos that ship docs + templates rather than a running service (this kit per B-005), the deploy sub-step is documented-as-no-op rather than skipped — the merge `gogogo!` still names all three sub-steps in the proposal.
 
 ---
 
@@ -297,13 +299,14 @@ Deploy runs on every commit to `main` (i.e., immediately after the rebase-merge 
 
 | Phase | Frequency |
 |---|---|
-| Branch creation | Once per branch (when starting a new chunk of work) |
-| Commits + push | Many times per branch — once per `gogogo!` |
-| Open PR | Once per branch, on user trigger ("PR" / "ready") |
-| Review | Once per branch, between PR open and merge |
-| Address feedback | As needed, more commits on the same branch |
-| Merge | Once per branch, on user "merge" |
-| Cleanup | Bundled with Merge on success |
+| Branch creation | Step 1 of the on-branch 6-step `gogogo!` — once per branch |
+| Spec + bump + code | Steps 2–4 of the same `gogogo!` — once per branch on fresh work |
+| Commits + push | Many times per branch — once per `gogogo!` (step 5; address-review iterations stay on the same branch) |
+| Open PR | Step 6 of the on-branch 6-step `gogogo!` — bundled with the first commit |
+| Review | Out-of-band, between PR open and merge |
+| Address feedback | As needed, more commits on the same branch (skip steps 1 + 6) |
+| Merge + deploy | One merge `gogogo!` — atomic over `gh pr merge` + `git pull` + deploy |
+| Cleanup | Bundled with merge `gogogo!` (`--delete-branch`) |
 
 ---
 
@@ -374,7 +377,7 @@ When Claude Code first opens a new project, ask it to write these memory entries
 | `project_overview.md` | project | What the project is, what it replaces, core flow, volume baseline |
 | `architecture_decisions.md` | project | Stack chosen for v1, why; open architecture questions still pending |
 | `existing_infra.md` | reference | Pointers to existing systems (URLs, IPs, repos) — credential-free |
-| `gogogo_gate_workflow.md` | feedback | The `gogogo!` passphrase gate + 5-step workflow rules |
+| `gogogo_gate_workflow.md` | feedback | The `gogogo!` passphrase gate + on-branch 6-step workflow rules |
 | `harness_quirks.md` | feedback | Operational gotchas about the Claude Code harness's permission/write rules |
 | `user_preferences.md` | feedback | How to collaborate with this user — tolerance for ceremony, doc preferences, credential-rotation cadence, etc. |
 

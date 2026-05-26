@@ -8,7 +8,7 @@ Living spec. <PROJECT_SPECIFIC: reference to any external/legacy spec if applica
 
 ## Process & versioning
 
-Process for making changes — branching, commits, the **`gogogo!` passphrase gate**, the **5-step atomic workflow** (spec → bump+CHANGELOG → code → commit → deploy; ENDS at deploy, does not auto-open a PR), the **push-after-every-commit** policy, the **multi-commit-per-branch** rule, the **rebase-merge** strategy, the **version-bump-on-every-change** rule — is binding and lives in [`CONTRIBUTING.md`](../CONTRIBUTING.md). Current version: `<X.Y.Z>` (see `VERSION` at repo root). Per-version diary lives in [`CHANGELOG.md`](../CHANGELOG.md). Architectural decisions live in the Decision log below.
+Process for making changes — branching, commits, the **`gogogo!` passphrase gate**, the **on-branch 6-step atomic workflow** (branch → spec → bump+CHANGELOG → code → commit+push → open PR; ENDS at step 6), the **push-after-every-commit** policy, the **one-PR-per-branch** rule (PR opens with the first commit), the **rebase-merge** strategy, the **merge-`gogogo!`-is-atomic-over-three-substeps** rule (gh pr merge → git pull → deploy), the **version-bump-on-every-change** rule, the **local `.githooks/pre-push` block on direct pushes to `main`** — is binding and lives in [`CONTRIBUTING.md`](../CONTRIBUTING.md). The current version is stored in `VERSION` at the repo root (single source of truth — no other file hardcodes it). Per-version diary lives in [`CHANGELOG.md`](../CHANGELOG.md). Architectural decisions live in the Decision log below.
 
 The reusable template behind this project's process and structure lives at [`PROJECT_STARTER.md`](../PROJECT_STARTER.md).
 
