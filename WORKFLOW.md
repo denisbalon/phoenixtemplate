@@ -245,7 +245,7 @@ Each round of fixes follows the full `gogogo!` workflow. New commits go on the s
 
 Only after the user `gogogo!`s a merge proposal Claude surfaced. Never implicit. The bare word "merge" without `gogogo!` does NOT authorize, and a proposal without `gogogo!` doesn't either.
 
-**The merge `gogogo!` is atomic over three sub-steps** — `gh pr merge --rebase --delete-branch` → `git pull --ff-only origin main` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; one merge `gogogo!` covers all three atomically. With branch protection on (set up per [`BOOTSTRAP.md` → "Branch protection on `main`"](BOOTSTRAP.md#branch-protection-on-main)), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked by the local `.githooks/pre-push` hook (and by server-side protection where available).
+**The merge `gogogo!` is atomic over three sub-steps** — `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; one merge `gogogo!` covers all three atomically. With branch protection on (set up per [`BOOTSTRAP.md` → "Branch protection on `main`"](BOOTSTRAP.md#branch-protection-on-main)), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked by the local `.githooks/pre-push` hook (and by server-side protection where available).
 
 ```sh
 gh pr merge <PR#> --rebase --delete-branch
@@ -282,7 +282,7 @@ Use `-d` (safe), not `-D` (force).
 
 ## Deploy timing
 
-**Deploy is bundled with merge.** The merge `gogogo!` is atomic over three sub-steps (`gh pr merge --rebase --delete-branch` → `git pull --ff-only origin main` → deploy); deploy fires once per merged PR, not once per topic-branch commit. Topic-branch commits do not deploy. If the project has separate dev/stage/live environments, document the alternative timing in the project's `CONTRIBUTING.md`. For meta-repos that ship docs + templates rather than a running service (this kit per B-005), the deploy sub-step is documented-as-no-op rather than skipped — the merge `gogogo!` still names all three sub-steps in the proposal.
+**Deploy is bundled with merge.** The merge `gogogo!` is atomic over three sub-steps (`gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy); deploy fires once per merged PR, not once per topic-branch commit. Topic-branch commits do not deploy. If the project has separate dev/stage/live environments, document the alternative timing in the project's `CONTRIBUTING.md`. For meta-repos that ship docs + templates rather than a running service (this kit per B-005), the deploy sub-step is documented-as-no-op rather than skipped — the merge `gogogo!` still names all three sub-steps in the proposal.
 
 ---
 

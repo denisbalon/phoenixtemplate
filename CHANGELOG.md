@@ -6,6 +6,28 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.42.1 — 2026-05-26
+
+**Address-review fixes from codex on PR #8 — merge-shorthand drift swept across the bug class + BOOTSTRAP verify step made tier-aware.** Patch bump per WORKFLOW.md (doc fix; no behavior rule change — the canonical wording already lived in the C4 region, only the prose mirrors had drifted).
+
+### Codex finding 1 (Strong) — merge 3-substep shorthand was missing `git checkout main`
+
+The canonical merge 3-substep in the C4 `proposal-format` region reads `gh pr merge --rebase --delete-branch <PR#>` → `git checkout main && git pull --ff-only origin main` → deploy. Several non-C4 prose mirrors had drifted to `git pull --ff-only origin main` or `git pull --ff-only` without the prerequisite `git checkout main`. `gh pr merge` may leave the working tree on the (now deleted) feature branch or some other state, so the shorthand-without-checkout would update / deploy from whatever branch happens to be current — not `main`.
+
+Codex flagged 4 spots (`WORKFLOW.md:248`, `templates/CONTRIBUTING.md:25`, `templates/CONTRIBUTING.md:156`, `CONTRIBUTING.md:11`). Repo-wide grep surfaced 7 more in the same bug class (transfer-note Key Insight #1: code-review-by-diff doesn't see files outside the PR's changes — sweep the bug class proactively): `WORKFLOW.md:285` (§Deploy timing), `templates/CONTRIBUTING.md:16` (cheat-sheet), `templates/CONTRIBUTING.md:51` (TL;DR), `templates/CONTRIBUTING.md:280` (Mandatory footer), `templates/CONTRIBUTING.md:290` (Deploy timing), `templates/CLAUDE.md:43` (non-C4 quick-ref), `docs/spec.md` D-026 `Chose:` line. Plus 1 spot in `CHANGELOG.md`'s v1.41.0 entry — the entry is still on the unmerged PR, so correcting it now keeps the audit trail accurate rather than locking in the typo. All 12 spots now spell the shorthand as `git checkout main && git pull --ff-only origin main` matching the C4 canonical form.
+
+### Codex finding 2 (Nit) — BOOTSTRAP verify step probed an endpoint that 403s on the documented tier
+
+`BOOTSTRAP.md` §Verify said `gh api /repos/<GITHUB_USER>/$PROJECT_SLUG/branches/main/protection 2>&1 | head  # should NOT be 404`. But the same release's §Branch protection now documents that GitHub Free private repos get **`403`** on this endpoint (both classic Branch Protection and Rulesets APIs). On the exact tier this change documents, the verify command tests something that's expected to fail.
+
+Rewrote tier-aware: the `gh api` line stays but with both possible outcomes named explicitly (`200` on Pro/public = server-side protection live; `403` on Free private = expected, local hook is the fallback). Added a sibling local-hook check (`git config core.hooksPath` should print `.githooks` after `make install-hooks` runs). The bootstrap verify now closes the loop whichever tier the user is on.
+
+### What did NOT change
+
+- No new B-block or D-entry — the rule is unchanged; only prose drift and a verify-step rewrite.
+- C4 `proposal-format` region untouched (its shorthand was already canonical).
+- Smoke test, manifest, placeholder, doc-references, spec-consistency linters all stay green.
+
 ## v1.42.0 — 2026-05-26
 
 **Interactive review sessions now draft the exact GitHub review package and offer to post it (B-043 / D-027).** Refines the v1.7.0 "review is out-of-band and reviewer-agnostic" pivot without re-introducing any reviewer launcher or default reviewer. Minor bump per WORKFLOW.md: behavior/spec change in a load-bearing workflow area.
@@ -67,7 +89,7 @@ The phoenixcnc instance surfaced the contradiction in PR #6 (v0.30.0 → v0.31.3
 
 ### Eat our own dog food
 
-This release IS the first commit landed under the new on-branch 6-step flow: feature branch `feat/branch-pr-workflow-on-branch-v1.41.0` → B-042 spec update → VERSION + CHANGELOG → doc edits + new pre-push hooks → single commit ending `v1.41.0` → PR ready (not draft). Merge happens via a separate `gogogo!` atomic over `gh pr merge --rebase --delete-branch` → `git pull --ff-only` → deploy (no-op on this meta-repo per B-005).
+This release IS the first commit landed under the new on-branch 6-step flow: feature branch `feat/branch-pr-workflow-on-branch-v1.41.0` → B-042 spec update → VERSION + CHANGELOG → doc edits + new pre-push hooks → single commit ending `v1.41.0` → PR ready (not draft). Merge happens via a separate `gogogo!` atomic over `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy (no-op on this meta-repo per B-005).
 
 ## v1.40.1 — 2026-05-25
 

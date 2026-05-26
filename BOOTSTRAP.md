@@ -172,8 +172,15 @@ make install-hooks   # runs `git config core.hooksPath .githooks`; blocks subseq
 ```sh
 git log --oneline -1                 # should show your initial commit
 gh repo view --json visibility,url   # should show your repo
-gh api /repos/<GITHUB_USER>/$PROJECT_SLUG/branches/main/protection 2>&1 | head  # should NOT be 404
+git config core.hooksPath            # should print `.githooks` after `make install-hooks` ran above
+gh api /repos/<GITHUB_USER>/$PROJECT_SLUG/branches/main/protection 2>&1 | head  # tier-dependent — see below
 ```
+
+Interpret the `gh api .../protection` output by repo tier:
+
+- **GitHub Pro / Team / Enterprise, or any public repo** — expect `200` with a JSON body describing the protection rule you configured. This means server-side branch protection is live; the local `.githooks/pre-push` hook is a belt-and-suspenders backstop.
+- **GitHub Free private repo** — expect `403 Forbidden` ("Upgrade to GitHub Pro and try again"). The classic Branch Protection API + the newer Rulesets API are both gated behind paid tiers for private repos. On this tier the local `.githooks/pre-push` hook (activated above via `make install-hooks` / `git config core.hooksPath .githooks`) is the **only** backstop blocking direct pushes to `main`; the workflow rule "never push to `main`" backed by the hook is what closes the failure mode. The previous `git config core.hooksPath` line is the verify-step that matters on this tier.
+- **404** — the repo doesn't exist at that path. Re-check `<GITHUB_USER>` and `$PROJECT_SLUG`.
 
 Bootstrap complete. From here on, all work follows [`WORKFLOW.md`](WORKFLOW.md).
 
