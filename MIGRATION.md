@@ -29,7 +29,7 @@ The four selective-import paths are designed to land cleanly in an existing proj
 
 ## Importing just the process layer
 
-The `gogogo!` propose-and-confirm gate + 5-step atomic workflow + per-project rules. This is the most-asked-for piece because it changes how AI sessions feel without touching the codebase.
+The `gogogo!` propose-and-confirm gate + on-branch 6-step atomic workflow + per-project rules. This is the most-asked-for piece because it changes how AI sessions feel without touching the codebase.
 
 **Files to copy** (from this kit's `templates/` into your project root):
 

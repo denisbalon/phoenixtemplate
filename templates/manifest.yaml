@@ -134,6 +134,14 @@ files:
     placeholders: []
     exported_by_starter: true
 
+  # ----- templates/.githooks/ ------------------------------------------
+
+  - path: templates/.githooks/pre-push
+    purpose: refuses direct pushes to main (workflow is branch+PR+merge; activated by `make install-hooks`)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
   # ----- templates/.claude/ --------------------------------------------
 
   - path: templates/.claude/settings.json

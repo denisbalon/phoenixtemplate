@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Pre-push: refuse direct pushes to `main`. Workflow is branch+PR+merge
+# (see CLAUDE.md / CONTRIBUTING.md / WORKFLOW.md). Server-side branch
+# protection would normally enforce this, but the GitHub Free private-repo
+# tier doesn't support it — this local hook is the partial backstop.
+#
+# stdin from git: <local-ref> <local-sha> <remote-ref> <remote-sha> per line.
+# Bypass (last resort): git push --no-verify
+#
+# Activated on this meta-repo via `git config core.hooksPath .githooks`.
+set -euo pipefail
+
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  if [ "$remote_ref" = "refs/heads/main" ]; then
+    echo "" >&2
+    echo "✗ Direct pushes to main are forbidden." >&2
+    echo "  Workflow: feature branch → PR → review → merge gogogo!" >&2
+    echo "  See CLAUDE.md / WORKFLOW.md for the on-branch 6-step sequence." >&2
+    echo "  Bypass (last resort): git push --no-verify" >&2
+    echo "" >&2
+    exit 1
+  fi
+done
+
+exit 0

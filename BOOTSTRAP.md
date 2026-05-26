@@ -8,7 +8,7 @@ The repo ships two layers with different scopes:
 
 | Layer | Scope | What it contains |
 |---|---|---|
-| **Process** (stack-agnostic) | Any project | `gogogo!` gate convention, 5-step atomic workflow, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric, bootstrap checklist (minus the language-specific bits), version-bump + CHANGELOG rules |
+| **Process** (stack-agnostic) | Any project | `gogogo!` gate convention, on-branch 6-step atomic workflow, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric, bootstrap checklist (minus the language-specific bits), version-bump + CHANGELOG rules |
 | **Language preset** (Python-only today) | Python/uv/FastAPI/VPS | `templates/Makefile`, `templates/.github/workflows/ci.yml`, `templates/scripts/deploy.sh`, `templates/.env.example` validators, expected `pyproject.toml` + `src/<package>/` + `tests/` layout |
 
 If you're starting a project in a **different stack** today, you can still adopt the process layer manually (read [`WORKFLOW.md`](WORKFLOW.md), copy `templates/CLAUDE.md` + `templates/CONTRIBUTING.md` + `templates/docs/`, customize) but the language-preset files will need stack-appropriate substitutes you write yourself. Multi-preset support (Node, Go, no-runtime) is on the roadmap (D-009 in `docs/spec.md`) but not shipped — when it lands, this section flips.
@@ -16,7 +16,7 @@ If you're starting a project in a **different stack** today, you can still adopt
 ## Reading order
 
 1. **Read "Bootstrap checklist" below** — the one-time zero-to-first-commit procedure.
-2. **Read [`WORKFLOW.md`](WORKFLOW.md) once** — the binding workflow you'll follow on every change (gate, propose-and-confirm contract, 5-step sequence, branching/commits/PR/merge/deploy mechanics, conventions, PR review rubric).
+2. **Read [`WORKFLOW.md`](WORKFLOW.md) once** — the binding workflow you'll follow on every change (gate, propose-and-confirm contract, on-branch 6-step sequence, branching/commits/PR/merge/deploy mechanics, conventions, PR review rubric).
 3. **Skim [`TEMPLATE_INVENTORY.md`](TEMPLATE_INVENTORY.md)** — file/folder layout you'll be reproducing + the copy-paste references in `templates/`.
 4. **Answer "Decisions to answer before writing feature code" below** in chat with Claude before touching `src/` — these are the decisions that shape everything.
 5. **Customize [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) if deploying to a VPS**, otherwise replace it with your platform's deploy procedure. It also covers the CI/CD baseline and credential handling.
@@ -115,7 +115,7 @@ git remote add origin git@github.com:<GITHUB_USER>/$PROJECT_SLUG.git
 
 ### Branch protection on `main`
 
-In **GitHub → Settings → Branches → Add classic branch protection rule** for `main`:
+**Server-side protection is preferred where available.** In **GitHub → Settings → Branches → Add classic branch protection rule** for `main`:
 
 - ✅ Require a pull request before merging
 - ✅ Require linear history
@@ -124,6 +124,8 @@ In **GitHub → Settings → Branches → Add classic branch protection rule** f
 - ✅ Do not allow bypassing the above settings
 
 Don't tick "Require approvals" (you're solo). Don't tick status checks until CI lands.
+
+**On GitHub Free private repos** both the classic Branch Protection API and the newer Rulesets API return `403: Upgrade to GitHub Pro or make this repository public` — server-side protection is not available. The kit's `.githooks/pre-push` hook is the local backstop: it refuses any push whose `remote_ref` is `refs/heads/main`, blocking direct pushes from this checkout. Activate it via `make install-hooks` (which runs `git config core.hooksPath .githooks`). The hook is shipped under `.githooks/pre-push` and is bypassable via `git push --no-verify` (documented as last-resort). Combined with the workflow rule "never push to `main`", this closes the per-session failure mode reliably enough on GitHub Free; flip to server-side protection if/when the repo moves to a tier that supports it.
 
 ### Repo merge settings
 
@@ -150,7 +152,7 @@ git commit -m "$(cat <<'EOF'
 chore: scaffold project skeleton v0.1.0
 
 Initial project bootstrap from PROJECT_STARTER template v1.0.0. Adopts the
-gogogo! gate, 5-step workflow, rebase-merge strategy, version-bump rule.
+gogogo! gate, on-branch 6-step workflow, rebase-merge strategy, version-bump rule.
 No source code yet.
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
@@ -159,7 +161,11 @@ EOF
 git push -u origin main
 ```
 
-This is the **only direct push to `main`** the project will ever do. Branch protection blocks all subsequent direct pushes; everything else goes through PRs.
+This is the **only direct push to `main`** the project will ever do. After it lands, run `make install-hooks` to activate the local `.githooks/pre-push` block on direct pushes to `main` (and configure server-side branch protection per the section above if your repo tier supports it). Everything else goes through PRs.
+
+```sh
+make install-hooks   # runs `git config core.hooksPath .githooks`; blocks subsequent direct pushes to `main`
+```
 
 ### Verify
 

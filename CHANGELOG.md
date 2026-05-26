@@ -1,10 +1,50 @@
 # Changelog
 
-All notable changes per `VERSION` bump. Per the `gogogo!` 5-step workflow, every change bumps `VERSION` and adds an entry here in the same commit.
+All notable changes per `VERSION` bump. Per the `gogogo!` on-branch 6-step workflow, every change bumps `VERSION` and adds an entry here in the same commit.
 
 Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by area.
 
 ---
+
+## v1.41.0 — 2026-05-26
+
+**On-branch 6-step workflow + branch-PR-merge flow + local pre-push fallback (B-042 / D-026).** Most invasive workflow-rule change since v1.23.0's verb-prefix → propose-and-confirm rewrite. Touches the loaded C4 `proposal-format` region across the doc trio + non-C4 mirrors across the kit + adds `.githooks/pre-push` for the kit and the template. Minor bump per WORKFLOW.md (rule rewrite of the most-loaded region).
+
+### Why
+
+The C4 `proposal-format` region had taught a **5-step "spec → bump+CHANGELOG → code → commit+push → deploy, every commit deploys"** sequence since v1.23.0. That framing contradicted the rest of the kit:
+
+- §Branching: *"Never commit to `main`. Every change lives on a feature branch."*
+- §Pull requests: user-triggered PR after `gogogo!`
+- §Merge: `gh pr merge --rebase --delete-branch` on a separate merge `gogogo!`
+- §Deploy timing: *"Deploy runs on every commit to `main`, i.e., immediately after the rebase-merge lands; topic-branch commits do not deploy."*
+
+The phoenixcnc instance surfaced the contradiction in PR #6 (v0.30.0 → v0.31.3 across 4 commits + 3 rounds of codex Block/Strong/Strong findings) and resolved it with an on-branch 6-step shape + pre-push hook + non-C4 sweep. This release lifts that resolution back into the kit so consumer projects ship coherent guidance from day one. Same root cause as B-041 (negative handlers): Claude reliably applies what's in the loaded C4 region and reliably misses what's only in non-C4 prose, so the durable fix is to make the loaded region match the rest of the doc kit.
+
+### What shipped
+
+**C4 region (byte-exact across `WORKFLOW.md` + `templates/CONTRIBUTING.md` + `templates/CLAUDE.md`)** — the `proposal-format` region's "multi-step actions" clause now reads "the on-branch feature workflow is 6 steps: branch → spec → bump+CHANGELOG → code → commit+push (to feature branch) → open PR, all six must appear as explicit items in the proposal when starting fresh work" + new merge-`gogogo!`-is-atomic-over-3-substeps clause + direct-push-to-main-forbidden clause + GitHub Pro server-side-protection deferral clause. The positive marker shape (`✏️`/`👀`), the three invitation forms (Single suggestion / Choose one / Choose any (in order)), the null-action-forbidden rule (B-038), the conservative-`[change]`-default and bare-`N`-against-`[change]` re-prompt handlers (B-041) are unchanged. C4 linter (B-022) green.
+
+**Non-C4 mirrors:**
+
+- `WORKFLOW.md` — §"The 5-step atomic sequence" renamed to §"The on-branch 6-step atomic sequence" with steps renumbered 1–6 (branch / spec / bump+CHANGELOG / code / commit+push / open PR); §Branching's "Topic branches accumulate many commits" replaced by "One PR per branch, opened with the first commit"; §Pull requests intro rewritten; §Merge gains the atomic-over-3-substeps clause; §Deploy timing rewrites "every commit to main" → "bundled with merge"; §Phase frequency table rows adjusted (Branch creation, Open PR, Merge+deploy).
+- `templates/CONTRIBUTING.md` — cheat-sheet rows; principles rewritten ("Topic branches accumulate" → "One PR per branch, opened with first commit"; "PR is user-triggered" → "Merge is user-triggered"); phase-frequency table; TL;DR items 3 / 5 / 6 / 8; §3 "Open the pull request" preamble; §6 renamed "Merge + deploy" with atomic clause; §"Mandatory 5-step sequence" → §"Mandatory on-branch 6-step sequence" with step renumbering; §Deploy timing.
+- `templates/CLAUDE.md` — non-C4 line ("When the proposed action is a 5-step feature workflow, the atomic sequence is: spec → ... → deploy") rewritten to the on-branch 6-step + merge phase.
+- `CONTRIBUTING.md` (meta top-level) — line 7 + line 11 (deploy step of the on-branch 6-step is no-op per B-005).
+- `BOOTSTRAP.md` — §Branch protection on `main` rewritten to attempt classic protection first but acknowledge the GitHub Free private-repo 403 and document `git config core.hooksPath .githooks` (kit) / `make install-hooks` (consumer projects) as the local fallback; the first-bootstrap-push exemption preserved.
+- `MIGRATION.md`, `PROJECT_STARTER.md`, `README.md`, `templates/docs/spec.md`, `templates/docs/karpathy-claude-rules.md`, `templates/.claude/skills/spec-block/SKILL.md`, `templates/CHANGELOG.md` — softened 5-step references; active step numbers shifted where the doc tracks them.
+
+**New files:**
+
+- `.githooks/pre-push` (kit root, executable) — refuses pushes whose `remote_ref` is `refs/heads/main`; bypassable via `git push --no-verify`. Activated by `git config core.hooksPath .githooks`.
+- `templates/.githooks/pre-push` (executable) — identical content for consumer projects; activated by `make install-hooks`.
+- `templates/Makefile` — new `install-hooks` target.
+
+**Spec:** B-042 (frozen — the on-branch 6-step rule + branch-PR-merge flow + local pre-push fallback) and D-026 (frozen — the design rationale, Considered/Why for the five alternatives, mapping to the file changes). Historical CHANGELOG rows and historical-superseded spec blocks that reference the 5-step shape are intentionally NOT rewritten — they capture the rule that WAS in force at their version, and rewriting them would erase the audit trail. Active 5-step refs in `B-027` / `B-028` / `D-004` / `D-006` / `D-008` / `B-001` / `B-006` / `B-011` rationale fields are left intact for the same reason — those fields describe past states.
+
+### Eat our own dog food
+
+This release IS the first commit landed under the new on-branch 6-step flow: feature branch `feat/branch-pr-workflow-on-branch-v1.41.0` → B-042 spec update → VERSION + CHANGELOG → doc edits + new pre-push hooks → single commit ending `v1.41.0` → PR ready (not draft). Merge happens via a separate `gogogo!` atomic over `gh pr merge --rebase --delete-branch` → `git pull --ff-only` → deploy (no-op on this meta-repo per B-005).
 
 ## v1.40.1 — 2026-05-25
 

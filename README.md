@@ -10,7 +10,7 @@ Two layers with different scopes:
 
 | Layer | Scope | Contents |
 |---|---|---|
-| **Process** (stack-agnostic) | Any project | `gogogo!` passphrase gate with propose-and-confirm semantics (Claude proposes concretely, user `gogogo!`s the proposal), 5-step atomic release sequence, spec-block format (`B-NNN` blocks + Decision log), Karpathy's four LLM-coding pitfalls as standing rules, reviewer-agnostic PR review rubric. |
+| **Process** (stack-agnostic) | Any project | `gogogo!` passphrase gate with propose-and-confirm semantics (Claude proposes concretely, user `gogogo!`s the proposal), on-branch 6-step atomic feature sequence (branch → spec → bump+CHANGELOG → code → commit+push → open PR) + atomic merge `gogogo!` (rebase-merge → pull → deploy), spec-block format (`B-NNN` blocks + Decision log), Karpathy's four LLM-coding pitfalls as standing rules, reviewer-agnostic PR review rubric, local `.githooks/pre-push` block on direct pushes to `main`. |
 | **Python preset** (Python-only today) | Python/uv/FastAPI/VPS | Minimal FastAPI app + smoke test, `pyproject.toml` (PEP 735 dependency groups, hatchling, ruff/mypy/pytest config), `Makefile`, GitHub Actions CI, VPS rsync `scripts/deploy.sh` with `/healthz` curl, interactive env-bootstrap with `@directive` schema. |
 
 Plus meta tooling: `scripts/export-starter.sh` (portable kit archive), `scripts/smoke-test.sh` + `.github/workflows/template-self-test.yml` (proves the template instantiates end-to-end on every push/PR).
