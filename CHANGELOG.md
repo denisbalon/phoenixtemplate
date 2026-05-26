@@ -6,6 +6,29 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.42.0 — 2026-05-26
+
+**Interactive review sessions now draft the exact GitHub review package and offer to post it (B-043 / D-027).** Refines the v1.7.0 "review is out-of-band and reviewer-agnostic" pivot without re-introducing any reviewer launcher or default reviewer. Minor bump per WORKFLOW.md: behavior/spec change in a load-bearing workflow area.
+
+### Why
+
+The current docs required GitHub comments as the review deliverable, but they still left an interaction gap for interactive reviewers like Claude/Codex: the reviewer could summarize findings in chat, stop there, and force the user to remind it to convert those findings into the actual PR comments the rubric already required. That is wasted friction and a source of drift between "the review result" and "what lands on GitHub."
+
+Auto-posting would be worse: review comments are still state-mutating GitHub writes and must stay previewable + gated. The right middle path is to keep review out-of-band and reviewer-agnostic, but make interactive reviewers draft the exact GitHub artifact first and then offer one explicit posting action.
+
+### What shipped
+
+- `templates/docs/pr_review_instructions.md` now says that when the reviewer can converse with the user before writing to GitHub, it first prepares the full GitHub review package in final postable wording, shows it in-session, and only then offers a separate posting action. The output-contract list was expanded accordingly.
+- `WORKFLOW.md`, `templates/CONTRIBUTING.md`, and `templates/CLAUDE.md` now all state the same behavior in both the review prose and the byte-exact C4 `proposal-format` region: review stays out-of-band, but if Claude is the reviewer in that separate session it prepares the exact comments/review first and offers to publish them as a separate gated `[change]` action. No auto-posting.
+- `docs/spec.md` keeps B-010 only as historical audit trail (superseded by new B-043), adds B-043 as the new active rule for interactive reviewer packaging, and adds D-027 as the architectural rationale. B-042's review cross-reference now points at B-043.
+
+### What did NOT come back
+
+- No `request-codex-review` skill
+- No Makefile review target
+- No default reviewer
+- No launcher/dispatcher flow in Claude
+
 ## v1.41.0 — 2026-05-26
 
 **On-branch 6-step workflow + branch-PR-merge flow + local pre-push fallback (B-042 / D-026).** Most invasive workflow-rule change since v1.23.0's verb-prefix → propose-and-confirm rewrite. Touches the loaded C4 `proposal-format` region across the doc trio + non-C4 mirrors across the kit + adds `.githooks/pre-push` for the kit and the template. Minor bump per WORKFLOW.md (rule rewrite of the most-loaded region).

@@ -2,19 +2,20 @@
 
 **Reviewer-agnostic.** This document is the rubric + output contract whichever reviewer you point at this PR — Codex CLI, `/ultrareview`, another LLM (Cursor, Gemini CLI, GPT-5 via CI), or a human reading the diff. **The project ships no default reviewer and no invocation wiring** — pick whatever you prefer, point it at this file and the open PR, and the rubric below applies.
 
-Review happens **out-of-band**: Claude opens the PR after a `gogogo!`-authorized PR-open proposal; you run the reviewer in a separate session. The reviewer reads this file, walks the diff, and posts comments via `gh` (or its native integration) per the output contract below. The branch-owner runs reviewers serially — never in parallel. Claude does not dispatch, prepare, remind about, or wrap any reviewer flow; this file is **not** for the dev session — that's [`CLAUDE.md`](../CLAUDE.md).
+Review happens **out-of-band**: Claude opens the PR after a `gogogo!`-authorized PR-open proposal; you run the reviewer in a separate session. The reviewer reads this file, walks the diff, and produces GitHub comments per the output contract below. The branch-owner runs reviewers serially — never in parallel. The project still ships no reviewer-specific wiring or default reviewer; this file is **not** for the dev session — that's [`CLAUDE.md`](../CLAUDE.md). When the reviewer can converse with the user before writing to GitHub (Claude/Codex/manual-interactive flows), the default is: prepare the exact GitHub review package first, show it in-session, then offer a separate posting action. Do not auto-post.
 
 ## Output contract — read this before anything else
 
 **The deliverable of every review is GitHub comments, posted via `gh api` (or the reviewer's native PR-comment integration), one per commit on the branch — including commits with no findings.**
 
-1. **Per-commit coverage is mandatory.** Walk every commit `main..HEAD` in order. Each commit gets at least one comment on GitHub. Concrete commands below are for the `gh api` path; reviewers with native PR-comment integrations use those instead and the same per-commit rule still applies:
+1. **Prepare the full GitHub review package before posting when the reviewer is interactive.** Draft the exact inline comments / commit-level comments / clean-commit comments / overall summary review in final postable wording first. Surface that package in-session, then offer a separate action to publish it. Non-interactive reviewers may post directly, but the GitHub artifact they produce must match this package shape.
+2. **Per-commit coverage is mandatory.** Walk every commit `main..HEAD` in order. Each commit gets at least one comment on GitHub. Concrete commands below are for the `gh api` path; reviewers with native PR-comment integrations use those instead and the same per-commit rule still applies:
    - inline comments on specific lines (`gh api -X POST repos/<owner>/<repo>/pulls/<N>/comments -f path=... -F line=... -F commit_id=<sha> -f body=...`),
    - or a commit-level review (`gh api -X POST repos/<owner>/<repo>/pulls/<N>/reviews -F commit_id=<sha> -f event=COMMENT -f body=... -F 'comments[]=...'`),
    - or — for a clean commit — an explicit "no findings on `<sha>` — `<subject>`" comment (see 2).
-2. **Clean commits are NOT silently skipped.** A commit with no findings still gets a comment that says so explicitly. Silence is indistinguishable from "the reviewer forgot this commit"; the explicit "no findings" comment closes that gap and makes the audit trail complete.
-3. **Plus one overall summary review at the end** with findings rolled up by severity (Block / Strong / Nit per the rubric below).
-4. **Never produce instead of comments:** local files (`review.md`, `findings.txt`, etc. — don't even draft them locally), chat-only summaries (ephemeral), Slack/email/PR-description edits (the description belongs to the author).
+3. **Clean commits are NOT silently skipped.** A commit with no findings still gets a comment that says so explicitly. Silence is indistinguishable from "the reviewer forgot this commit"; the explicit "no findings" comment closes that gap and makes the audit trail complete.
+4. **Plus one overall summary review at the end** with findings rolled up by severity (Block / Strong / Nit per the rubric below).
+5. **Never produce instead of comments:** local files (`review.md`, `findings.txt`, etc. — don't even draft them locally), chat-only summaries (ephemeral), Slack/email/PR-description edits (the description belongs to the author).
 
 ### Invoking `gh` directly
 
@@ -26,7 +27,7 @@ When the reviewer is running `gh` from a shell (rather than a native PR-comment 
 4. **Verify state-mutating writes landed on GitHub.** After any state-mutating `gh` command (`gh api` review/comment posts, `gh pr create`, `gh pr merge`, issue/PR edits, or similar), query GitHub and confirm the expected result is actually visible. Do not claim success based only on local command output. If the expected state is not visible after a write, treat the operation as not completed and re-apply the retry / batch-and-intervene flow above.
 5. **Keep verification reads separate and direct.** Do follow-up verification with distinct `gh pr view ...` or `gh api ...` read commands rather than bundling write+verify logic inside shell wrappers. The reviewer should be able to point to the specific read-back output that proves the write landed on GitHub.
 
-The rest of this document is the rubric for *what* to look for. The output contract above (items 1–4) is *where the output goes* — non-negotiable, applies to every reviewer (interactive CLI, slash-command, CI-driven, manual).
+The rest of this document is the rubric for *what* to look for. The output contract above (items 1–5) is *where the output goes* — non-negotiable, applies to every reviewer (interactive CLI, slash-command, CI-driven, manual).
 
 ## Block (must fix before merge)
 
