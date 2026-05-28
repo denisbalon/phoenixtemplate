@@ -46,7 +46,7 @@ Binding behavior of this template kit, written as **Blocks**. Format defined in 
 
 ### Block B-005: deploy step is a no-op for this repo
 
-**Rule:** Step 5 of the `gogogo!` workflow (deploy) is a no-op for `phoenixtemplate`. There is no deployable artifact; the "release" is `main` being up to date.
+**Rule:** The deploy sub-step of the merge `gogogo!` (third of three sub-steps per B-044, atomic over `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy) is a no-op for `phoenixtemplate`. There is no deployable artifact; the "release" is `main` being up to date. The deploy sub-step is documented-as-no-op (not skipped) so the merge `gogogo!` remains atomic over the same three sub-steps for consistency with consumer projects.
 **Rationale:** This is a doc + scaffold kit, not a running service. Consumers pull updates by re-cloning or re-fetching templates manually.
 **Test:** manual — no `make deploy`, no `scripts/deploy.sh` at this repo's root (only inside `templates/`).
 **Status:** frozen
