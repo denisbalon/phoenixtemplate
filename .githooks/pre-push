@@ -15,7 +15,7 @@ while read -r _local_ref _local_sha remote_ref _remote_sha; do
     echo "" >&2
     echo "✗ Direct pushes to main are forbidden." >&2
     echo "  Workflow: feature branch → PR → review → merge gogogo!" >&2
-    echo "  See CLAUDE.md / WORKFLOW.md for the on-branch 6-step sequence." >&2
+    echo "  See CLAUDE.md / WORKFLOW.md for the on-branch per-node gogogo! cadence." >&2
     echo "  Bypass (last resort): git push --no-verify" >&2
     echo "" >&2
     exit 1
