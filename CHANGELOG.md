@@ -1,10 +1,14 @@
 # Changelog
 
-All notable changes per `VERSION` bump. Per the `gogogo!` on-branch 6-step workflow, every change bumps `VERSION` and adds an entry here in the same commit.
+All notable changes per `VERSION` bump. Per the `gogogo!` on-branch per-node cadence (B-044), every commit on a feature branch bumps `VERSION` and adds its own entry here in the same commit.
 
 Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by area.
 
 ---
+
+## v1.43.0 — 2026-05-28
+
+**On-branch per-node `gogogo!` cadence + N≥1 commits per branch (B-044 + D-028).** Replaces B-042's bundled-6-step-per-`gogogo!` on-branch atomic with **per-node cadence**: each of the five nodes (stake-branch, each commit, open-PR, each address-review iteration, merge) is its own concrete proposal + `gogogo!`. A feature branch may now carry N≥1 atomic commits before its PR opens; the per-commit shape (spec? → bump → CHANGELOG → code → commit + push) is preserved as the atomic unit *inside* node (2). Branch names drop the `-v<X.Y.Z>` suffix from B-042 (versions span a range across a branch's commits); the PR title carries the range `v<X.Y.A>..v<X.Y.B>` (collapses to `v<X.Y.A>` for single-commit branches). No WIP commits — every commit on a branch stays deliberate and gated. Reference implementation: phoenixcnc PR #13 (5 atomic commits across v0.34.7..v0.34.11, developed under live address-review pressure across 3 reviewer rounds). This commit (#1 of 4 on the rollout branch) updates the C4 `proposal-format` region byte-exact across WORKFLOW.md + templates/CONTRIBUTING.md + templates/CLAUDE.md (B-022 verified green); rewrites WORKFLOW.md §"The on-branch 6-step atomic sequence" → §"The on-branch workflow (per-node `gogogo!` cadence)" as a 5-node branch life-cycle with per-commit shape (a)–(e); updates WORKFLOW.md §Branching (branch-name no version suffix; PR-opens-after-N≥1-commits bullet) and §Pull requests (version-range title); adds B-044 frozen block + D-028 + supersession lines on B-042 + D-026 in `docs/spec.md`; updates `CHANGELOG.md` header prose (line 3) to describe per-node cadence. Commits #2–#4 (separate `gogogo!`s under the new cadence): v1.43.1 sweeps remaining stale 6-step refs in `templates/CONTRIBUTING.md` non-C4 + root `CONTRIBUTING.md` + remaining `WORKFLOW.md` prose + `docs/spec.md` Process & versioning paragraph; v1.43.2 sweeps bootstrap/template surfaces (`PROJECT_STARTER.md` / `BOOTSTRAP.md` / `MIGRATION.md` / `README.md` / `templates/docs/karpathy-claude-rules.md` / `templates/docs/spec.md` / `templates/CLAUDE.md` non-C4 paragraph / `templates/CHANGELOG.md` seed); v1.43.3 sweeps active workflow surfaces (`.githooks/pre-push` / `templates/.githooks/pre-push` / `templates/.claude/skills/spec-block/SKILL.md`). Historical CHANGELOG rows + B-042 / D-026 themselves NOT rewritten beyond the supersession line (audit-trail preservation). Minor bump per WORKFLOW.md (C4-region rewrite of the most-loaded text; mirrors v1.41.0's minor bump for B-042's rule rewrite).
 
 ## v1.42.1 — 2026-05-26
 
