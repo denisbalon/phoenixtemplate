@@ -8,7 +8,7 @@ The repo ships two layers with different scopes:
 
 | Layer | Scope | What it contains |
 |---|---|---|
-| **Process** (stack-agnostic) | Any project | `gogogo!` gate convention, on-branch 6-step atomic workflow, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric, bootstrap checklist (minus the language-specific bits), version-bump + CHANGELOG rules |
+| **Process** (stack-agnostic) | Any project | `gogogo!` gate convention, on-branch per-node `gogogo!` cadence (N≥1 atomic commits per branch), spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric, bootstrap checklist (minus the language-specific bits), version-bump + CHANGELOG rules |
 | **Language preset** (Python-only today) | Python/uv/FastAPI/VPS | `templates/Makefile`, `templates/.github/workflows/ci.yml`, `templates/scripts/deploy.sh`, `templates/.env.example` validators, expected `pyproject.toml` + `src/<package>/` + `tests/` layout |
 
 If you're starting a project in a **different stack** today, you can still adopt the process layer manually (read [`WORKFLOW.md`](WORKFLOW.md), copy `templates/CLAUDE.md` + `templates/CONTRIBUTING.md` + `templates/docs/`, customize) but the language-preset files will need stack-appropriate substitutes you write yourself. Multi-preset support (Node, Go, no-runtime) is on the roadmap (D-009 in `docs/spec.md`) but not shipped — when it lands, this section flips.
@@ -16,7 +16,7 @@ If you're starting a project in a **different stack** today, you can still adopt
 ## Reading order
 
 1. **Read "Bootstrap checklist" below** — the one-time zero-to-first-commit procedure.
-2. **Read [`WORKFLOW.md`](WORKFLOW.md) once** — the binding workflow you'll follow on every change (gate, propose-and-confirm contract, on-branch 6-step sequence, branching/commits/PR/merge/deploy mechanics, conventions, PR review rubric).
+2. **Read [`WORKFLOW.md`](WORKFLOW.md) once** — the binding workflow you'll follow on every change (gate, propose-and-confirm contract, on-branch per-node `gogogo!` cadence with N≥1 atomic commits per branch, branching/commits/PR/merge/deploy mechanics, conventions, PR review rubric).
 3. **Skim [`TEMPLATE_INVENTORY.md`](TEMPLATE_INVENTORY.md)** — file/folder layout you'll be reproducing + the copy-paste references in `templates/`.
 4. **Answer "Decisions to answer before writing feature code" below** in chat with Claude before touching `src/` — these are the decisions that shape everything.
 5. **Customize [`DEPLOY_BASELINE.md`](DEPLOY_BASELINE.md) if deploying to a VPS**, otherwise replace it with your platform's deploy procedure. It also covers the CI/CD baseline and credential handling.
@@ -152,7 +152,8 @@ git commit -m "$(cat <<'EOF'
 chore: scaffold project skeleton v0.1.0
 
 Initial project bootstrap from PROJECT_STARTER template v1.0.0. Adopts the
-gogogo! gate, on-branch 6-step workflow, rebase-merge strategy, version-bump rule.
+gogogo! gate, on-branch per-node cadence (N>=1 atomic commits per branch),
+rebase-merge strategy, version-bump rule.
 No source code yet.
 
 Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>

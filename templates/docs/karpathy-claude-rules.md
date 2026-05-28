@@ -69,10 +69,10 @@ LLMs are exceptionally good at looping until they meet a verifiable goal. The bo
 
 ## How this fits the workflow
 
-These rules apply *inside* the `gogogo!` on-branch 6-step sequence:
+These rules apply *inside* each atomic commit's shape on the on-branch per-node `gogogo!` cadence (each commit is its own proposal + `gogogo!`; shape: (a) spec? → (b) bump → (c) CHANGELOG → (d) code → (e) commit + push):
 
-- **Step 2 (spec)** — Rule 1: state assumptions in the spec entry before any code.
-- **Step 4 (code)** — Rules 2 + 3: minimal, surgical edits; resist scope creep.
-- **Step 5 (commit + push)** — Rule 4: the commit message should reference the verification (test name, manual check, healthcheck) — not just the change.
+- **Sub-stage (a) (spec)** — Rule 1: state assumptions in the spec entry before any code.
+- **Sub-stage (d) (code)** — Rules 2 + 3: minimal, surgical edits; resist scope creep.
+- **Sub-stage (e) (commit + push)** — Rule 4: the commit message should reference the verification (test name, manual check, healthcheck) — not just the change.
 
 If you catch yourself rationalizing past any of these, stop and ask.
