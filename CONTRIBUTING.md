@@ -4,7 +4,7 @@ This file is for working on **this meta repo** — the template kit itself. For 
 
 ## Workflow
 
-Read [`WORKFLOW.md`](WORKFLOW.md) — it's the canonical source for the workflow rules (the propose-and-confirm `gogogo!` gate, on-branch 6-step, version-bump, branching, PR/merge flow, review flow, conventions). This meta repo follows the same rules as any consumer project, with the meta-specific overrides below.
+Read [`WORKFLOW.md`](WORKFLOW.md) — it's the canonical source for the workflow rules (the propose-and-confirm `gogogo!` gate, on-branch per-node cadence with N≥1 commits per branch, version-bump, branching, PR/merge flow, review flow, conventions). This meta repo follows the same rules as any consumer project, with the meta-specific overrides below.
 
 ## Meta-repo specifics (overrides vs. consumer projects)
 

@@ -12,7 +12,7 @@ The kit is currently Python+uv+FastAPI+VPS-shaped; making it stack-agnostic is a
 
 ## Process & versioning
 
-This repo follows its own published workflow. The `gogogo!` passphrase gate + 5-step atomic workflow (spec → bump+CHANGELOG → code → commit → deploy) is binding here too. Process rules live in `templates/CONTRIBUTING.md`. Current version lives in [`VERSION`](../VERSION) — single source of truth, never duplicated in prose. Per-version diary: [`CHANGELOG.md`](../CHANGELOG.md). The template version inside `PROJECT_STARTER.md` mirrors `VERSION` — they bump together.
+This repo follows its own published workflow. The `gogogo!` passphrase gate + on-branch per-node `gogogo!` cadence (N≥1 atomic commits per branch; each of stake-branch, each commit, open-PR, each address-review iteration, and merge is its own `gogogo!`; per-commit shape spec? → bump → CHANGELOG → code → commit + push) is binding here too. Process rules live in `templates/CONTRIBUTING.md` (per-project operational) and [`../WORKFLOW.md`](../WORKFLOW.md) (canonical rationale). The current version lives in [`VERSION`](../VERSION); in language-preset projects (Python/uv) the three version markers — `VERSION` + `pyproject.toml` `[project].version` + `__version__` in `src/<package>/__init__.py` — move together within each commit. This meta-repo has only `VERSION` at meta level (the other markers are template content shipped under `templates/`). Per-version diary: [`CHANGELOG.md`](../CHANGELOG.md). The template version inside `PROJECT_STARTER.md` mirrors `VERSION` — they bump together.
 
 ## Frozen behavior
 
