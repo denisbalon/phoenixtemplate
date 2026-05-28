@@ -1,8 +1,8 @@
 # Workflow + Gate
 
-The canonical source for this project's process: the `gogogo!` propose-and-confirm gate, the on-branch 6-step atomic feature sequence, branching/commit/PR/merge/deploy mechanics, conventions, the recommended auto-memory seed, and the PR review rubric. Extracted from `PROJECT_STARTER.md` §2 + §9 + §10 + §11 in v1.25.0 as part of the doc split (Codex Phase 4 #2). Read this when you need to know how this project's process works.
+The canonical source for this project's process: the `gogogo!` propose-and-confirm gate, the on-branch per-node `gogogo!` cadence (N≥1 atomic commits per branch), branching/commit/PR/merge/deploy mechanics, conventions, the recommended auto-memory seed, and the PR review rubric. Extracted from `PROJECT_STARTER.md` §2 + §9 + §10 + §11 in v1.25.0 as part of the doc split (Codex Phase 4 #2). Read this when you need to know how this project's process works.
 
-**Canonical scope (per B-021):** this file is the canonical source for the **core workflow + rationale** — gate semantics, propose-and-confirm contract, on-branch 6-step structure, version-bump rule, branching, PR/merge/review flow, plus the *why* behind each. `templates/CONTRIBUTING.md` carries the per-project operational concretization (commands, sequences, project-specific bits) and references this file for rationale. `templates/CLAUDE.md` carries the session-facing summary the AI needs in working context (rule statements inline, not pointers). **Rule statements** (gate clause, proposal format, bare-gogogo prompt, allowed-without-gate list, refuse-list) are **deliberately duplicated** across all three tiers — defensive AI-safety redundancy that earned its keep historically. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (`scripts/check-rule-consistency.sh`) catches drift automatically.
+**Canonical scope (per B-021):** this file is the canonical source for the **core workflow + rationale** — gate semantics, propose-and-confirm contract, on-branch per-node `gogogo!` cadence, version-bump rule, branching, PR/merge/review flow, plus the *why* behind each. `templates/CONTRIBUTING.md` carries the per-project operational concretization (commands, sequences, project-specific bits) and references this file for rationale. `templates/CLAUDE.md` carries the session-facing summary the AI needs in working context (rule statements inline, not pointers). **Rule statements** (gate clause, proposal format, bare-gogogo prompt, allowed-without-gate list, refuse-list) are **deliberately duplicated** across all three tiers — defensive AI-safety redundancy that earned its keep historically. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (`scripts/check-rule-consistency.sh`) catches drift automatically.
 
 This file is **binding** for every change.
 
@@ -311,12 +311,11 @@ Use `-d` (safe), not `-D` (force).
 
 | Phase | Frequency |
 |---|---|
-| Branch creation | Step 1 of the on-branch 6-step `gogogo!` — once per branch |
-| Spec + bump + code | Steps 2–4 of the same `gogogo!` — once per branch on fresh work |
-| Commits + push | Many times per branch — once per `gogogo!` (step 5; address-review iterations stay on the same branch) |
-| Open PR | Step 6 of the on-branch 6-step `gogogo!` — bundled with the first commit |
+| Branch creation | Once per branch — its own `gogogo!` |
+| Atomic commits on the branch | N≥1 per branch — each its own `gogogo!` (spec? → bump → CHANGELOG → code → commit + push) |
+| Open PR | Once per branch — its own `gogogo!`, after N≥1 commits on the branch |
 | Review | Out-of-band, between PR open and merge |
-| Address feedback | As needed, more commits on the same branch (skip steps 1 + 6) |
+| Address feedback | As needed, more `gogogo!`-authorized atomic commits on the same branch (branch and PR already exist) |
 | Merge + deploy | One merge `gogogo!` — atomic over `gh pr merge` + `git pull` + deploy |
 | Cleanup | Bundled with merge `gogogo!` (`--delete-branch`) |
 
@@ -389,7 +388,7 @@ When Claude Code first opens a new project, ask it to write these memory entries
 | `project_overview.md` | project | What the project is, what it replaces, core flow, volume baseline |
 | `architecture_decisions.md` | project | Stack chosen for v1, why; open architecture questions still pending |
 | `existing_infra.md` | reference | Pointers to existing systems (URLs, IPs, repos) — credential-free |
-| `gogogo_gate_workflow.md` | feedback | The `gogogo!` passphrase gate + on-branch 6-step workflow rules |
+| `gogogo_gate_workflow.md` | feedback | The `gogogo!` passphrase gate + on-branch per-node cadence rules |
 | `harness_quirks.md` | feedback | Operational gotchas about the Claude Code harness's permission/write rules |
 | `user_preferences.md` | feedback | How to collaborate with this user — tolerance for ceremony, doc preferences, credential-rotation cadence, etc. |
 

@@ -2,17 +2,18 @@
 
 Binding process document. Read once; revisit when conventions feel off.
 
-**Canonical scope (per B-021 in `docs/spec.md`):** this file is the canonical source for the **per-project operational workflow** — exact commands, sequences, project-specific paths, deploy specifics, version markers per stack. The **core workflow rules + rationale** (the *why* behind the gate, the propose-and-confirm semantics, the on-branch 6-step structure) live canonically in `WORKFLOW.md` — this file references them rather than re-deriving them. The **session-facing AI summary** is `CLAUDE.md`. Rule statements (gate clause, proposal format, bare-gogogo prompt, allowed-without-gate list, refuse-list) are deliberately duplicated here, in `CLAUDE.md`, and in `WORKFLOW.md` — that's defensive AI-safety redundancy, not debt. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (`scripts/check-rule-consistency.sh`) catches drift automatically.
+**Canonical scope (per B-021 in `docs/spec.md`):** this file is the canonical source for the **per-project operational workflow** — exact commands, sequences, project-specific paths, deploy specifics, version markers per stack. The **core workflow rules + rationale** (the *why* behind the gate, the propose-and-confirm semantics, the on-branch per-node `gogogo!` cadence) live canonically in `WORKFLOW.md` — this file references them rather than re-deriving them. The **session-facing AI summary** is `CLAUDE.md`. Rule statements (gate clause, proposal format, bare-gogogo prompt, allowed-without-gate list, refuse-list) are deliberately duplicated here, in `CLAUDE.md`, and in `WORKFLOW.md` — that's defensive AI-safety redundancy, not debt. Editing any duplicated rule means editing it in all three places; the C4 consistency linter (`scripts/check-rule-consistency.sh`) catches drift automatically.
 
 ## Quick rules cheat-sheet
 
 | Situation | Action |
 |---|---|
-| Need to start fresh work | Step 1 of the on-branch 6-step `gogogo!` — new branch `<type>/<slug>-v<X.Y.Z>` off `main` |
-| First commit on a fresh branch | Bundled with `gh pr create` (no `--draft`) in the same `gogogo!` — step 5 + step 6 |
+| Need to start fresh work | Stake-branch `gogogo!` — new branch `<type>/<slug>` (no version suffix) off `main` |
+| Each atomic commit on the branch | Its own concrete proposal + `gogogo!` — spec? → bump → CHANGELOG → code → commit + push to feature branch |
 | Made a commit | Push to origin same turn — no exceptions; never to `main` (pre-push hook blocks it) |
 | Touched any tracked `.md` | Commit it AND push (machine-swap survival) |
-| Address-review fixes | Standard `gogogo!` on the existing branch — skip steps 1 + 6 (branch + PR already exist) |
+| Ready to open the PR | Separate `gogogo!` (after N≥1 commits on the branch); title `<type>: <desc> v<X.Y.A>..v<X.Y.B>` (collapses to `v<X.Y.A>` for single-commit branches) |
+| Address-review fixes | More atomic commits on the existing branch, each its own `gogogo!` |
 | User `gogogo!`s a merge proposal | Atomic over `gh pr merge <PR#> --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy |
 | `--rebase` refuses | Rebase the feature branch with `--force-with-lease`, retry merge |
 | Anything ambiguous | Ask. Never `--force` without explicit OK. |
@@ -21,7 +22,9 @@ Binding process document. Read once; revisit when conventions feel off.
 
 - **Never commit to `main`.** Every change lives on a feature branch. `main` only receives explicit fast-forward merges via PR. Direct pushes to `main` are blocked by the local `.githooks/pre-push` hook (and by server-side branch protection where available).
 - **Push after every commit.** Local-only commits are not allowed. Spec, docs, and version bumps must always be on origin.
-- **One PR per branch, opened with the first commit.** PR opens in step 6 of the on-branch 6-step `gogogo!` sequence — bundled with the first commit on a fresh branch. Subsequent commits (review-feedback fixes) push to the existing branch.
+- **One PR per branch, opened after N≥1 commits.** PR-open is its own `gogogo!`, separate from the per-commit `gogogo!`s on the branch. A branch may accumulate multiple atomic commits before its PR opens; subsequent commits (pre-PR or address-review) push to the existing branch and the PR updates automatically.
+- **Branch name has no version suffix.** Versions live in commit subjects. A branch's commits may span a version range `v<X.Y.A>..v<X.Y.B>` — captured in the PR title at PR-open time.
+- **No WIP commits.** Every commit on a branch is deliberate and gated. "Trying X, didn't work" is not a valid commit shape — abandon it and re-propose.
 - **Merge is user-triggered.** Review happens out-of-band; merge fires only on a separate merge `gogogo!`. The merge `gogogo!` is atomic over `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy.
 - **Merge with rebase to preserve linear history.** `gh pr merge --rebase --delete-branch` is the canonical merge under branch protection.
 - **Delete branches after successful merge** (bundled with `--delete-branch`).
@@ -32,22 +35,22 @@ Binding process document. Read once; revisit when conventions feel off.
 
 | Phase | Frequency |
 |---|---|
-| §1 Set up branch | Step 1 of the on-branch 6-step `gogogo!` — once per branch |
-| §2 Commits + push | Many per branch — once per `gogogo!` (step 5 of the sequence); address-review iterations stay on the same branch |
-| §3 Open PR | Step 6 of the on-branch 6-step `gogogo!` — bundled with the first commit |
+| §1 Set up branch | Once per branch — its own `gogogo!` |
+| §2 Commits + push | N≥1 atomic commits on the branch, each its own `gogogo!`; address-review iterations stay on the same branch |
+| §3 Open PR | Once per branch — its own `gogogo!`, after N≥1 commits on the branch |
 | §4 Review | Out-of-band, between PR open and merge |
-| §5 Address feedback | As needed, more commits on the same branch (skip steps 1 + 6) |
+| §5 Address feedback | As needed, more `gogogo!`-authorized atomic commits on the same branch (branch and PR already exist) |
 | §6 Merge + deploy | One merge `gogogo!` — atomic over `gh pr merge` + `git pull` + deploy |
 | §7 Cleanup | Bundled with §6 (`--delete-branch`) |
 
 ## TL;DR
 
-1. Feature branch from `main` named `<type>/<slug>-v<X.Y.Z>`. Created as step 1 of the on-branch 6-step `gogogo!` sequence — not in advance.
+1. Feature branch from `main` named `<type>/<slug>` (no version suffix). Created as the stake-branch `gogogo!` — not in advance, not bundled with later commits.
 2. **No state-mutating action unless Claude's immediately preceding message contained a concrete proposal AND the user's current message contains `gogogo!` (or `N gogogo!` for a numbered choice).** The proposal IS the contract — specific files, specific commands, specific commits. Bare `gogogo!` without a preceding proposal is invalid — Claude must ask for clarification.
-3. When the user `gogogo!`s a fresh-work feature proposal, the on-branch 6-step atomic sequence is: **branch → spec → bump+CHANGELOG → code → commit+push (to feature branch) → open PR**. Push after every commit, to the feature branch — never to `main`. The proposal enumerates each step upfront so one `gogogo!` authorizes the whole sequence.
-4. Every change bumps `VERSION`. ANY change. Address-review iterations bump too (each round = one VERSION + one CHANGELOG entry on the same branch).
-5. PR opens **ready** (not draft) in step 6 of the on-branch 6-step sequence — bundled with the first commit. Body uses `## Summary` + `## Test plan`.
-6. Review happens **out-of-band** in a separate session — user runs any reviewer (Codex, `/ultrareview`, another LLM, manual) against `docs/pr_review_instructions.md` and the open PR. Claude does not dispatch reviewers from the authoring session; if Claude is the reviewer in the separate review session, it prepares the exact GitHub comments/review and offers to post them as a separate gated action. Address feedback with more `gogogo!`-authorized commits on the same branch (skipping steps 1 + 6).
+3. When the user `gogogo!`s on-branch feature work, the per-node cadence is: **stake-branch (`gogogo!`) → N≥1 atomic commits on the branch (each its own `gogogo!`; per-commit shape: spec? → bump → CHANGELOG → code → commit + push to feature branch) → open PR (`gogogo!`) → 0+ address-review commits (each its own `gogogo!`) → merge (`gogogo!`)**. Push after every commit, to the feature branch — never to `main`.
+4. Every commit on the branch bumps `VERSION` (and language-specific markers — they move together). ANY change. The branch's commits may span a version range `v<X.Y.A>..v<X.Y.B>`.
+5. PR opens **ready** (not draft) as its own `gogogo!`, after N≥1 commits on the branch. Title carries the version range `v<X.Y.A>..v<X.Y.B>` (collapses to `v<X.Y.A>` for single-commit branches). Body uses `## Summary` + `## Test plan`.
+6. Review happens **out-of-band** in a separate session — user runs any reviewer (Codex, `/ultrareview`, another LLM, manual) against `docs/pr_review_instructions.md` and the open PR. Claude does not dispatch reviewers from the authoring session; if Claude is the reviewer in the separate review session, it prepares the exact GitHub comments/review and offers to post them as a separate gated action. Address feedback with more `gogogo!`-authorized atomic commits on the same branch (branch and PR already exist).
 7. When the user `gogogo!`s a merge proposal, the merge `gogogo!` is **atomic over three sub-steps**: `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge.
 8. **Deploy is bundled with merge** — fires once per merged PR as the third sub-step of the merge `gogogo!`. Topic-branch commits do not deploy. For meta-repos that ship docs only, the deploy sub-step is documented-as-no-op (still named in the merge proposal).
 
@@ -59,10 +62,10 @@ Binding process document. Read once; revisit when conventions feel off.
 git fetch origin
 git checkout main
 git pull --ff-only origin main
-git checkout -b <type>/<slug>-v<X.Y.Z>
+git checkout -b <type>/<slug>
 ```
 
-Branch naming: kebab-case `<type>/<slug>-v<X.Y.Z>` where `<type>` is one of `feat`/`fix`/`chore`/`docs`/`refactor`/`test`/`perf`. The `-v<X.Y.Z>` suffix names the version this branch first ships. The branch is created locally in step 1 and pushed in step 5 with the first commit (no need for an upfront empty `git push -u`); the PR opens in step 6 of the same `gogogo!` sequence. Direct pushes to `main` are blocked by `.githooks/pre-push` (activated via `make install-hooks`).
+Branch naming: kebab-case `<type>/<slug>` where `<type>` is one of `feat`/`fix`/`chore`/`docs`/`refactor`/`test`/`perf`. **No version suffix on the branch name** — versions live in commit subjects, and a branch's commits may span a version range captured at PR-open time. The branch is created locally as the stake-branch `gogogo!` and first push happens bundled with the first commit's push (no need for an upfront empty `git push -u`); the PR opens as its own later `gogogo!` after N≥1 atomic commits land. Direct pushes to `main` are blocked by `.githooks/pre-push` (activated via `make install-hooks`).
 
 ## 2. Commits
 
@@ -108,7 +111,7 @@ git push origin <branch>
 
 ## 3. Open the pull request
 
-**Bundled with the first commit** — step 6 of the on-branch 6-step `gogogo!` sequence. PR opens **ready** (no `--draft` flag). Generate title + body from the actual commit log.
+**A separate `gogogo!`, after N≥1 commits on the branch.** PR opens **ready** (no `--draft` flag), so the out-of-band reviewer (§4) can pick it up immediately. Generate title + body from the actual commit log. Title carries the version range `v<X.Y.A>..v<X.Y.B>` covered by the branch's commits (collapses to `v<X.Y.A>` when the branch had a single commit).
 
 ```sh
 gh pr create --base main --head <branch> --title "<concise title under 70 chars>" --body "$(cat <<'BODY'
@@ -266,20 +269,21 @@ Reading files · grep · read-only git · web search · planning text · proposi
 
 **Canonical list lives in [`WORKFLOW.md` → "Rationalizations to refuse"](WORKFLOW.md#rationalizations-to-refuse).** This file does not duplicate the table — the list evolves per observed failure mode (rows added as new rationalizations surface during sessions), making byte-exact cross-file duplication high-churn for low marginal AI-safety value. The C4-anchored regions in this file (gate-clause / proposal-format / bare-gogogo / env-metadata-contract) cover the load-bearing rule statements; the refuse-list is a teaching aid that lives canonically in WORKFLOW.md. `templates/CLAUDE.md` similarly doesn't carry the table.
 
-## Mandatory on-branch 6-step sequence on a `gogogo!`-authorized feature proposal
+## On-branch per-node `gogogo!` cadence for `gogogo!`-authorized feature work
 
-Atomic. Runs when the user `gogogo!`s a proposal Claude surfaced for a state-mutating feature change (per B-026 / B-028 / B-042; see also [WORKFLOW.md → "The on-branch 6-step atomic sequence"](WORKFLOW.md#the-on-branch-workflow-per-node-gogogo-cadence)). Address-review iterations on an existing branch skip steps 1 and 6 and keep steps 2–5.
+Per-node atomic. Each node is its own `gogogo!`. A feature branch may carry N≥1 atomic commits before its PR opens (per B-026 / B-028 / B-044; see also [WORKFLOW.md → "The on-branch workflow (per-node `gogogo!` cadence)"](WORKFLOW.md#the-on-branch-workflow-per-node-gogogo-cadence)).
 
-1. **Create the feature branch** — `git checkout main && git pull --ff-only origin main && git checkout -b <type>/<slug>-v<X.Y.Z>`. Direct pushes to `main` are blocked by `.githooks/pre-push` (activated via `make install-hooks`).
-2. **Update the spec** — `docs/spec.md` reflects the change BEFORE any code is written. For architectural decisions, also add a Decision log entry in `docs/spec.md` (`D-NNN (YYYY-MM-DD) <title>` with Chose / Considered / Why / Implemented in).
-3. **Bump versions + CHANGELOG** — bump `VERSION` (and language-specific markers) and add a `CHANGELOG.md` entry under the new version. Markers for this project: <LIST_PROJECT_VERSION_MARKERS — e.g. `VERSION` at root, `pyproject.toml` `version`, `__version__` in `src/.../__init__.py`>.
-4. **Write the code.**
-5. **Commit + push to the feature branch** — single commit per concern, subject ends with `v<X.Y.Z>`. Push to origin in the same turn (to the feature branch — never to `main`).
-6. **Open the PR ready** — `gh pr create --base main --head <branch> --title "..." --body "..."`. **No `--draft` flag.** Claude stops here.
+1. **Stake the feature branch** — `git checkout main && git pull --ff-only origin main` (clean base), then `git checkout -b <type>/<slug>`. Branch naming: kebab-case prefix per type (`feat/`, `fix/`, `chore/`, `docs/`, `refactor/`, `test/`, `perf/`). **No version suffix on the branch name** — versions live in commit subjects. First push of the branch is bundled with the first commit's push. Direct pushes to `main` are blocked by `.githooks/pre-push` (activated via `make install-hooks`).
+2. **N≥1 atomic commits on the branch** — each its own concrete proposal + `gogogo!`. Per-commit shape: (a) update spec if behavior-relevant + add Decision log entry if architectural (`D-NNN (YYYY-MM-DD) <title>` with Chose / Considered / Why / Implemented in); (b) bump version markers (they move together — for this project: <LIST_PROJECT_VERSION_MARKERS — e.g. `VERSION` at root, `pyproject.toml` `version`, `__version__` in `src/.../__init__.py`>); (c) add a `## v<X.Y.Z> — YYYY-MM-DD` CHANGELOG entry; (d) write the code; (e) commit (subject ends `v<X.Y.Z>`) + push to feature branch. **No WIP commits** — every commit deliberate. The branch's commits may span a range `v<X.Y.A>..v<X.Y.B>`.
+3. **Open the PR (ready, not draft)** — separate `gogogo!`. `gh pr create --base main --head <branch> --title "<type>: <bundle description> v<X.Y.A>..v<X.Y.B>" --body "..."` (no `--draft`). Title carries the version range (collapses to `v<X.Y.A>` for single-commit branches). After this Claude stops; PR review is out-of-band.
+4. **Address-review iterations** — 0+ atomic commits, each its own `gogogo!`. Same per-commit shape as step 2. No branch creation, no second PR open.
+5. **Merge** — separate `gogogo!`, atomic over `gh pr merge <PR#> --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy. Deploy is NOT a separate `gogogo!` after merge.
 
-**The sequence ENDS at step 6.** Do not auto-merge. The next user message is either a fix `gogogo!` (address-review iteration — skips steps 1 + 6) or a separate merge `gogogo!` (atomic over `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy).
+**The on-branch sequence ENDS at PR open.** Do not auto-merge. Do not auto-deploy. The next user message is either an address-review `gogogo!` (more atomic commits on the same branch) or a merge `gogogo!`.
 
 If a step fails, surface — do not fake-complete.
+
+**CHANGELOG.md merge-conflict surface:** with multiple concurrent feature branches each prepending entries to `CHANGELOG.md`, rebase-on-pull will sometimes produce conflicts. Resolve mechanically (keep both sections, ordered by version descending) and re-push.
 
 ## Version-bump rule
 
