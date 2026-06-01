@@ -7,3 +7,4 @@
 5. WTF with GitHub permissions for Codex.
 6. Make sure NO files or changes are written without a branch — always ask first.
 7. Update the "review PR" skill/flow with explicit instructions to post comments (not just produce them locally).
+8. Codex review trick: check review. If NOT 100% green and needs fixing — then code! After that wait for re-review. If 100% green — merge!
