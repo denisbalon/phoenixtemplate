@@ -236,14 +236,14 @@ BODY
 
 1. Open whichever reviewer you prefer in a separate terminal or session.
 2. Point it at `docs/pr_review_instructions.md` (the rubric) and the open PR.
-3. The reviewer walks `main..HEAD`, prepares the per-commit comments + overall summary review per the output contract, and posts them via `gh` (or its native PR-comment integration). If the reviewer is interactive (Codex CLI, Claude-as-reviewer, manual review), it should first show the exact prepared GitHub review package in-session and then offer a separate posting action. You approve each shell call if the reviewer asks.
+3. The reviewer walks `main..HEAD`, prepares the per-commit comments + overall summary review per the output contract, and posts them via `gh` (or its native PR-comment integration). If the reviewer is interactive (Codex CLI, Claude-as-reviewer, manual review), it should first show the exact prepared GitHub review package in-session and then offer a separate posting action — unless the user opened the pass with the literal command `review-post!` (B-045), which authorizes reviewing every PR open at that moment and publishing each package immediately, scoped strictly to per-commit comments, inline review comments, and the one `event=COMMENT` overall review. You approve each shell call if the reviewer asks.
 4. Return to Claude. Address feedback with more `gogogo!`-authorized commits on the same branch.
 
 That's it. No prereq checking from Claude. No dispatcher or launcher flow. The user picks a reviewer and runs it; if the reviewer is interactive, the default closeout is the prepared GitHub review package plus a separate offer to post it.
 
 ### Output contract (universal)
 
-The deliverable is GitHub comments via `gh api` (or the reviewer's native PR-comment integration), **one per commit on the branch — including commits with no findings**. In interactive reviewer sessions, first prepare the exact GitHub review package in final postable wording, then offer a separate posting action. Clean commits get an explicit "no findings on `<sha>` — `<subject>`" comment so silence isn't mistaken for omission. Plus one overall summary review rolled up by severity (Block / Strong / Nit). Never a local file, never a chat-only summary, never PR-description edits. Full rules: "PR review heuristics" below and `docs/pr_review_instructions.md`.
+The deliverable is GitHub comments via `gh api` (or the reviewer's native PR-comment integration), **one per commit on the branch — including commits with no findings**. In interactive reviewer sessions, first prepare the exact GitHub review package in final postable wording, then offer a separate posting action; the literal command `review-post!` (B-045) is the one exception, publishing each package immediately across every PR open when the command lands, and authorizing review artifacts only — no merge, approval, label, or description edit. Clean commits get an explicit "no findings on `<sha>` — `<subject>`" comment so silence isn't mistaken for omission. Plus one overall summary review rolled up by severity (Block / Strong / Nit). Never a local file, never a chat-only summary, never PR-description edits. Full rules: "PR review heuristics" below and `docs/pr_review_instructions.md`.
 
 ---
 
