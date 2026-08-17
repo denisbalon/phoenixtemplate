@@ -6,6 +6,16 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.44.1 — 2026-08-17
+
+**Sweep non-C4 `review-post!` prose mirrors (commit #2 of the B-045 / D-029 rollout).** v1.44.0 put the rule in the two C4 regions (`gate-clause`, `proposal-format`) and in `templates/docs/pr_review_instructions.md`, but six non-C4 prose mirrors still described prepare-then-offer as unconditional with no mention of the exception. Left alone they'd contradict the C4 region that now overrides them — and the C4 region is the text Claude actually applies, so the mirrors would read as a second, stricter rule that no longer exists. Same failure mode B-041 named: content stranded outside the loaded region drifts and misdirects.
+
+Highest-impact of the six is the `templates/CLAUDE.md` "Review is out-of-band" one-liner, which loads into context on every consumer session.
+
+Touches: `WORKFLOW.md` §"PR review" — reviewer-flow step 3 and the output-contract summary paragraph. `templates/CONTRIBUTING.md` — §6 of the workflow list, reviewer-flow step 3, and the review-heuristics bullet. `templates/CLAUDE.md` — the review one-liner below the C4 blocks. Each gains a clause naming `review-post!`, its open-PR-set semantics ("every PR open when the command lands"), and its three-artifact scope boundary, worded to match the surrounding tier's voice rather than pasted verbatim. No C4 region is touched, so B-022 stays green by construction.
+
+After this commit, `git grep -n "offer a separate posting action"` and the equivalent gated-action phrasings all carry the exception clause; no active surface describes prepare-then-offer as unconditional. `PROJECT_STARTER.md` Template-version header bumped to v1.44.1 + changelog row added (per B-002). All 5 linters green (C4 / spec / doc-refs / placeholders / manifest). Branch `feat/review-post-command` is ready for PR-open as a separate `gogogo!`, title `feat: review-post! scoped review-publishing token v1.44.0..v1.44.1`. Patch bump (prose sweep; no behavior change beyond what landed in v1.44.0).
+
 ## v1.44.0 — 2026-08-17
 
 **`review-post!` — scoped immediate-publish token for PR reviews (B-045 + D-029).** Commit #1 on `feat/review-post-command`. Adds a second authorization token alongside `gogogo!`, deliberately narrow: the exact command `review-post!` authorizes reviewing **every PR that is open at the moment the command is received** and publishing each prepared review package immediately after preparing it — no separate `gogogo!`, no per-PR confirmation round-trip.
