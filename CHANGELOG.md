@@ -6,6 +6,22 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.46.0 — 2026-08-18
+
+**Host capabilities discovered through an index, not a per-capability list (B-046 amended, D-030 (f)).** v1.45.0 named one capability directly — *"if `~/docs/file-exchange.md` exists, read it."* That form survived exactly as long as there was one capability doc. A second one made the flaw concrete: the kit would accrete one vendor-shaped bullet per capability the operator happens to run, arriving slowly enough not to look like the de-personalization regression it is, and forcing a kit change plus a consumer re-sync every time a doc is added.
+
+**The section now names a single entry point:** `~/docs/README.md`, an index of one line per capability — what it is and when to reach for it. If it exists, the session reads it, then reads a specific doc on demand when a task calls for that doc. If it does not exist, the host provides no capabilities and the absence is **completely silent** — no warning, no prompt, no mention.
+
+**The property this buys:** adding a capability on a host requires **no kit change at all** — a new index line and a new doc, both host-side. The kit's surface stops growing with one operator's infrastructure, which is what B-046 existed to guarantee and what the per-capability form quietly gave up.
+
+**Token cost is now bounded too.** Only the index loads by default; capability docs are read on demand. Under the v1.45.0 form every capability's description sat in the loaded section whether or not the session ever touched it.
+
+Amended in place rather than superseded: v1.45.0 has not been merged and no PR is open, so B-046 gains a corrected Rule and Test instead of a B-047 superseding a block that would otherwise have shipped wrong. D-030 gains `Considered` option (f) recording the rejected per-capability form and why a second doc was what exposed it, plus an `Implemented in` note covering both versions.
+
+Test (3) is new and is the real regression guard: *adding a capability must require no kit change.* Test (4) additionally forbids any capability **name** appearing in the kit, not just hosts and domains.
+
+Touches: `templates/CLAUDE.md` (section rewritten — still non-C4, no C4 region touched, B-022 green by construction); `docs/spec.md` (B-046 Rule + Test; D-030 Considered + Implemented in); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md` (per B-002). All 5 linters green. Minor bump per WORKFLOW.md (behavior change to a frozen block's Rule).
+
 ## v1.45.0 — 2026-08-18
 
 **Host capabilities discovered by convention, never assumed (B-046 + D-030).** `templates/CLAUDE.md` gains a **Host capabilities (optional)** section: capabilities the *host* provides but the *project* does not ship are discovered at a fixed documented path, and **absence is silent** — the session proceeds without the capability and never reports it as missing. First capability is file exchange at `~/docs/file-exchange.md`.
