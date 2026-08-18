@@ -156,6 +156,12 @@ files:
     placeholders: []
     exported_by_starter: true
 
+  - path: templates/.claude/skills/updates/SKILL.md
+    purpose: kit-update check skill — reads the adoption journal, reports what this project has not adopted (B-047)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
   # ----- templates/.github/ --------------------------------------------
 
   - path: templates/.github/workflows/ci.yml

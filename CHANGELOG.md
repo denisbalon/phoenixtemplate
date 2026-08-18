@@ -6,6 +6,22 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.48.0 — 2026-08-18
+
+**`/updates` skill — the intended way to consume the adoption journal (A-003).** v1.47.0 shipped `ADOPTION.md` but left the invocation as "read this URL and tell me what's missing" — a paragraph to type, every time, in every project. Nobody types that. The skill holds the URL so it is never typed: in any project built from the kit, `/updates` fetches the live journal, runs each entry's Check against that project, and reports only what is not adopted.
+
+**Quiet when current.** The skill is explicitly instructed to answer in one line and stop when nothing is missing — no table, no summary of what it checked, no restating adopted entries. Being up to date is the common case and must not produce a wall of text, or the skill stops getting run.
+
+**Reports and proposes; never applies.** Adoption is a normal state-mutating change and goes through `gogogo!` like anything else. The skill carries the two rules that make adoption safe into its proposal: C4 regions are replaced **byte-exact and only where the project already has them** (a project that deliberately dropped a region must not have it re-added — re-imposing a removed rule is a regression, not an update), and entries flagged adopt-together are adopted together.
+
+**Uses `curl` via Bash rather than WebFetch**, since WebFetch is frequently not permitted and this is a plain public file — the kit's own README already documents that friction. On fetch failure the skill says so and stops; it is explicitly forbidden from answering from memory of a previous run, because a stale answer here is worse than no answer.
+
+**This commit exercises B-047's obligation one commit after freezing it.** The skill is a new file under `templates/`, so it ships to consumers, so it needs its own journal entry — `A-003`, with the Check `test -f .claude/skills/updates/SKILL.md`. New projects get the skill at bootstrap; the entry exists for projects created before v1.48.0.
+
+Also considered and skipped: a page on `phoenixtemplate.com`. It would serve a human browsing the site, but it does not shorten anything — with the skill, no URL is ever typed or read. Different problem, different repo.
+
+Touches: `templates/.claude/skills/updates/SKILL.md` (new); `templates/manifest.yaml` (registered, 47 entries, validator green); `ADOPTION.md` (A-003); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md` per B-002. All 5 linters green. Minor bump per WORKFLOW.md (new shipped template file).
+
 ## v1.47.0 — 2026-08-18
 
 **Adoption journal — `ADOPTION.md` (B-047 + D-031).** Consumers drift silently: the kit ships a rule, every project built from it keeps the old text until someone remembers to hand-sync, and nothing surfaces the gap. The projects keep working; they just quietly disagree with the kit and with each other. `ADOPTION.md` is the consumer-facing feed of what a project built from the kit should pick up — distinct from `CHANGELOG.md`, which records every kit change including the large majority consumers never touch. **Absence of an entry is a positive statement that nothing is required.**

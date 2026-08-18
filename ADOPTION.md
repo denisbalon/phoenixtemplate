@@ -24,6 +24,22 @@ Each entry carries a one-line **Check** you can run to see whether you already h
 
 ---
 
+## A-003 — `/updates` skill
+
+**Merged:** 2026-08-18 · **Kit version:** v1.48.0 · **Spec:** B-047 in [`docs/spec.md`](docs/spec.md)
+
+**What:** a `/updates` skill that reads this journal, runs each entry's Check against the project it is invoked in, and reports only what is not adopted — then proposes adoption through the normal `gogogo!` flow. It never edits a file itself. This is the intended way to consume this journal: you type `/updates`, not a URL.
+
+**Affects:** `.claude/skills/updates/SKILL.md` (new file) and your project's manifest, if it keeps one.
+
+**Check:** `test -f .claude/skills/updates/SKILL.md && echo adopted || echo not-adopted`
+
+**Adopt:** copy [`templates/.claude/skills/updates/SKILL.md`](templates/.claude/skills/updates/SKILL.md) to `.claude/skills/updates/SKILL.md`. If your project has a `manifest.yaml`, register it the way the other skill is registered. New projects bootstrapped from the kit get it automatically — this entry exists for projects created before v1.48.0.
+
+**Skip if:** you would rather check for kit updates by reading this file directly. Nothing else depends on the skill.
+
+---
+
 ## A-002 — Host capabilities (optional)
 
 **Merged:** 2026-08-18 · **Kit version:** v1.46.0 · **Spec:** B-046, D-030 in [`docs/spec.md`](docs/spec.md)
