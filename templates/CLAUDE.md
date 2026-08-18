@@ -64,9 +64,13 @@ A `SessionStart` hook in `.claude/settings.json` runs `scripts/check-env.sh`. If
 
 ## Host capabilities (optional)
 
-The host a project runs on may provide capabilities the project itself doesn't ship. These are discovered **by convention, never assumed** — the absence of a capability is normal and silent, not an error to report.
+The host a project runs on may provide capabilities the project itself doesn't ship — moving files off the box, reaching another machine, driving an attached device. These are discovered **by convention, never assumed**.
 
-- **File exchange.** If `~/docs/file-exchange.md` exists on this host, read it before moving any file into or out of the box, and follow it — it documents the host's file-transfer side-channel (where uploads land, the share command for outbound artifacts, how to retrieve them). If that file does not exist, this host has no such capability: proceed normally and do not mention it.
+**If `~/docs/README.md` exists, read it.** It is an index of this host's capability docs: one line per capability saying what it is and when to reach for it. Before doing work a listed doc covers, read that doc and follow it. If a task has no entry in the index, the host offers nothing extra for it — proceed normally.
+
+**If `~/docs/README.md` does not exist, this host provides no capabilities.** That is the normal case. Say nothing, ask for nothing, and do not treat it as missing or broken — the absence must be completely silent.
+
+Only the index loads by default; the docs it points at are read on demand, when a task actually calls for one.
 
 Host capability docs are **host-local, not project content**. Never copy their contents into a tracked file, a commit message, a PR body, or any other surface that leaves the box — a capability doc may describe infrastructure that is not public.
 
