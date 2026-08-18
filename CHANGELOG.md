@@ -6,6 +6,22 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.45.0 — 2026-08-18
+
+**Host capabilities discovered by convention, never assumed (B-046 + D-030).** `templates/CLAUDE.md` gains a **Host capabilities (optional)** section: capabilities the *host* provides but the *project* does not ship are discovered at a fixed documented path, and **absence is silent** — the session proceeds without the capability and never reports it as missing. First capability is file exchange at `~/docs/file-exchange.md`.
+
+**The kit ships the mechanism, never the content.** The section names a path and a contract — no host, project, domain, or infrastructure. A consumer who has never heard of host capabilities sees no behavior change, no warning, and no prompt; a consumer who wants host-local extension docs gets a convention that works for them too.
+
+**Why it isn't just a concrete path.** Putting `/root/projects/<name>/docs/file-exchange.md` in the kit would work immediately and — since `docs/spec.md` already names sibling projects throughout the decision log — leak nothing new. It was rejected anyway: it reverses the deliberate de-personalization of A1–A3 (v1.11.2–v1.13.0, `denisbalon/` parametrized to `<GITHUB_USER>`, vendor specifics removed or explicitly labeled), and ships every clone on every machine a line that is true on exactly one machine. Splitting mechanism from content resolves both: the convention is honest public kit content, the subject matter stays on the host.
+
+**Why a fixed path rather than a search.** Instructing the session to *find* the doc by name costs a filesystem scan every session and can match an unrelated same-named file inside some project's `docs/` directory — the wrong file, silently. A documented path is the disciplined form of the same idea.
+
+**Also rejected:** a private overlay repo plus a fetch hook (over-engineering — the content was already versioned in a private repo cloned on the host, so an overlay added a second access grant for nothing); encrypting internal docs into the public repo via git-crypt/SOPS/age (the ciphertext would be public *permanently*, so one key compromise or enough elapsed time makes it retroactively readable, and filenames and sizes leak regardless); host-level `~/.claude/CLAUDE.md` with no kit change (viable and zero-footprint, but invisible to the kit and un-versioned, so every machine re-derives it). Full comparison in D-030.
+
+The section carries an explicit **no-exfiltration clause** — host capability docs are host-local, not project content, and their contents must never be copied into a tracked file, commit message, PR body, or any surface that leaves the host. That clause exists because the realistic failure mode is habit rather than mechanism: a session holding such a doc in context can paste it somewhere public, which no convention can prevent and must therefore name.
+
+Touches: `templates/CLAUDE.md` (new non-C4 section between §"Session start" and §"Sensitive context" — **no C4 region touched**, so B-022 is green by construction); `docs/spec.md` (B-046 frozen + D-030); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md` (per B-002). Deliberately not touched: `WORKFLOW.md` and `templates/CONTRIBUTING.md` — a session-facing capability note is neither a workflow rule nor an operational procedure, so B-021's three-tier redundancy doesn't apply. All 5 linters green. Minor bump per WORKFLOW.md (new frozen spec block + new shipped template behavior).
+
 ## v1.44.1 — 2026-08-17
 
 **Sweep non-C4 `review-post!` prose mirrors (commit #2 of the B-045 / D-029 rollout).** v1.44.0 put the rule in the two C4 regions (`gate-clause`, `proposal-format`) and in `templates/docs/pr_review_instructions.md`, but six non-C4 prose mirrors still described prepare-then-offer as unconditional with no mention of the exception. Left alone they'd contradict the C4 region that now overrides them — and the C4 region is the text Claude actually applies, so the mirrors would read as a second, stricter rule that no longer exists. Same failure mode B-041 named: content stranded outside the loaded region drifts and misdirects.
