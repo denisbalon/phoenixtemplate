@@ -6,6 +6,24 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.47.0 — 2026-08-18
+
+**Adoption journal — `ADOPTION.md` (B-047 + D-031).** Consumers drift silently: the kit ships a rule, every project built from it keeps the old text until someone remembers to hand-sync, and nothing surfaces the gap. The projects keep working; they just quietly disagree with the kit and with each other. `ADOPTION.md` is the consumer-facing feed of what a project built from the kit should pick up — distinct from `CHANGELOG.md`, which records every kit change including the large majority consumers never touch. **Absence of an entry is a positive statement that nothing is required.**
+
+**Why a journal and not a sync script.** The obvious fix was `scripts/sync-kit-rules.sh` — fetch `templates/CLAUDE.md` from GitHub, replace the C4 regions in place. Measuring actual drift against a real consuming project killed it: that project carries **no `env-metadata-contract` region at all**, having dropped it deliberately because it does not apply, so a region-copying script would re-impose a rule it removed on purpose. And since most kit changes need no consumer action, the script must either over-apply or carry a hand-maintained exclusion list that rots. A journal moves the judgment to where the knowledge is, and keeps adoption inside the propose-and-confirm gate that governs everything else here. It also fails in the better direction: a forgotten journal entry is a visible omission; a subtly wrong sync script rewrites files nobody reads.
+
+**Per adoptable change, not per commit or per version.** This kit routinely splits one rule across several commits — v1.44.0 put `review-post!` in the C4 regions and the rubric, v1.44.1 swept the non-C4 prose mirrors that still described the old unconditional behaviour. Adopting only the first leaves a consumer's docs contradicting the region that overrides them, so that is one entry, not two.
+
+**IDs are merge-ordered, not version-ordered.** B-044's per-commit `VERSION` bumps plus rebase merges mean a long-lived branch lands commits numbered *below* what is already on `main` — a consumer tracking "adopted through v1.46.0" would skip a newer entry carrying an older number. Entries are therefore `A-NNN`, assigned at merge, never reused, and that ID is what a consumer records. Entries are created at **merge**, not at commit: unmerged work is not adoptable.
+
+The merge-time rule came from a real case rather than speculation — **PR #10 sat unmerged for 77 days** and landed on 2026-08-17 carrying June commits. It touched only `DEV_NOTES.md`, so it needs no entry at all, which is exactly the wanted behaviour: staleness matters to the journal only when the change is consumer-facing.
+
+**Backfilled entries:** `A-001` — `review-post!` (v1.44.0..v1.44.1, B-045/D-029), C4 `gate-clause` + `proposal-format` byte-exact plus the non-C4 review prose and the rubric, with an explicit note to adopt both versions together. `A-002` — host capabilities (v1.46.0, B-046/D-030), a non-C4 section that is safe to paste, noting that v1.45.0's superseded per-capability form must **not** be adopted. Each entry carries a one-line **Check** command a consuming project runs as-is.
+
+Mechanical enforcement (a linter failing when a `templates/` change merges with no journal entry) is **deferred, not rejected** — the obligation is stated in B-047 and reviewable in a PR diff today; the check is worth building once the format has survived contact with a few real changes.
+
+Touches: `ADOPTION.md` (new); `docs/spec.md` (B-047 frozen + D-031); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md` per B-002. **No `templates/` file changes**, so this commit requires no entry in its own journal. All 5 linters green. Minor bump per WORKFLOW.md (new frozen spec block + new consumer-facing surface).
+
 ## v1.46.0 — 2026-08-18
 
 **Host capabilities discovered through an index, not a per-capability list (B-046 amended, D-030 (f)).** v1.45.0 named one capability directly — *"if `~/docs/file-exchange.md` exists, read it."* That form survived exactly as long as there was one capability doc. A second one made the flaw concrete: the kit would accrete one vendor-shaped bullet per capability the operator happens to run, arriving slowly enough not to look like the de-personalization regression it is, and forcing a kit change plus a consumer re-sync every time a doc is added.
