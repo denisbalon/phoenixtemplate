@@ -62,6 +62,14 @@ See [docs/architecture.md](docs/architecture.md).
 
 A `SessionStart` hook in `.claude/settings.json` runs `scripts/check-env.sh`. If it reports missing or empty vars, walk the user through `scripts/bootstrap.sh` interactively — one credential at a time, explaining where each comes from. [docs/setup.md](docs/setup.md) has the full credential map.
 
+## Host capabilities (optional)
+
+The host a project runs on may provide capabilities the project itself doesn't ship. These are discovered **by convention, never assumed** — the absence of a capability is normal and silent, not an error to report.
+
+- **File exchange.** If `~/docs/file-exchange.md` exists on this host, read it before moving any file into or out of the box, and follow it — it documents the host's file-transfer side-channel (where uploads land, the share command for outbound artifacts, how to retrieve them). If that file does not exist, this host has no such capability: proceed normally and do not mention it.
+
+Host capability docs are **host-local, not project content**. Never copy their contents into a tracked file, a commit message, a PR body, or any other surface that leaves the box — a capability doc may describe infrastructure that is not public.
+
 ## Sensitive context
 
 - **Never paste credentials into chat.** Anything entered in the conversation is logged.
