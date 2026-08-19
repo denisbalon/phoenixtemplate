@@ -8,11 +8,31 @@ This is not a changelog — [`CHANGELOG.md`](CHANGELOG.md) records every kit cha
 
 ## How to use it
 
-From a session in a consuming project:
+From a session in a consuming project, run the skill:
 
-> Read `https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/ADOPTION.md` and tell me which entries this project hasn't adopted yet.
+```
+/updates
+```
 
-Each entry carries a one-line **Check** you can run to see whether you already have it. Nothing here is applied automatically — read, decide, then adopt through the normal `gogogo!` flow.
+It fetches this file, runs each entry's **Check** against the project you are in, and reports only what is missing — one line if nothing is. Nothing is applied automatically: read, decide, then adopt through the normal `gogogo!` flow.
+
+### Don't have `/updates` yet?
+
+The skill is itself something to adopt (entry A-003), so a project created before v1.48.0 cannot use it to learn about itself. Install it once, directly:
+
+```sh
+# for every project on this machine (recommended — one install, applies everywhere)
+curl -fsSL https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/templates/.claude/skills/updates/SKILL.md \
+  --create-dirs -o ~/.claude/skills/updates/SKILL.md
+
+# or for this project only
+curl -fsSL https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/templates/.claude/skills/updates/SKILL.md \
+  --create-dirs -o .claude/skills/updates/SKILL.md
+```
+
+Projects bootstrapped from the kit at v1.48.0 or later already have it.
+
+Failing that, this file is readable on its own — each entry's **Check** is a plain command you can run by hand.
 
 ## Rules
 
@@ -34,7 +54,9 @@ Each entry carries a one-line **Check** you can run to see whether you already h
 
 **Check:** `test -f .claude/skills/updates/SKILL.md && echo adopted || echo not-adopted`
 
-**Adopt:** copy [`templates/.claude/skills/updates/SKILL.md`](templates/.claude/skills/updates/SKILL.md) to `.claude/skills/updates/SKILL.md`. If your project has a `manifest.yaml`, register it the way the other skill is registered. New projects bootstrapped from the kit get it automatically — this entry exists for projects created before v1.48.0.
+**Adopt:** copy [`templates/.claude/skills/updates/SKILL.md`](templates/.claude/skills/updates/SKILL.md) into place, either at `~/.claude/skills/updates/SKILL.md` (**user-level — applies to every project on that machine, one install**) or at `.claude/skills/updates/SKILL.md` for this project alone. If you run several projects from one machine, prefer user-level: the per-project copy has to be repeated and kept in step everywhere. If your project has a `manifest.yaml` and you took the per-project route, register it the way the other skill is registered. New projects bootstrapped from the kit get the per-project copy automatically — this entry exists for projects created before v1.48.0.
+
+**Check (user-level):** `test -f ~/.claude/skills/updates/SKILL.md && echo adopted || echo not-adopted` — a user-level install satisfies this entry for every project on the machine, so the per-project Check above may report `not-adopted` while `/updates` works fine.
 
 **Skip if:** you would rather check for kit updates by reading this file directly. Nothing else depends on the skill.
 

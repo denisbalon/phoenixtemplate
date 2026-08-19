@@ -6,6 +6,18 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.48.1 — 2026-08-19
+
+**Break the bootstrap paradox in `ADOPTION.md` — you cannot learn about `/updates` from `/updates`.** v1.48.0 shipped the skill as entry A-003, which meant a project created before v1.48.0 had no way to be told it existed: the skill announces adoptable changes, and the skill is itself an adoptable change. A-003's Check only helps someone already reading the journal by hand.
+
+The "How to use it" section now leads with `/updates` and carries an explicit **"Don't have `/updates` yet?"** escape hatch — a `curl` one-liner that installs the skill directly, plus the reminder that this file is perfectly readable on its own since every Check is a plain command. Anyone who reaches the journal, by any route, can now get unstuck without already having the thing they came to learn about.
+
+**A-003 gains the user-level install option, and recommends it.** The entry previously described only the per-project copy at `.claude/skills/updates/SKILL.md`. Claude Code also reads `~/.claude/skills/`, which applies to **every project on a machine** — one install instead of one per project, and it covers projects that do not exist yet. For anyone running several projects from one machine that is strictly better: the per-project copy has to be repeated and then kept in step everywhere.
+
+That also means A-003 needs **two** Checks, and they can legitimately disagree: a user-level install leaves the per-project Check reporting `not-adopted` while `/updates` works fine. The entry now says so explicitly rather than leaving a false negative for the skill to trip over when it reports on itself.
+
+Patch bump — documentation and an additional install path. No change to B-047's frozen rule, the entry format, or any `templates/` file.
+
 ## v1.48.0 — 2026-08-18
 
 **`/updates` skill — the intended way to consume the adoption journal (A-003).** v1.47.0 shipped `ADOPTION.md` but left the invocation as "read this URL and tell me what's missing" — a paragraph to type, every time, in every project. Nobody types that. The skill holds the URL so it is never typed: in any project built from the kit, `/updates` fetches the live journal, runs each entry's Check against that project, and reports only what is not adopted.
