@@ -60,21 +60,29 @@ if [[ -n "${ADOPTION_SKIP:-}" ]]; then
   exit 0
 fi
 
-if ! git rev-parse --verify --quiet "$BASE" >/dev/null; then
-  echo "WARN: cannot verify — no '$BASE' ref to compare against." >&2
-  echo "      This is NOT a pass; the check did not run. In CI this means the" >&2
-  echo "      checkout is shallow — set 'fetch-depth: 0' on actions/checkout." >&2
+# Resolve the base ref. A CI checkout has full history under fetch-depth: 0
+# but creates no local branch for the base — only origin/<base> exists. The
+# first CI run after fetch-depth: 0 landed still warned for exactly that
+# reason, so try the remote-tracking ref before giving up.
+if git rev-parse --verify --quiet "$BASE" >/dev/null; then
+  BASE_REF="$BASE"
+elif git rev-parse --verify --quiet "origin/$BASE" >/dev/null; then
+  BASE_REF="origin/$BASE"
+else
+  echo "WARN: cannot verify — neither '$BASE' nor 'origin/$BASE' resolves." >&2
+  echo "      This is NOT a pass; the check did not run. In CI this usually" >&2
+  echo "      means a shallow checkout — set 'fetch-depth: 0' on actions/checkout." >&2
   exit 0
 fi
 
-if [[ "$(git rev-parse HEAD)" == "$(git rev-parse "$BASE")" ]]; then
-  echo "OK: on '$BASE' itself — nothing to check."
+if [[ "$(git rev-parse HEAD)" == "$(git rev-parse "$BASE_REF")" ]]; then
+  echo "OK: on '$BASE_REF' itself — nothing to check."
   exit 0
 fi
 
-MERGE_BASE="$(git merge-base HEAD "$BASE" 2>/dev/null || true)"
+MERGE_BASE="$(git merge-base HEAD "$BASE_REF" 2>/dev/null || true)"
 if [[ -z "$MERGE_BASE" ]]; then
-  echo "WARN: cannot verify — no merge-base with '$BASE'." >&2
+  echo "WARN: cannot verify — no merge-base with '$BASE_REF'." >&2
   echo "      This is NOT a pass; the check did not run. Usually a shallow clone." >&2
   exit 0
 fi
