@@ -44,22 +44,6 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
-## A-007 — adoption-journal linter registered (no action required)
-
-**Merged:** 2026-08-20 · **Kit version:** v1.51.5 · **Spec:** B-050 in [`docs/spec.md`](docs/spec.md)
-
-**What:** `templates/manifest.yaml` gains an entry for `scripts/check-adoption-journal.sh`, the linter enforcing B-047's obligation in this repo's own CI.
-
-**Affects:** nothing in a consuming project. The script is `tier: meta-only`, `exported_by_starter: false` — it is never exported, so a project built from the kit does not receive it and has nothing to mirror.
-
-**Check:** n/a
-
-**Adopt:** nothing to do.
-
-**Why this entry exists at all:** the linter has **no exemption mechanism**, by design. Three were tried on the PR that introduced it and each leaked — a branch-wide trailer let a meta-only skip cover a later consumer-facing change; per-commit scoping made an earlier untrailered commit unjustifiable without rewriting history; per-file scoping carried an exemption forward forever, so a typo skip on `CLAUDE.md` silently covered a rule change to the same file. Every leak was found by review rather than design. So a `templates/` change that consumers need not act on still gets an entry saying exactly that. One line is cheaper than an exemption that was wrong three times, and it keeps this journal a complete record of what touched `templates/` instead of one with invisible gaps.
-
----
-
 ## A-006 — proposals end with a command list, not a sentence
 
 **Merged:** 2026-08-20 · **Kit version:** v1.50.0 · **Spec:** B-049, D-033 in [`docs/spec.md`](docs/spec.md)
