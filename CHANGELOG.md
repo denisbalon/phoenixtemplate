@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.51.1 — 2026-08-20
+
+**The new linter was passing vacuously in CI — fixed, and made incapable of doing so silently again.** Its first real CI run printed `OK: no 'main' ref to compare against — nothing to check` and exited 0. `actions/checkout@v4` defaults to a shallow single-branch clone, so `main` does not exist as a ref on the runner, and the script took its cannot-compare path on every PR. As merged it would have provided **zero protection while reporting green** — the worst available failure mode for a check whose whole job is catching an omission.
+
+Found by reading what the step actually printed rather than trusting the green tick. It was flagged as a risk in PR #19's own reviewer notes ("a shallow clone could make it pass vacuously — the worst kind of green") and was already true at the time of writing.
+
+**A third fix, found by the linter firing on its own branch.** Registering the new script in `templates/manifest.yaml` counts as a `templates/` change, so the check failed — correctly, by its own rule, on a change consumers never receive (`tier: meta-only`, `exported_by_starter: false`). That exposed a design flaw in the escape hatch: `ADOPTION_SKIP=1` is an environment variable **CI cannot see**, so the override worked locally while the build failed anyway. The hatch is now an `Adoption-Skip: <reason>` commit trailer — it travels with the commit, is visible to CI, and puts the justification in permanent history rather than a shell invocation nobody can audit later. The env var survives for local one-off runs and now says explicitly that it will not satisfy CI.
+
+**Two fixes, and the second matters more.** The workflow now sets `fetch-depth: 0` so a merge-base exists. And the cannot-compare paths no longer print `OK:` — they print `WARN: cannot verify` on stderr, stating outright that this is **not a pass** and naming the shallow checkout as the usual cause. Exit stays 0, because a fresh local clone with no remote is a legitimate case; what changes is that a check which could not run can never again be mistaken for one that ran and found nothing.
+
+That distinction is the actual lesson. The original wording collapsed "nothing to check" and "cannot check" into the same reassuring output, which is how the vacuous pass survived being written, reviewed, and shipped.
+
+Touches: `.github/workflows/template-self-test.yml` (`fetch-depth: 0` with the reason recorded inline), `scripts/check-adoption-journal.sh` (both cannot-compare paths + header comment), `docs/spec.md` (B-050 Test field), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump (defect fix in a check that shipped hours ago; no rule change).
+
 ## v1.51.0 — 2026-08-20
 
 **The adoption-journal obligation is now mechanically checked (B-050).** `scripts/check-adoption-journal.sh` fails when a tracked file under `templates/` differs from the merge-base and `ADOPTION.md` has gained no new `## A-NNN` heading. Wired into `template-self-test.yml` alongside the other five linters, bringing the set to six.
