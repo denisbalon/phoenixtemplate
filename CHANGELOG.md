@@ -6,6 +6,18 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.51.2 — 2026-08-20
+
+**The vacuous-pass fix had a second layer, and the `WARN` wording is what found it.** v1.51.1 added `fetch-depth: 0` so CI would have the history to compute a merge-base. The next CI run warned anyway: `actions/checkout` gives full history but creates **no local branch for the base** — only `origin/main` exists, so `git rev-parse --verify main` still failed and the check still did not run.
+
+The script now resolves `$BASE`, then falls back to `origin/$BASE`.
+
+**This is the payoff for the change made one version earlier.** Had the cannot-compare path still printed `OK:` and exited 0, `fetch-depth: 0` would have looked like a complete fix — green CI, inert check, and no signal that anything was wrong. Instead the run said plainly *"This is NOT a pass; the check did not run"*, and the remaining layer was visible immediately.
+
+A check that announces its own inability to run is worth more than one that is merely correct when it does.
+
+Touches: `scripts/check-adoption-journal.sh` (base-ref resolution + the reason recorded inline), `docs/spec.md` (B-050 Test field), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump.
+
 ## v1.51.1 — 2026-08-20
 
 **The new linter was passing vacuously in CI — fixed, and made incapable of doing so silently again.** Its first real CI run printed `OK: no 'main' ref to compare against — nothing to check` and exited 0. `actions/checkout@v4` defaults to a shallow single-branch clone, so `main` does not exist as a ref on the runner, and the script took its cannot-compare path on every PR. As merged it would have provided **zero protection while reporting green** — the worst available failure mode for a check whose whole job is catching an omission.
