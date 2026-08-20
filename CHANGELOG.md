@@ -6,6 +6,21 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.51.4 — 2026-08-20
+
+**Adoption-Skip is scoped per file, not per commit — the fix for finding 2 was itself too strict.** v1.51.3 scoped the trailer to the commit carrying it, which closed the bypass but created a new failure: an earlier untrailered commit cannot be justified without rewriting pushed history. That blocked this branch immediately. `templates/manifest.yaml` was touched by the v1.51.0 commit (no trailer) and again by v1.51.3 (trailered), so the file was simultaneously justified and not.
+
+Two failure modes bracket the choice:
+
+- **Branch-wide** (v1.51.2) — any trailer anywhere skipped everything. A meta-only commit's justified trailer let a later consumer-facing change bypass the journal.
+- **Strictly per-commit** (v1.51.3) — closed that hole, but made history-rewriting the only way to fix a past omission.
+
+**Per-file resolves both.** The justified set is the union of `templates/` files from every trailered commit. A trailer for `manifest.yaml` never licenses a change to `CLAUDE.md` — but it does cover `manifest.yaml` wherever it moved. Verified both ways: the bypass case still exits 1 and names `templates/CLAUDE.md` while `manifest.yaml` stays covered, and the amendment path still exits 0.
+
+Worth recording that the linter blocked its own branch and the response was to fix the rule rather than weaken it to pass. The alternative on the table — adding an `ADOPTION.md` entry for a meta-only script consumers never receive — would have made the branch green by writing something untrue in the journal, which is precisely the failure the journal exists to prevent.
+
+Touches: `scripts/check-adoption-journal.sh`, `docs/spec.md` (B-050 Rule), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump.
+
 ## v1.51.3 — 2026-08-20
 
 **Two Block findings on PR #19, both defects in the linter this branch introduces.**
