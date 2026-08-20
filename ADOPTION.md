@@ -44,6 +44,26 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-008 — review session pinning + authoritative lock check
+
+**Merged:** 2026-08-20 · **Kit version:** v1.52.2 · **Spec:** B-048, B-051 in [`docs/spec.md`](docs/spec.md)
+
+**What:** fixes a contradiction between two frozen blocks that stopped bundled review from ever firing. B-048 requires a bundled PR-open proposal to *name* the reviewer target; B-051 forbade naming one without asking. The only compliant move was to ask — a round-trip, which is exactly what bundling removes. So review never auto-dispatched after PR-open, and B-048's constraint (4), which permits mechanical findings to be fixed inside the node, never got to run.
+
+The resolution distinguishes **choosing** a session from **recalling a choice already made**. `/review` now reads a pin from `~/.claude/codex-review-sessions.json`, keyed by GitHub repo, written only after you name a session. Recording a pin you did not choose is still forbidden.
+
+Also replaces the reviewer-busy check. It used `ps | grep codex` — a proxy over the whole process table that cannot tell which thread is held, and was observed reporting a lock that did not exist. It now checks that specific thread's lock file and whether an owner is alive, and treats the dispatch error as the authority.
+
+**Affects:** `.claude/skills/review/SKILL.md`, and the C4 `proposal-format` region in `CLAUDE.md`, `CONTRIBUTING.md` and `WORKFLOW.md` (**byte-exact**, all three together).
+
+**Check:** `grep -c 'previously recorded' CLAUDE.md` — `0` means not adopted.
+
+**Adopt:** replace the `proposal-format` C4 region byte-exact from [`templates/CLAUDE.md`](templates/CLAUDE.md) / [`templates/CONTRIBUTING.md`](templates/CONTRIBUTING.md) in every file carrying it, and copy [`templates/.claude/skills/review/SKILL.md`](templates/.claude/skills/review/SKILL.md) over your existing one. Run `scripts/check-rule-consistency.sh` afterwards.
+
+**Skip if:** you do not use the `/review` skill. The C4 change only alters what a *bundled* review proposal must satisfy, and nothing bundles without a non-interactively invocable reviewer — so on a manual-review project this is inert.
+
+---
+
 ## A-007 — `/review` dispatch skill
 
 **Merged:** 2026-08-20 · **Kit version:** v1.52.0 · **Spec:** B-051, D-034 in [`docs/spec.md`](docs/spec.md)

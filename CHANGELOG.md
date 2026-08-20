@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.52.2 — 2026-08-20
+
+**Two frozen blocks could not both be satisfied, so bundled review never fired. Three reported symptoms, one cause.**
+
+B-048 requires a bundled PR-open proposal to *name the exact reviewer target*. B-051 said *"you do not select it, infer it, or fall back to a default."* Naming a target without asking was forbidden; asking is a round-trip; a round-trip is what bundling exists to remove. So the node never bundled — and B-048's **constraint (4)**, the clause permitting mechanical findings to be fixed inside the node, never got to run either, because it lives inside the bundle that never formed.
+
+That accounts for all three reports: review not dispatching after PR-open; a version-number Nit offered as a numbered choice rather than simply corrected; and the loop not feeling self-contained. None was drift — the affected project had adopted every entry through A-006. The rules were present and mutually exclusive.
+
+**The resolution distinguishes choosing from recalling.** B-051's protection is real: dispatch sends an autonomous agent with write access, and both auto-selection heuristics were caught picking wrong the same day. But it conflated *selecting a session* with *remembering one the user selected*. `/review` now reads a pin from `~/.claude/codex-review-sessions.json`, keyed by GitHub repo, written only after the user names a session — writing an unchosen pin would be selecting, and stays forbidden. A pin that no longer resolves stops the run rather than substituting.
+
+**The reviewer-busy check was a guess, and behaved like one.** `ps | grep codex` is a proxy over the entire process table: it cannot tell which thread a process holds, matches unrelated Codex work in other repositories, and matches a dispatch the session started itself. It was observed reporting a lock that did not exist and asking the user to close a client that was already closed. It now checks that specific thread's lock file, verifies an owner is alive, and defers to the dispatch error — which is specific, names the thread, and changes nothing when it fails.
+
+Touches: `templates/.claude/skills/review/SKILL.md` (steps 1 and 2 rewritten), the C4 `proposal-format` region byte-exact across `WORKFLOW.md` + `templates/CONTRIBUTING.md` + `templates/CLAUDE.md`, `docs/spec.md` (B-051 Rule, conflict record, Test), `ADOPTION.md` (A-008, same PR per B-047), `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md`. All 6 linters green. Patch bump (resolves a contradiction between existing blocks; no new behaviour beyond making B-048 reachable).
+
 ## v1.52.1 — 2026-08-20
 
 **Two Block findings on PR #20: an undisclosed default reviewer, and hardcoded `/root` paths.**
