@@ -6,6 +6,24 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.51.6 — 2026-08-20
+
+**`templates/manifest.yaml` is excluded as a derived file — closing the charter conflict without touching a frozen block.**
+
+PR #19's review found that v1.51.5 had put B-050 in direct conflict with B-047: enforcement now demanded an entry for every `templates/` diff, while B-047 defines the journal as *what consumers should pick up* and states that absence positively means nothing is required. A-007 — an entry whose content was "nothing to do" — was the contradiction made concrete.
+
+**The narrowing first proposed did not work, and checking said so.** Scoping by `exported_by_starter` would not have exempted `templates/manifest.yaml`, which is exported; and it would have been a no-op in general, since **zero** files under `templates/` are non-exported — all ten such manifest entries are meta-only scripts under `scripts/`, which this linter never examines.
+
+That exposed the actual gap. The manifest genuinely reaches consumers, but the change to it — registering a script they never receive — needs no action from them. **B-047 has no way to express "consumer-facing file, no consumer action"**; its binary is entry = action needed, absence = nothing needed. Every scoping attempt failed because the fix was being attempted in the linter for something the charter does not model.
+
+**The exclusion sidesteps that rather than papering over it.** `templates/manifest.yaml` is an *inventory of* the kit, not kit content — it changes because something else changed. So it never independently triggers the obligation, and A-007 is removed, because it only ever existed to satisfy a rule that should not have fired.
+
+This is a **derived-file exclusion, not an exemption**. The difference is the one every failed attempt got wrong: it is a fixed property of one named file, visible in the script and unreachable from a commit message — not a per-change judgement anyone can invoke. Verified both ways: a real `templates/` change alongside a manifest edit still exits 1 and names only the real file; a manifest-only change exits 0.
+
+B-047 is untouched. Amending a frozen block to make a linter pass was the alternative, and it would have changed what the journal means for every consumer to avoid excluding one bookkeeping file.
+
+Touches: `scripts/check-adoption-journal.sh`, `ADOPTION.md` (A-007 removed), `docs/spec.md` (B-050 Rule), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump.
+
 ## v1.51.5 — 2026-08-20
 
 **The exemption mechanism is removed entirely — it leaked three times and each fix moved the hole rather than closing it.**

@@ -87,7 +87,20 @@ if [[ -z "$MERGE_BASE" ]]; then
   exit 0
 fi
 
-CHANGED="$(git diff --name-only "$MERGE_BASE"...HEAD -- templates/ || true)"
+# templates/manifest.yaml is an INVENTORY of the kit, not kit content. It
+# changes because something else changed — adding a file, renaming one,
+# correcting a purpose line — so it never independently obliges an entry.
+# Consumers do receive it (exported_by_starter: true), but a manifest row for
+# a meta-only script they never get is not something they can act on.
+#
+# This is an exclusion of a derived file, NOT an exemption mechanism. Three
+# of those were tried and each leaked (see the header). The distinction that
+# matters: this is a fixed property of one file, visible in the script and
+# unchangeable from a commit message — not a per-change judgement anyone can
+# invoke. A real templates/ change alongside a manifest edit still fails,
+# because the other file is still counted.
+CHANGED="$(git diff --name-only "$MERGE_BASE"...HEAD -- templates/ \
+  | grep -v '^templates/manifest\.yaml$' || true)"
 if [[ -z "$CHANGED" ]]; then
   echo "OK: no templates/ changes on this branch — no adoption entry required."
   exit 0
