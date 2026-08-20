@@ -6,6 +6,26 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.51.5 — 2026-08-20
+
+**The exemption mechanism is removed entirely — it leaked three times and each fix moved the hole rather than closing it.**
+
+| attempt | closed | opened |
+|---|---|---|
+| branch-wide trailer (v1.51.1) | — | a meta-only skip covered a later consumer-facing change |
+| per-commit (v1.51.3) | that | an earlier untrailered commit became unjustifiable without rewriting pushed history — it blocked its own branch |
+| per-file (v1.51.4) | that | a skip carried forward forever: a typo exemption on `templates/CLAUDE.md` silently covered a rule change to the same file |
+
+Every leak was found by **review**, not by design. Three rounds on one script is a signal about the mechanism, not the implementation: scoping an exemption correctly turned out to be harder than the exemption was worth.
+
+**So there is no exemption.** Every `templates/` change needs a journal entry, including changes consumers need not act on — those get an entry saying exactly that. `**Check:** n/a  **Adopt:** nothing to do — <why>` is a complete entry and costs one line.
+
+Two things that buys. One line is cheaper than a mechanism that has been wrong three times. And the journal becomes a **complete** record of what touched `templates/`, rather than a record with invisible gaps where someone judged an exemption applied.
+
+**The linter then demanded this of its own branch**, which is how A-007 exists: `templates/manifest.yaml` registers the script, consumers never receive it (`tier: meta-only`, `exported_by_starter: false`), and the entry says so plainly instead of being waved through.
+
+Touches: `scripts/check-adoption-journal.sh` (trailer and env-var paths deleted; failure message now shows the no-action entry form), `ADOPTION.md` (A-007), `docs/spec.md` (B-050 Rule), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump.
+
 ## v1.51.4 — 2026-08-20
 
 **Adoption-Skip is scoped per file, not per commit — the fix for finding 2 was itself too strict.** v1.51.3 scoped the trailer to the commit carrying it, which closed the bypass but created a new failure: an earlier untrailered commit cannot be justified without rewriting pushed history. That blocked this branch immediately. `templates/manifest.yaml` was touched by the v1.51.0 commit (no trailer) and again by v1.51.3 (trailered), so the file was simultaneously justified and not.
