@@ -60,7 +60,7 @@ Supersedes B-010's "ships no Claude-side reviewer trigger" clause. Review is sti
 
 **Check (user-level):** `test -f ~/.claude/skills/review/SKILL.md && echo adopted || echo not-adopted` — a user-level install satisfies this entry for every project on the machine, so the per-project Check above may report `not-adopted` while `/review` works fine.
 
-**Skip if:** your reviewer cannot be invoked non-interactively, or you review manually. The skill assumes a resumable reviewer session addressable by id; without one it has nothing to dispatch into, and reviewing by hand as before costs you nothing.
+**Skip if:** you review manually, or with anything other than Codex. **This skill is Codex-shaped** — it reads Codex session state from `$CODEX_HOME` (default `~/.codex`) and dispatches with `codex exec resume`. The skill assumes a resumable reviewer session addressable by id; without one it has nothing to dispatch into, and reviewing by hand as before costs you nothing.
 
 ---
 

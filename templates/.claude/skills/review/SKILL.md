@@ -3,7 +3,14 @@ name: review
 description: Dispatch a code review to the project's warm Codex session and report what it posted. Use when asked to review a PR, get a second opinion on a branch, send something to Codex, or check what the reviewer found. Codex reviews and posts to GitHub itself; this skill only dispatches and relays its findings verbatim, never judging them.
 ---
 
-# review — dispatch to Codex, relay verbatim
+# review — dispatch to the reviewer session, relay verbatim
+
+> **Scope: this skill assumes Codex as the reviewer.** It reads Codex session
+> state from `$CODEX_HOME` (default `~/.codex`) and dispatches with
+> `codex exec resume`. That is a deliberate choice recorded in B-051, not an
+> oversight — the kit names no default reviewer in its *rubric*, but this
+> skill is Codex-shaped and a project using a different reviewer should not
+> adopt it. Session paths resolve per-user; nothing here assumes root.
 
 The second reviewer is a **long-lived Codex session per project**, holding the accumulated context of everything it has reviewed here. This skill presses `review-post!` in that session from the current window and brings back what landed on GitHub.
 
@@ -24,8 +31,9 @@ If the user supplied a session UUID or a number with the invocation, use exactly
 ```sh
 python3 - <<'PY'
 import sqlite3, datetime, re, collections, os
-st=sqlite3.connect('file:/root/.codex/state_5.sqlite?mode=ro', uri=True)
-hi=sqlite3.connect('file:/root/.codex/thread_history_1.sqlite?mode=ro', uri=True)
+CODEX=os.environ.get('CODEX_HOME') or os.path.expanduser('~/.codex')
+st=sqlite3.connect(f'file:{CODEX}/state_5.sqlite?mode=ro', uri=True)
+hi=sqlite3.connect(f'file:{CODEX}/thread_history_1.sqlite?mode=ro', uri=True)
 ALL = os.environ.get('ALL')
 rows=list(st.execute("select id,updated_at_ms,cwd from threads "
   "where archived is null or archived=0 order by updated_at_ms desc"))

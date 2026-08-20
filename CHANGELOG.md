@@ -6,6 +6,22 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.52.1 — 2026-08-20
+
+**Two Block findings on PR #20: an undisclosed default reviewer, and hardcoded `/root` paths.**
+
+**1. The skill would not have worked for anyone but me.** Session discovery hardcoded `/root/.codex/state_5.sqlite` — the author's home directory. Any adopter who is not root would get an empty listing and a skill unable to perform the one job B-051 requires of it. Paths now resolve `$CODEX_HOME`, defaulting to `~/.codex`.
+
+This is precisely what the de-personalization work removed from this kit across v1.11.2–v1.13.0, reintroduced by hand into a brand-new shipped file. The placeholder linter did not catch it because `/root/.codex` is not a placeholder — it is a real path that happens to be true only here.
+
+**2. B-051 overclaimed, and the PR body said so before it was frozen.** The block asserted the kit "configures no default reviewer" while shipping a skill that reads Codex state and dispatches `codex exec resume`. The PR body itself flagged this — *"a reader could reasonably call that a default in all but name"* — and it was frozen anyway. Raising a concern and then shipping past it is worse than not seeing it.
+
+The block now states the scope outright: **the skill assumes Codex**, the rubric stays reviewer-agnostic, and the honest formulation is that the kit configures no reviewer *for the rubric* while offering an optional skill for one specific reviewer. The skill's own header says the same in the first paragraph a reader sees, and A-007's `Skip if` now names Codex explicitly so an adopter using anything else skips it deliberately.
+
+What survives of B-010 unqualified: review is user-initiated, and the skill still asks which session to use rather than choosing.
+
+Touches: `templates/.claude/skills/review/SKILL.md` (path resolution + scope header), `docs/spec.md` (B-051 Rule and supersession paragraph), `ADOPTION.md` (A-007 `Skip if`), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump (address-review fixes).
+
 ## v1.52.0 — 2026-08-20
 
 **The kit ships a review-dispatch skill (B-051 + D-034), superseding B-010's no-reviewer-trigger clause.** `/review` lists the reviewer sessions on the host — deduplicated by GitHub repository, most recent per repo — **stops for the user to name one**, verifies it is not held by an interactive client, dispatches, and relays every finding verbatim.
