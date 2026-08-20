@@ -162,6 +162,12 @@ files:
     placeholders: []
     exported_by_starter: true
 
+  - path: templates/.claude/skills/review/SKILL.md
+    purpose: review-dispatch skill — sends a PR to the project's reviewer session and relays findings verbatim (B-051)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
   # ----- templates/.github/ --------------------------------------------
 
   - path: templates/.github/workflows/ci.yml
