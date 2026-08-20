@@ -6,6 +6,16 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.48.4 — 2026-08-20
+
+**Add the `ADOPTION.md` entry v1.48.3 should have carried — addresses the Block finding on PR #16.** v1.48.3 changed `templates/docs/pr_review_instructions.md`, a consumer-shipped file, without adding a journal entry. B-047 requires one in the same PR for exactly that kind of change. `A-004` now covers the clarified per-commit coverage rule.
+
+**This is the enforcement gap, arriving on schedule.** D-031 deferred the mechanical check — a linter failing when a `templates/` change merges with no new entry — on the reasoning that "the obligation is stated in B-047 and reviewable in a PR diff today." The very next `templates/` change omitted the entry, and nothing caught it except a reviewer reading the diff. The deferral was a judgement call about how long the format needed to settle before mechanising it; one commit is the answer.
+
+`A-004` also documents the **skip** case honestly: a project that wants its reviewers held to the stricter reading — a commit-scoped comment on every commit regardless of inline findings — should not adopt this. That is more audit trail per review and a legitimate choice; the kit simply no longer requires it.
+
+Touches: `ADOPTION.md` (A-004), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 5 linters green. Patch bump (journal entry for an already-landed change).
+
 ## v1.48.3 — 2026-08-20
 
 **Fix a self-referential cross-reference in the review rubric, and state the per-commit alternatives explicitly.** Output-contract item 2 ended its third bullet with `(see 2)` — item 2 pointing at itself. The intended target is item 3, "Clean commits are NOT silently skipped." A reader following that pointer lands back where they started.
