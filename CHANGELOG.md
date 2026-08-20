@@ -6,6 +6,14 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.48.3 — 2026-08-20
+
+**Fix a self-referential cross-reference in the review rubric, and state the per-commit alternatives explicitly.** Output-contract item 2 ended its third bullet with `(see 2)` — item 2 pointing at itself. The intended target is item 3, "Clean commits are NOT silently skipped." A reader following that pointer lands back where they started.
+
+**The ambiguity it masked.** Item 2 lists three ways a commit can be covered — inline comments, a commit-level review, or an explicit clean-commit comment — but never says outright that *any one of them suffices*. Read strictly, "each commit gets at least one comment" can be taken as requiring a commit-scoped comment on top of whatever inline findings were already posted. Observed behaviour across two real reviews took both readings: PR #14 covered its single commit with four inline comments and no commit-scoped line, PR #15 posted `No findings on c03c76d`. Both are compliant under the intended reading; only one is compliant under the strict one. The rubric now says so directly, and names the actual failure — a commit with no comment of any kind.
+
+Touches: `templates/docs/pr_review_instructions.md` (item 2), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 5 linters green. Patch bump (documentation correctness; no rule change — this states what was already meant).
+
 ## v1.48.2 — 2026-08-20
 
 **Bound the network calls the `/updates` path makes — addresses two Strong findings from the PR #13 review.** All three `curl` invocations shipped with `-fsSL` and no timeout: the skill's journal fetch and both bootstrap install commands in `ADOPTION.md`. Each now carries `--connect-timeout 10 --max-time 60`.
