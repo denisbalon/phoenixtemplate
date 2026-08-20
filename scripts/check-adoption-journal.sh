@@ -87,27 +87,70 @@ if [[ -z "$MERGE_BASE" ]]; then
   exit 0
 fi
 
-SKIP_REASON="$(git log "$MERGE_BASE"..HEAD --format=%B 2>/dev/null | sed -n 's/^Adoption-Skip:[[:space:]]*//p' | head -1 || true)"
-if [[ -n "$SKIP_REASON" ]]; then
-  echo "SKIP: Adoption-Skip trailer found — $SKIP_REASON"
+# An Adoption-Skip trailer justifies the templates/ files in ITS OWN COMMIT,
+# never the whole branch. The first version accepted any trailer anywhere in
+# merge-base..HEAD and skipped everything: a harmless meta-only commit could
+# carry a justified trailer, and a later consumer-facing change on the same
+# branch would then bypass the journal entirely. A one-commit justification
+# must not become a branch-wide exemption.
+declare -a UNJUSTIFIED=()
+SKIPPED_ANY=""
+while read -r sha; do
+  [[ -z "$sha" ]] && continue
+  files="$(git show --name-only --format= "$sha" -- templates/ || true)"
+  [[ -z "$files" ]] && continue
+  reason="$(git log -1 --format=%B "$sha" | sed -n 's/^Adoption-Skip:[[:space:]]*//p' | head -1 || true)"
+  if [[ -n "$reason" ]]; then
+    echo "SKIP: ${sha:0:7} — $reason"
+    SKIPPED_ANY=1
+  else
+    while read -r f; do [[ -n "$f" ]] && UNJUSTIFIED+=("$f"); done <<< "$files"
+  fi
+done < <(git rev-list "$MERGE_BASE"..HEAD)
+
+if [[ ${#UNJUSTIFIED[@]} -eq 0 ]]; then
+  if [[ -n "$SKIPPED_ANY" ]]; then
+    echo "OK: every templates/ change on this branch is covered by a scoped Adoption-Skip trailer."
+  else
+    echo "OK: no templates/ changes on this branch — no adoption entry required."
+  fi
   exit 0
 fi
 
-CHANGED="$(git diff --name-only "$MERGE_BASE"...HEAD -- templates/ || true)"
+CHANGED="$(printf '%s\n' "${UNJUSTIFIED[@]}" | sort -u)"
 if [[ -z "$CHANGED" ]]; then
   echo "OK: no templates/ changes on this branch — no adoption entry required."
   exit 0
 fi
 
-before="$(git show "$MERGE_BASE:$JOURNAL" 2>/dev/null | grep -c '^## A-' || true)"
-after="$(grep -c '^## A-' "$JOURNAL" 2>/dev/null || true)"
-before="${before:-0}"
-after="${after:-0}"
-added=$(( after - before ))
 nfiles="$(printf '%s\n' "$CHANGED" | wc -l | tr -d ' ')"
+
+# A new "## A-NNN" heading is the common case, but B-047 is per adoptable
+# CHANGE, not per commit — a correction to an already-shipped change amends
+# its existing entry instead. This repo has done exactly that (A-003 gained
+# the timeout note in v1.48.2), and an earlier version of this script would
+# have rejected that commit while its author could not honestly claim the
+# change was consumer-irrelevant. So: accept either a new heading, or a
+# substantive edit to the body of an existing entry.
+#
+# "Substantive" excludes whitespace-only churn deliberately — otherwise
+# re-wrapping a paragraph would satisfy the obligation.
+before_headings="$(git show "$MERGE_BASE:$JOURNAL" 2>/dev/null | grep -c '^## A-' || true)"
+after_headings="$(grep -c '^## A-' "$JOURNAL" 2>/dev/null || true)"
+added=$(( ${after_headings:-0} - ${before_headings:-0} ))
 
 if (( added > 0 )); then
   echo "OK: $added new adoption entry/entries for $nfiles changed templates/ file(s)."
+  exit 0
+fi
+
+# No new heading — did an existing entry change substantively?
+journal_edit="$(git diff --ignore-all-space --ignore-blank-lines \
+  "$MERGE_BASE"...HEAD -- "$JOURNAL" | grep -cE '^[+-][^+-]' || true)"
+if (( ${journal_edit:-0} > 0 )); then
+  echo "OK: existing adoption entry amended for $nfiles changed templates/ file(s)."
+  echo "    (no new A-NNN heading; B-047 is per adoptable change, so a correction"
+  echo "     to an already-shipped change amends its entry rather than adding one)"
   exit 0
 fi
 
@@ -117,7 +160,8 @@ fi
   echo "Changed under templates/:"
   printf '%s\n' "$CHANGED" | sed 's/^/  /'
   echo
-  echo "$JOURNAL has $before entry/entries at the merge-base and $after now."
+  echo "$JOURNAL has ${before_headings:-0} entry/entries at the merge-base and ${after_headings:-0} now,"
+  echo "and no substantive edit to an existing entry."
   echo
   echo "B-047: a change consuming projects must mirror obliges an adoption-journal"
   echo "entry in the SAME PR. Add one, or — if consumers genuinely need not mirror"

@@ -311,7 +311,7 @@ files:
     exported_by_starter: false
 
   - path: scripts/check-adoption-journal.sh
-    purpose: adoption-journal linter — templates/ change obliges an ADOPTION.md entry (B-050)
+    purpose: adoption-journal linter — templates/ change obliges a new or amended ADOPTION.md entry, unless a per-commit Adoption-Skip trailer justifies it (B-050)
     tier: meta-only
     placeholders: []
     exported_by_starter: false
