@@ -6,6 +6,22 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.52.0 — 2026-08-20
+
+**The kit ships a review-dispatch skill (B-051 + D-034), superseding B-010's no-reviewer-trigger clause.** `/review` lists the reviewer sessions on the host — deduplicated by GitHub repository, most recent per repo — **stops for the user to name one**, verifies it is not held by an interactive client, dispatches, and relays every finding verbatim.
+
+**Why B-010's reasoning stopped applying.** It removed every reviewer trigger because each prior attempt was Claude doing a job the user was already doing better in another window. That held for one-shot launchers. It stopped holding once the reviewer became a **long-lived session per repository**, carrying the context of everything it has reviewed there. Dispatching into a warm session is not a launcher.
+
+The difference is not marginal. Measured on this box: a warm dispatch costs **10–34k tokens** against a **median 6.6M** for the cold `look around, read pr review instructions` sessions it replaces, and **75% of all Codex consumption here had been cold starts** — 38 of them, each re-crawling the repo and re-reading the rubric from zero. The skill's job is to make the cheap path the default, because resuming by session id is harder to do by hand than opening a new tab, which is exactly why it did not happen.
+
+**What B-010 protected is preserved by the never-judge rule, not by absence.** The skill relays findings in the reviewer's own words, order and severities — no ranking, filtering, dismissing, agreeing or summarising, and no opinion until asked and until the raw findings are on screen. A second model is worth having because it is not the first one; relaying it through Claude's judgement destroys exactly that (B-007).
+
+**It refuses to pick a session, and that is not caution for its own sake.** Dispatch sends an autonomous agent with write access into whichever session is named. Both automatic heuristics were observed choosing wrong: recency selected a session that had drifted into fleet SSH hardening, and token count selected a stale thread because an *active* session's count **falls** after context compaction. So the skill lists and stops — and does not proceed on a single candidate, because one candidate is not consent.
+
+The kit still configures **no default reviewer**: the skill asks which session to use and cannot answer that itself. B-010's out-of-band and reviewer-agnostic principles survive intact.
+
+Touches: `templates/.claude/skills/review/SKILL.md` (new), `templates/manifest.yaml` (49 entries), `docs/spec.md` (B-051 frozen, D-034, B-010 status extended), `ADOPTION.md` (A-007, same PR per B-047), `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md`. All 6 linters green. Minor bump (new frozen block + new shipped template file).
+
 ## v1.51.7 — 2026-08-20
 
 **Align the linter's own prose with its behaviour — addresses the Nit on PR #19.** v1.51.6 excluded `templates/manifest.yaml` in code, but the script's header and FAIL-path text still asserted the pre-exclusion rule: *"every templates/ change needs a journal entry"*. Both now state the exclusion and distinguish it from an exemption.

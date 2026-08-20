@@ -44,6 +44,26 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-007 — `/review` dispatch skill
+
+**Merged:** 2026-08-20 · **Kit version:** v1.52.0 · **Spec:** B-051, D-034 in [`docs/spec.md`](docs/spec.md)
+
+**What:** a `/review` skill that lists the reviewer sessions on the host — deduplicated by GitHub repository, most recent per repo — **stops for you to name one**, checks it is not held by an interactive client, dispatches the review, and relays every finding **verbatim**. It never picks a session itself and never edits a file; adopting a finding is a separate gated proposal.
+
+Supersedes B-010's "ships no Claude-side reviewer trigger" clause. Review is still user-initiated, the rubric is still reviewer-agnostic, and the kit still configures **no default reviewer** — the skill asks which session to use and cannot answer that itself.
+
+**Affects:** `.claude/skills/review/SKILL.md` (new file) and your project's manifest, if it keeps one.
+
+**Check:** `test -f .claude/skills/review/SKILL.md && echo adopted || echo not-adopted`
+
+**Adopt:** copy [`templates/.claude/skills/review/SKILL.md`](templates/.claude/skills/review/SKILL.md) into place, either at `~/.claude/skills/review/SKILL.md` (**user-level — one install covers every project on that machine**) or `.claude/skills/review/SKILL.md` for this project alone. Prefer user-level if you run several projects from one machine. New projects bootstrapped at v1.52.0 or later get the per-project copy automatically.
+
+**Check (user-level):** `test -f ~/.claude/skills/review/SKILL.md && echo adopted || echo not-adopted` — a user-level install satisfies this entry for every project on the machine, so the per-project Check above may report `not-adopted` while `/review` works fine.
+
+**Skip if:** your reviewer cannot be invoked non-interactively, or you review manually. The skill assumes a resumable reviewer session addressable by id; without one it has nothing to dispatch into, and reviewing by hand as before costs you nothing.
+
+---
+
 ## A-006 — proposals end with a command list, not a sentence
 
 **Merged:** 2026-08-20 · **Kit version:** v1.50.0 · **Spec:** B-049, D-033 in [`docs/spec.md`](docs/spec.md)
