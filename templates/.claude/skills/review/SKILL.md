@@ -22,11 +22,29 @@ If the user asks what *you* think, answer then — after they have seen the raw 
 
 ## Steps
 
-### 1. Let the user pick the session — never choose one yourself
+### 1. Resolve the session — pinned, or ask once
 
-**The user names the review session. You do not select it, infer it, or fall back to a default.**
+**You never choose a reviewer session. You may read a choice the user already made.**
 
-If the user supplied a session UUID or a number with the invocation, use exactly that. Otherwise print this numbered list and **stop, asking which number to use**:
+That distinction is the whole rule. Selecting a session is forbidden; recalling one the user pinned is not. Without it, a PR-open node that must *name* a reviewer target can never satisfy that requirement without a round-trip, and bundled review never fires.
+
+Pins live in `~/.claude/codex-review-sessions.json`, keyed by GitHub repo:
+
+```sh
+python3 - <<'PY'
+import json, os, subprocess
+PIN=os.path.expanduser('~/.claude/codex-review-sessions.json')
+repo=subprocess.run(['gh','repo','view','--json','nameWithOwner','-q','.nameWithOwner'],
+                    capture_output=True, text=True).stdout.strip()
+pins=json.load(open(PIN)) if os.path.exists(PIN) else {}
+print(f"repo: {repo or '(not a GitHub repo)'}")
+print(f"pinned session: {pins.get(repo, '(none)')}")
+PY
+```
+
+**If a pin exists**, verify it still resolves — the session must exist, be unarchived, and belong to this repo. If it does, use it and say which session you are using. If it does not, **stop and say so**; never silently fall back to another.
+
+**If no pin exists**, list the candidates and stop, asking which number to use. Then record the choice before dispatching, so the next PR-open in this repo needs no round-trip:
 
 ```sh
 python3 - <<'PY'
@@ -44,23 +62,19 @@ for i,up,cwd in rows:
         "where thread_id=? and item_type='commandExecution'", (i,)):
         for m in re.finditer(r'repos/([\w.-]+/[\w.-]+)', ij): repos[m.group(1)]+=1
     if not repos:
-        # Touched no GitHub repo: cannot be the review session for one, and
-        # ancient sessions have no local transcript to tell us either way.
         norepo+=1
         if not ALL: continue
         repo='-'
     else:
         repo=repos.most_common(1)[0][0]
-    # One row per repo, most recent first. Rows are ordered by recency, so the
-    # first sighting of a repo IS its latest session.
     if not ALL and repo in seen:
         older+=1; continue
     seen.add(repo)
-    shown.append((up,(cwd or '?').replace('/root/projects/','').replace('/root','~'),repo))
-print(f"  {'#':<4}{'last used':<14}{'github repo':<34}launched in")
-for n,(up,folder,repo) in enumerate(shown,1):
+    shown.append((up,(cwd or '?').replace(os.path.expanduser('~')+'/projects/','').replace(os.path.expanduser('~'),'~'),repo,i))
+print(f"  {'#':<4}{'last used':<14}{'github repo':<34}{'launched in':<22}session")
+for n,(up,folder,repo,i) in enumerate(shown,1):
     when=datetime.datetime.fromtimestamp((up or 0)/1000, datetime.UTC).strftime('%m-%d %H:%M')
-    print(f"  {n:<4}{when:<14}{repo:<34}{folder}")
+    print(f"  {n:<4}{when:<14}{repo:<34}{folder:<22}{i}")
 if not ALL and (older or norepo):
     print()
     if older:  print(f"  {older} older session(s) hidden — a newer one exists for the same repo.")
@@ -69,25 +83,40 @@ if not ALL and (older or norepo):
 PY
 ```
 
-Show it as printed and wait for a number. Do not rank the entries, do not recommend one, and **do not proceed on a single result — one candidate is not consent.**
+Do not rank the entries, do not recommend one, and **do not proceed on a single result — one candidate is not consent.** Record the pin only after the user names it; writing a pin the user did not choose is choosing.
 
-The two columns that identify a session are **launched in** and **github repo**. When they disagree — a thread opened in one project that has been operating on another — that session lost track of what it reviews. Do not dispatch into one without the user explicitly choosing it anyway.
+**Changing or clearing a pin** is a normal request — rewrite the entry, or delete the key so the next run asks again.
 
-**Why this is a hard rule.** Dispatching sends an autonomous agent (`approval: never`, `workspace-write`, GitHub write access) into whichever session you name. Threads carry no label — the `name` column is unused — so the only machine-readable signals are recency and the opening message, and both are wrong the moment the user has ever opened Codex in this repo for something other than review. Sessions like *"how to login diff account for codex"* and *"i am working on a cyber security thesis"* already exist. Sending `review-post!` into one of those is not a bad review; it is an agent acting on a repo with no idea why.
+### 2. Check the session is free — authoritatively, not by guessing
 
-Recency was tried and rejected for exactly this reason. It appears to work only because Codex is used here almost exclusively for review; the first exception breaks it silently.
+A thread has **exactly one writer**. An interactive Codex client holding the chosen thread makes dispatch fail with `already has an active writer`.
 
-**If the chosen session does not exist, is archived, or belongs to a different `cwd`**, stop and say so. Do not substitute a nearby one.
-
-### 2. Check the session is free
-
-A thread has **exactly one writer**. If a Codex TUI has it open, dispatch fails with `already has an active writer`. Find the holder:
+Check the lock for **that specific thread**, and confirm its owner is actually alive:
 
 ```sh
-ps -eo pid,cmd | grep '[c]odex resume' | while read p rest; do echo "$p $(readlink /proc/$p/cwd)"; done
+python3 - <<'PY'
+import os, sys
+CODEX=os.environ.get('CODEX_HOME') or os.path.expanduser('~/.codex')
+uuid=sys.argv[1] if len(sys.argv)>1 else os.environ.get('SESSION','')
+lock=os.path.join(CODEX,'thread-writer-locks',f'{uuid}.lock')
+if not uuid:
+    print('no session id given')
+elif not os.path.exists(lock):
+    print('FREE — no lock file for this thread')
+else:
+    # A lock file alone proves nothing: it can outlive the process that made
+    # it. Report it as held only if some live codex process could own it.
+    live=[p for p in os.listdir('/proc') if p.isdigit()
+          and 'codex' in open(f'/proc/{p}/cmdline','rb').read().decode('utf8','replace')]
+    print(f'lock present; live codex processes: {live or "none"}')
+    print('FREE — lock is stale, no codex process running' if not live
+          else 'MAY BE HELD — try the dispatch; the error names the thread if so')
+PY
 ```
 
-If one is running in this project's directory, tell the user which PID to close and stop. Do not kill it yourself — it may hold unsaved context the user is mid-way through.
+**Never use a bare `ps | grep codex` as the check.** It is a proxy over the whole process table: it cannot tell which thread a process holds, matches unrelated Codex work in other repos, and matches a dispatch this session started itself. It reports a lock that does not exist and blocks a dispatch that would have succeeded — an observed failure, not a theoretical one.
+
+**The dispatch itself is the authority.** If the lock state is ambiguous, attempt it: the error is specific, names the thread, and changes nothing when it fails. Only if it fails with `already has an active writer` do you tell the user which client to close — and then say *which thread* is held, not merely that some Codex process exists.
 
 ### 3. Dispatch
 
