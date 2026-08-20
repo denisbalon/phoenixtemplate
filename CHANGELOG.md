@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.51.3 — 2026-08-20
+
+**Two Block findings on PR #19, both defects in the linter this branch introduces.**
+
+**1. It rejected valid amendments.** The check counted new `## A-NNN` headings only, but B-047 is per *adoptable change*, not per commit — a correction to an already-shipped change amends its existing entry rather than adding one. **This repo has already done that**: A-003 gained the timeout note in v1.48.2. The linter as written would have rejected that commit, and its author could not honestly have used `Adoption-Skip`, because the change genuinely was consumer-facing. A rule encoded as a proxy ("new heading") was never checked against the history of the rule it proxied for. It now accepts a substantive edit to an existing entry; whitespace-only churn deliberately does not count, or re-wrapping a paragraph would discharge the obligation.
+
+**2. One trailer disabled the whole branch.** `Adoption-Skip` was matched anywhere in `merge-base..HEAD` and skipped everything. A harmless meta-only commit could carry a justified trailer, and a later consumer-facing `templates/` change on the same branch would then bypass the journal with no entry. The trailer now justifies only the `templates/` files changed in **its own commit**; unjustified files from other commits still fail, listed by name.
+
+**A usability limit worth stating, found while fixing it.** Strict per-commit scoping means an earlier untrailered commit cannot be retroactively justified without rewriting pushed history. That surfaced on this very branch: v1.51.0 registered the script in `templates/manifest.yaml` with no trailer. The resolution was to touch that file legitimately here — its `purpose` line no longer described the behaviour — rather than weaken the scoping to make the branch pass.
+
+Also fixed: the FAIL message referenced `$before`/`$after` after those variables were renamed, so the failure path died with `unbound variable` instead of printing its diagnosis. Only visible because the failure path was exercised rather than assumed — the third time on this branch that testing the unhappy path found a defect the happy path hid.
+
+Touches: `scripts/check-adoption-journal.sh`, `templates/manifest.yaml`, `docs/spec.md` (B-050 Rule), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump (address-review fixes).
+
 ## v1.51.2 — 2026-08-20
 
 **The vacuous-pass fix had a second layer, and the `WARN` wording is what found it.** v1.51.1 added `fetch-depth: 0` so CI would have the history to compute a merge-base. The next CI run warned anyway: `actions/checkout` gives full history but creates **no local branch for the base** — only `origin/main` exists, so `git rev-parse --verify main` still failed and the check still did not run.
