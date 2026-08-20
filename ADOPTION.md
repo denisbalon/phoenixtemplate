@@ -44,6 +44,22 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-004 — per-commit coverage: any one form suffices
+
+**Merged:** 2026-08-20 · **Kit version:** v1.48.3 · **Spec:** B-043 in [`docs/spec.md`](docs/spec.md)
+
+**What:** the review rubric's output contract now states directly that a commit is covered by **any one** of the three listed forms — inline comments carrying `commit_id`, a commit-level review, or an explicit clean-commit comment. Previously item 2 listed the three alternatives but never said one was enough, so "each commit gets at least one comment" could be read as requiring a commit-scoped comment *in addition to* inline findings. Also fixes a self-referential `(see 2)` pointer that should have read `(see 3)`.
+
+**Affects:** `docs/pr_review_instructions.md` — output-contract item 2.
+
+**Check:** `grep -c 'Any one of these satisfies coverage' docs/pr_review_instructions.md` — `0` means not adopted.
+
+**Adopt:** replace output-contract item 2 with the version in [`templates/docs/pr_review_instructions.md`](templates/docs/pr_review_instructions.md). Prose only, no byte-exact requirement.
+
+**Skip if:** you want your reviewers held to the stricter reading — a commit-scoped comment on every commit regardless of inline findings. That is more audit trail per review and is a legitimate choice; the kit simply no longer requires it.
+
+---
+
 ## A-003 — `/updates` skill
 
 **Merged:** 2026-08-18 · **Kit version:** v1.48.0 · **Spec:** B-047 in [`docs/spec.md`](docs/spec.md)
