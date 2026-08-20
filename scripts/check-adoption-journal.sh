@@ -22,16 +22,29 @@
 #     Whether A-NNN names the right files, or its Check actually works, is
 #     review's job — PR #17 had exactly that failure and a linter would not
 #     have caught it. Pretending otherwise would give false confidence.
-#   - On the base branch itself, or with no base to compare against, it
-#     passes. There is nothing to diff.
+#   - On the base branch itself it passes: there is nothing to diff. But a
+#     branch with no base ref or no merge-base is NOT a pass — it is a check
+#     that could not run, and says so as WARN on stderr. That distinction
+#     exists because the first CI run of this script passed vacuously: the
+#     default shallow checkout has no 'main' ref, so it reported green while
+#     verifying nothing. A check that cannot run must never look like one
+#     that ran and found nothing.
 #
 # Exit codes: 0 = satisfied or not applicable, 1 = templates/ changed with
 # no new adoption entry.
 #
-# Override: ADOPTION_SKIP=1 ./scripts/check-adoption-journal.sh
-#   For a templates/ change consumers genuinely need not mirror. Use it in
-#   the commit that needs it and say why in the commit message — an
-#   unexplained override is the failure mode this script exists to prevent.
+# Override: an `Adoption-Skip: <reason>` trailer in any commit message on
+# the branch. For a templates/ change consumers genuinely need not mirror —
+# e.g. registering a meta-only script in templates/manifest.yaml, which is
+# never exported to consumers.
+#
+#   The trailer, not an environment variable, is the mechanism on purpose.
+#   The first version of this script used ADOPTION_SKIP=1, which CI cannot
+#   see: the override worked locally and the build failed anyway. A trailer
+#   travels with the commit, is visible to CI, and puts the justification in
+#   permanent history instead of a shell invocation nobody can audit later.
+#   ADOPTION_SKIP=1 still works for a local one-off run, but it does NOT
+#   satisfy CI — use the trailer for anything that needs to merge.
 
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -41,13 +54,16 @@ BASE="${ADOPTION_BASE:-main}"
 JOURNAL="ADOPTION.md"
 
 if [[ -n "${ADOPTION_SKIP:-}" ]]; then
-  echo "SKIP: adoption-journal check overridden (ADOPTION_SKIP set)."
-  echo "      State in the commit message why this templates/ change needs no entry."
+  echo "SKIP: overridden locally via ADOPTION_SKIP."
+  echo "      NOTE: CI cannot see this. Use an 'Adoption-Skip: <reason>' commit"
+  echo "      trailer for anything that needs to merge."
   exit 0
 fi
 
 if ! git rev-parse --verify --quiet "$BASE" >/dev/null; then
-  echo "OK: no '$BASE' ref to compare against — nothing to check."
+  echo "WARN: cannot verify — no '$BASE' ref to compare against." >&2
+  echo "      This is NOT a pass; the check did not run. In CI this means the" >&2
+  echo "      checkout is shallow — set 'fetch-depth: 0' on actions/checkout." >&2
   exit 0
 fi
 
@@ -58,7 +74,14 @@ fi
 
 MERGE_BASE="$(git merge-base HEAD "$BASE" 2>/dev/null || true)"
 if [[ -z "$MERGE_BASE" ]]; then
-  echo "OK: no merge-base with '$BASE' — nothing to check."
+  echo "WARN: cannot verify — no merge-base with '$BASE'." >&2
+  echo "      This is NOT a pass; the check did not run. Usually a shallow clone." >&2
+  exit 0
+fi
+
+SKIP_REASON="$(git log "$MERGE_BASE"..HEAD --format=%B 2>/dev/null | sed -n 's/^Adoption-Skip:[[:space:]]*//p' | head -1 || true)"
+if [[ -n "$SKIP_REASON" ]]; then
+  echo "SKIP: Adoption-Skip trailer found — $SKIP_REASON"
   exit 0
 fi
 
@@ -90,6 +113,8 @@ fi
   echo
   echo "B-047: a change consuming projects must mirror obliges an adoption-journal"
   echo "entry in the SAME PR. Add one, or — if consumers genuinely need not mirror"
-  echo "this change — re-run with ADOPTION_SKIP=1 and say why in the commit message."
+  echo "this change — add an 'Adoption-Skip: <reason>' trailer to a commit on"
+  echo "this branch. The trailer is visible to CI and lands in permanent history;"
+  echo "the ADOPTION_SKIP env var is local-only and will not make CI pass."
 } >&2
 exit 1
