@@ -9,8 +9,9 @@
 # motivated this script (D-031 option (e), deferred there, closed here).
 #
 # What it does: compares HEAD against the merge-base with the base branch.
-# If any tracked file under templates/ changed, ADOPTION.md must also have
-# gained at least one new "## A-NNN" heading.
+# If any tracked file under templates/ changed — excluding
+# templates/manifest.yaml, see below — ADOPTION.md must also have gained a
+# new "## A-NNN" heading or a substantive edit to an existing entry.
 #
 # Deliberate limits, so the check stays honest rather than merely strict:
 #
@@ -33,8 +34,12 @@
 # Exit codes: 0 = satisfied or not applicable, 1 = templates/ changed with
 # no new adoption entry.
 #
-# There is deliberately NO exemption mechanism. Three were tried and each
-# leaked:
+# There is deliberately NO exemption mechanism — no way to wave a change
+# through from a commit message or the environment. One file is excluded by
+# name (templates/manifest.yaml, a derived inventory; see below), which is a
+# fixed property of the script rather than a per-change judgement.
+#
+# Three exemption mechanisms were tried and each leaked:
 #
 #   branch-wide trailer  — a meta-only commit's justified trailer covered a
 #                          later consumer-facing change on the same branch.
@@ -46,12 +51,9 @@
 #                          covered a rule change to the same file later.
 #
 # Every leak was found by review, not by design, and each fix moved the hole
-# rather than closing it. So: every templates/ change needs a journal entry,
-# including changes consumers need not act on. Write the entry and say so —
-# "no action required, <reason>" is a fine entry and costs one line. That is
-# cheaper than an exemption that has been wrong three times, and it leaves
-# the journal a complete record of what touched templates/ rather than a
-# record with invisible gaps.
+# rather than closing it — so there is no mechanism at all. A templates/
+# change that consumers need not act on is still consumer-facing content and
+# still gets an entry; there is no way to declare otherwise per-change.
 
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -147,13 +149,10 @@ fi
   echo "and no substantive edit to an existing entry."
   echo
   echo "B-047: a templates/ change obliges an adoption-journal entry in the SAME PR."
-  echo "There is no exemption mechanism — three were tried and each leaked."
+  echo "There is no exemption mechanism — three were tried and each leaked, so a"
+  echo "change cannot be waved through from a commit message or the environment."
   echo
-  echo "If consumers need not act on this change, that is still an entry:"
-  echo "  ## A-NNN — <what changed>"
-  echo "  **Check:** n/a   **Adopt:** nothing to do — <why>"
-  echo
-  echo "One line is cheaper than an exemption that has been wrong three times,"
-  echo "and it keeps the journal a complete record rather than one with gaps."
+  echo "templates/manifest.yaml is excluded by name as a derived inventory file"
+  echo "and is never listed above; every other templates/ file needs an entry."
 } >&2
 exit 1

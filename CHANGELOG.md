@@ -6,6 +6,16 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.51.7 — 2026-08-20
+
+**Align the linter's own prose with its behaviour — addresses the Nit on PR #19.** v1.51.6 excluded `templates/manifest.yaml` in code, but the script's header and FAIL-path text still asserted the pre-exclusion rule: *"every templates/ change needs a journal entry"*. Both now state the exclusion and distinguish it from an exemption.
+
+Small, and fixed anyway because it is the same defect class that produced two Blocks on this branch: code changed, the prose describing it did not. A script whose comments contradict its behaviour is how the next person reasons their way to the wrong conclusion — and on this branch, twice, that person was me.
+
+The FAIL message also gained a line worth having on its own: it now says `templates/manifest.yaml` is excluded and never appears in the list above, so someone reading a failure does not go looking for a file that was deliberately filtered out.
+
+Touches: `scripts/check-adoption-journal.sh` (header, exemption note, FAIL text), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump (documentation correctness; no behaviour change).
+
 ## v1.51.6 — 2026-08-20
 
 **`templates/manifest.yaml` is excluded as a derived file — closing the charter conflict without touching a frozen block.**
