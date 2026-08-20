@@ -6,6 +6,22 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.49.0 — 2026-08-20
+
+**Review requests bundle into the PR-open and address-review nodes (B-048 + D-032).** Where a project has a reviewer that can be invoked non-interactively, PR-open becomes atomic over `gh pr create` → request review → relay verbatim, and each address-review node over fix commit → push → `gh pr edit` → re-request → relay. One `gogogo!` per node instead of two. Where review is manual or out-of-band, both nodes are unchanged.
+
+**This does not weaken B-044.** The per-commit atom is untouched — each address-review fix is still one commit with one authorization. What changes is what a *node* is atomic over, and the precedent already existed: the merge node is atomic over three sub-steps because surfacing deploy separately after a merge is friction with no decision attached. Requesting review after opening a PR is the same shape.
+
+**Four constraints, each from an observed failure rather than an anticipated one.** A dispatch was sent into a session chosen by heuristic before the rule required naming one; a bundled dispatch failed mid-flight on a writer lock that was checkable beforehand; a review command scoped to "every open PR" was invoked without stating which PRs that covered; and a "clear bug" was nearly auto-fixed that closer reading showed did not exist.
+
+**Constraint (4) is the load-bearing one.** Bundled address-review fixes are limited to mechanical findings — a broken link, a missing entry, an absent flag. Anything requiring interpretation stops and is surfaced unfixed. Full autonomy was considered and rejected: auto-fixing inverts the never-judge rule from "do not dismiss findings" into "decide a finding is correct and act before the user reads it" — the same faculty, the same failure mode. A loop where Claude adjudicates the second model's findings removes the human that made the second opinion worth having (B-007).
+
+**Also rejected:** a `PostToolUse` hook firing review automatically on `gh pr create`. A hook fires with no proposal in front of it — not "one token authorized two things" but "nothing authorized this" — and it is the one option where the user cannot see what is about to happen before it happens.
+
+**The mechanism stays out of the kit.** B-010's no-default-reviewer rule is intact: this block governs *when* a review request may be bundled into a node, never *who* reviews or how they are invoked. The concrete dispatch command is host-specific and lives outside the repo — the same mechanism/content split as B-046.
+
+Touches: the C4 `proposal-format` region byte-exact across `WORKFLOW.md` + `templates/CONTRIBUTING.md` + `templates/CLAUDE.md` (B-022 verified green); `docs/spec.md` (B-048 frozen + D-032); `ADOPTION.md` (A-005, in the same PR per B-047); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md`. All 5 linters green. Minor bump (new frozen block + C4 region edit).
+
 ## v1.48.4 — 2026-08-20
 
 **Add the `ADOPTION.md` entry v1.48.3 should have carried — addresses the Block finding on PR #16.** v1.48.3 changed `templates/docs/pr_review_instructions.md`, a consumer-shipped file, without adding a journal entry. B-047 requires one in the same PR for exactly that kind of change. `A-004` now covers the clarified per-commit coverage rule.

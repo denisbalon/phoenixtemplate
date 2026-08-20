@@ -44,6 +44,24 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-005 — review requests bundle into PR-open and address-review
+
+**Merged:** 2026-08-20 · **Kit version:** v1.49.0 · **Spec:** B-048, D-032 in [`docs/spec.md`](docs/spec.md)
+
+**What:** where your project has a reviewer that can be invoked **non-interactively**, two nodes of the per-node cadence gain bundled sub-steps. PR-open becomes atomic over `gh pr create` → request review → relay findings verbatim; each address-review node becomes atomic over fix commit → push → `gh pr edit` → re-request review → relay. One `gogogo!` per node instead of two.
+
+Four constraints bind it: the proposal names the exact reviewer target; any exclusivity constraint is checked *before* proposing rather than during execution; the blast radius is stated when the reviewer covers more than the PR at hand; and bundled fixes are limited to **mechanical** findings — anything needing interpretation stops and is surfaced unfixed.
+
+**Affects:** `CLAUDE.md` and `CONTRIBUTING.md` — the C4 `proposal-format` region (**byte-exact**).
+
+**Check:** `grep -c 'atomic over requesting review' CLAUDE.md` — `0` means not adopted.
+
+**Adopt:** replace the `proposal-format` C4 region in every file your project carries it in, byte-exact from [`templates/CLAUDE.md`](templates/CLAUDE.md) / [`templates/CONTRIBUTING.md`](templates/CONTRIBUTING.md). Run `scripts/check-rule-consistency.sh` afterwards — a partial replacement fails it.
+
+**Skip if:** your review is manual or fully out-of-band. The rule is inert without a non-interactively invocable reviewer, so adopting it changes nothing for you — but skipping is equally fine, and skipping deliberately is better than adopting a rule you cannot exercise.
+
+---
+
 ## A-004 — per-commit coverage: any one form suffices
 
 **Merged:** 2026-08-20 · **Kit version:** v1.48.3 · **Spec:** B-043 in [`docs/spec.md`](docs/spec.md)
