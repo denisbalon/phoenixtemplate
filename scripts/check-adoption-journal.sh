@@ -87,30 +87,44 @@ if [[ -z "$MERGE_BASE" ]]; then
   exit 0
 fi
 
-# An Adoption-Skip trailer justifies the templates/ files in ITS OWN COMMIT,
-# never the whole branch. The first version accepted any trailer anywhere in
-# merge-base..HEAD and skipped everything: a harmless meta-only commit could
-# carry a justified trailer, and a later consumer-facing change on the same
-# branch would then bypass the journal entirely. A one-commit justification
-# must not become a branch-wide exemption.
-declare -a UNJUSTIFIED=()
-SKIPPED_ANY=""
+# An Adoption-Skip trailer justifies the templates/ FILES changed in the
+# commit carrying it — and those files stay justified wherever else they
+# change on the branch. Two failure modes bracket this choice:
+#
+#   Branch-wide (first version): any trailer anywhere skipped everything.
+#   A harmless meta-only commit could carry a justified trailer and a later
+#   consumer-facing change would bypass the journal entirely.
+#
+#   Strictly per-commit (second version): closed that hole but made an
+#   earlier untrailered commit impossible to justify without rewriting
+#   pushed history. It blocked this very branch, where templates/manifest.yaml
+#   was touched by two commits and only the later one carried a trailer.
+#
+# Per-file is the resolution. The justified set is the union of templates/
+# files from every trailered commit; anything changed outside that set still
+# needs a journal entry. A trailer for manifest.yaml never licenses a change
+# to CLAUDE.md, but it does cover manifest.yaml wherever it moved.
+declare -A JUSTIFIED=()
 while read -r sha; do
   [[ -z "$sha" ]] && continue
+  reason="$(git log -1 --format=%B "$sha" | sed -n 's/^Adoption-Skip:[[:space:]]*//p' | head -1 || true)"
+  [[ -z "$reason" ]] && continue
   files="$(git show --name-only --format= "$sha" -- templates/ || true)"
   [[ -z "$files" ]] && continue
-  reason="$(git log -1 --format=%B "$sha" | sed -n 's/^Adoption-Skip:[[:space:]]*//p' | head -1 || true)"
-  if [[ -n "$reason" ]]; then
-    echo "SKIP: ${sha:0:7} — $reason"
-    SKIPPED_ANY=1
-  else
-    while read -r f; do [[ -n "$f" ]] && UNJUSTIFIED+=("$f"); done <<< "$files"
-  fi
+  echo "SKIP: ${sha:0:7} — $reason"
+  while read -r f; do [[ -n "$f" ]] && JUSTIFIED["$f"]=1; done <<< "$files"
 done < <(git rev-list "$MERGE_BASE"..HEAD)
 
+ALL_CHANGED="$(git diff --name-only "$MERGE_BASE"...HEAD -- templates/ || true)"
+declare -a UNJUSTIFIED=()
+while read -r f; do
+  [[ -z "$f" ]] && continue
+  [[ -n "${JUSTIFIED[$f]:-}" ]] || UNJUSTIFIED+=("$f")
+done <<< "$ALL_CHANGED"
+
 if [[ ${#UNJUSTIFIED[@]} -eq 0 ]]; then
-  if [[ -n "$SKIPPED_ANY" ]]; then
-    echo "OK: every templates/ change on this branch is covered by a scoped Adoption-Skip trailer."
+  if [[ ${#JUSTIFIED[@]} -gt 0 ]]; then
+    echo "OK: every changed templates/ file is covered by an Adoption-Skip trailer."
   else
     echo "OK: no templates/ changes on this branch — no adoption entry required."
   fi
