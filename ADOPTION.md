@@ -44,6 +44,24 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-006 — proposals end with a command list, not a sentence
+
+**Merged:** 2026-08-20 · **Kit version:** v1.50.0 · **Spec:** B-049, D-033 in [`docs/spec.md`](docs/spec.md)
+
+**What:** the invitation line at the end of every numbered proposal becomes a **command list** — the valid inputs as inline-code spans on one comma-separated line, e.g. `` `1 gogogo!`, `2 gogogo!`, `1 2 gogogo!` or `3` `` — instead of prose the reader decodes into digits. Bounded to: every option individually, the all-`[change]` combination on a "Choose any" list, and any combination the proposal recommends. Never the power set. "Choose one" lists show no combinations; single suggestions show only `gogogo!`.
+
+The three invitation forms and every gate condition are unchanged — this is purely how the line is rendered.
+
+**Affects:** `WORKFLOW.md`, `CLAUDE.md` and `CONTRIBUTING.md` — the C4 `proposal-format` region (**byte-exact**). All three must move together; syncing a subset fails `scripts/check-rule-consistency.sh`.
+
+**Check:** `grep -c 'The command line' CLAUDE.md` — `0` means not adopted.
+
+**Adopt:** replace the `proposal-format` C4 region in every file your project carries it in, byte-exact from [`templates/CLAUDE.md`](templates/CLAUDE.md) / [`templates/CONTRIBUTING.md`](templates/CONTRIBUTING.md). Run `scripts/check-rule-consistency.sh` afterwards.
+
+**Skip if:** your proposals are read rather than tapped, and the prose line causes you no friction. The change costs nothing to skip — the gate conditions are identical either way, so a project on the old rendering and one on the new behave the same; only the last line of a proposal looks different.
+
+---
+
 ## A-005 — review requests bundle into PR-open and address-review
 
 **Merged:** 2026-08-20 · **Kit version:** v1.49.0 · **Spec:** B-048, D-032 in [`docs/spec.md`](docs/spec.md)

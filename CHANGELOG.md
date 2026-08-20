@@ -6,6 +6,22 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.50.0 — 2026-08-20
+
+**Proposals end with a command list, not a sentence (B-049 + D-033).** The invitation line becomes the valid inputs rendered as inline-code spans on one comma-separated line — `` `1 gogogo!`, `2 gogogo!`, `1 2 gogogo!` or `3` `` — replacing prose the reader had to decode into digits. Every entry is typed or tapped verbatim.
+
+**Why the prose form failed.** *"Type `1 gogogo!` for the [change] option, or `2` / `3` for the [info] options"* required working out which digits take the token and which do not, every time, from a sentence whose shape changed with the mix of options. That is a decoding step standing between the user and an action already decided on. It also degraded with scale in a way that was easy to miss: two options read fine, four or five accumulated clauses while the underlying choice stayed simple.
+
+**The bound is the design, not a detail.** "List the sensible variations" without a rule is the power set — five options produce thirty-one entries, worse than the sentence it replaces. The line is restricted to: every option individually; the all-`[change]` combination on a "Choose any" list carrying more than one; and any combination the proposal itself recommends. A "Choose one" list shows no combinations at all, since multi-select against that form is invalid.
+
+**Rendering.** Inline-code spans are deliberate: terminal themes colour them, so each command separates visually from the surrounding text. Markdown cannot specify a colour directly, and rendering the commands as links was rejected — links imply navigation the entries do not have.
+
+**A fenced block with one command per line was tried and discarded.** Clearer for long lists, but it costs five or six vertical lines on every proposal, and its per-command descriptions duplicate the numbered options directly above. One line carries the same information.
+
+Gate conditions are untouched. B-028's three invitation forms are unchanged; B-037's `✏️`/`👀` markers still prefix numbered options and still never appear on the command line itself. A project on the old rendering and one on the new behave identically — only the last line of a proposal looks different, which is why A-006 documents skipping as genuinely free.
+
+Touches: the C4 `proposal-format` region byte-exact across `WORKFLOW.md` + `templates/CONTRIBUTING.md` + `templates/CLAUDE.md` (B-022 verified green); `docs/spec.md` (B-049 frozen + D-033); `ADOPTION.md` (A-006, same PR per B-047); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md`. All 5 linters green. Minor bump (new frozen block + C4 region edit).
+
 ## v1.49.1 — 2026-08-20
 
 **Address two Block findings on PR #17 — stale non-C4 prose and an incomplete adoption entry.**
