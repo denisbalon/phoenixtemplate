@@ -12,10 +12,10 @@ The kit (`phoenixtemplate`) publishes an **adoption journal** listing changes a 
 ### 1. Fetch the journal
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/ADOPTION.md
+curl -fsSL --connect-timeout 10 --max-time 60 https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/ADOPTION.md
 ```
 
-Use `curl` via Bash rather than WebFetch — WebFetch is frequently not permitted, and this is a plain public file. If the fetch fails (no network, or the URL 404s), say so plainly and stop. **Do not** guess what the journal says or work from memory of a previous run; a stale answer here is worse than no answer.
+Use `curl` via Bash rather than WebFetch — WebFetch is frequently not permitted, and this is a plain public file. **Keep the timeouts.** `--connect-timeout 10 --max-time 60` are load-bearing, not decoration: without them a stalled DNS, TCP or TLS connection blocks the session indefinitely and the fail-and-stop behaviour below never runs, because `curl` never returns. A hang is worse than an error — an error you can act on. If the fetch fails (no network, a timeout, or the URL 404s), say so plainly and stop. **Do not** guess what the journal says or work from memory of a previous run; a stale answer here is worse than no answer.
 
 ### 2. Run each entry's Check
 

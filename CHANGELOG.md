@@ -6,6 +6,18 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.48.2 — 2026-08-20
+
+**Bound the network calls the `/updates` path makes — addresses two Strong findings from the PR #13 review.** All three `curl` invocations shipped with `-fsSL` and no timeout: the skill's journal fetch and both bootstrap install commands in `ADOPTION.md`. Each now carries `--connect-timeout 10 --max-time 60`.
+
+**Why this mattered more than a missing flag.** The skill promises that on fetch failure it says so and stops, rather than answering from memory of a previous run. An unbounded `curl` defeats exactly that promise: a stalled DNS, TCP or TLS connection never returns, so the fail-and-stop path never executes and the session hangs instead. A hang is strictly worse than an error, because an error is actionable. The skill's step 1 now states the flags are load-bearing rather than decoration, so a future edit doesn't quietly drop them.
+
+**The findings were reported before v1.47.0 merged and were not read.** Codex posted the first at 2026-08-18 19:26 against the skill fetch, and the second at 2026-08-19 04:12 against the bootstrap commands added in v1.48.1; PR #13 merged at 04:28. The merge proposal asserted that review was un-run without checking, so both Strong findings landed on `main` unaddressed. Recorded here because the process failure is the more useful lesson than the missing flag: the adoption journal and `/updates` were built in that PR to stop drift going unnoticed, and an unread review is the same class of problem one layer up.
+
+**A-003 amended rather than a new entry**, per B-047 — the timeouts are a correction to an existing adoptable change, not a new one. The entry now tells anyone who adopted before v1.48.2 to re-copy the skill, since an unbounded fetch is the difference between a clean failure and an indefinite hang.
+
+Touches: `templates/.claude/skills/updates/SKILL.md` (fetch + step-1 note), `ADOPTION.md` (both install commands + A-003 amendment), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 5 linters green. Patch bump (defect fix; no rule or format change).
+
 ## v1.48.1 — 2026-08-19
 
 **Break the bootstrap paradox in `ADOPTION.md` — you cannot learn about `/updates` from `/updates`.** v1.48.0 shipped the skill as entry A-003, which meant a project created before v1.48.0 had no way to be told it existed: the skill announces adoptable changes, and the skill is itself an adoptable change. A-003's Check only helps someone already reading the journal by hand.

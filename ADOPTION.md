@@ -22,11 +22,11 @@ The skill is itself something to adopt (entry A-003), so a project created befor
 
 ```sh
 # for every project on this machine (recommended — one install, applies everywhere)
-curl -fsSL https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/templates/.claude/skills/updates/SKILL.md \
+curl -fsSL --connect-timeout 10 --max-time 60 https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/templates/.claude/skills/updates/SKILL.md \
   --create-dirs -o ~/.claude/skills/updates/SKILL.md
 
 # or for this project only
-curl -fsSL https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/templates/.claude/skills/updates/SKILL.md \
+curl -fsSL --connect-timeout 10 --max-time 60 https://raw.githubusercontent.com/denisbalon/phoenixtemplate/main/templates/.claude/skills/updates/SKILL.md \
   --create-dirs -o .claude/skills/updates/SKILL.md
 ```
 
@@ -59,6 +59,8 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 **Check (user-level):** `test -f ~/.claude/skills/updates/SKILL.md && echo adopted || echo not-adopted` — a user-level install satisfies this entry for every project on the machine, so the per-project Check above may report `not-adopted` while `/updates` works fine.
 
 **Skip if:** you would rather check for kit updates by reading this file directly. Nothing else depends on the skill.
+
+**Amended v1.48.2:** the skill's fetch and both install commands above now carry `--connect-timeout 10 --max-time 60`. If you adopted this entry before v1.48.2, re-copy the skill — an unbounded `curl` can hang a session indefinitely instead of failing cleanly.
 
 ---
 
