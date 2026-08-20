@@ -6,6 +6,12 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.48.2 — 2026-08-20
+
+**Test harness for the Claude→Codex review loop (`test/review-loop`, not for merge).** Adds `SCRATCH.md`, a throwaway document used to exercise the full review cycle against a real PR: open, dispatch `review-post!` into a warm Codex session, collect posted findings, iterate. Kit content is untouched — the point is to prove the loop on the real `gh` path rather than a simulation, so the branch is deliberately never merged.
+
+`SCRATCH.md` contains planted defects drawn from real classes the rubric covers, so the run measures whether the reviewer catches substantive contradictions rather than typos.
+
 ## v1.48.1 — 2026-08-19
 
 **Break the bootstrap paradox in `ADOPTION.md` — you cannot learn about `/updates` from `/updates`.** v1.48.0 shipped the skill as entry A-003, which meant a project created before v1.48.0 had no way to be told it existed: the skill announces adoptable changes, and the skill is itself an adoptable change. A-003's Check only helps someone already reading the journal by hand.
