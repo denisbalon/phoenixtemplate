@@ -52,11 +52,11 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 Four constraints bind it: the proposal names the exact reviewer target; any exclusivity constraint is checked *before* proposing rather than during execution; the blast radius is stated when the reviewer covers more than the PR at hand; and bundled fixes are limited to **mechanical** findings — anything needing interpretation stops and is surfaced unfixed.
 
-**Affects:** `CLAUDE.md` and `CONTRIBUTING.md` — the C4 `proposal-format` region (**byte-exact**).
+**Affects:** `WORKFLOW.md`, `CLAUDE.md` and `CONTRIBUTING.md` — the C4 `proposal-format` region (**byte-exact**), plus the PR-open and address-review node descriptions in `WORKFLOW.md`'s on-branch workflow section. All three files must be updated together: the region is compared byte-for-byte across every tier the project carries, so syncing two of three fails `scripts/check-rule-consistency.sh`.
 
 **Check:** `grep -c 'atomic over requesting review' CLAUDE.md` — `0` means not adopted.
 
-**Adopt:** replace the `proposal-format` C4 region in every file your project carries it in, byte-exact from [`templates/CLAUDE.md`](templates/CLAUDE.md) / [`templates/CONTRIBUTING.md`](templates/CONTRIBUTING.md). Run `scripts/check-rule-consistency.sh` afterwards — a partial replacement fails it.
+**Adopt:** replace the `proposal-format` C4 region in every file your project carries it in — byte-exact from [`templates/CLAUDE.md`](templates/CLAUDE.md) / [`templates/CONTRIBUTING.md`](templates/CONTRIBUTING.md) — and update the PR-open and address-review node prose in your `WORKFLOW.md` to match, so the loaded region and the detailed workflow do not contradict each other. Run `scripts/check-rule-consistency.sh` afterwards; a partial replacement fails it.
 
 **Skip if:** your review is manual or fully out-of-band. The rule is inert without a non-interactively invocable reviewer, so adopting it changes nothing for you — but skipping is equally fine, and skipping deliberately is better than adopting a rule you cannot exercise.
 

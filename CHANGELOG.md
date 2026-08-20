@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.49.1 — 2026-08-20
+
+**Address two Block findings on PR #17 — stale non-C4 prose and an incomplete adoption entry.**
+
+**Finding 1: the canonical workflow contradicted the region that overrides it.** v1.49.0 put B-048's bundled sub-steps into the C4 `proposal-format` region, but `WORKFLOW.md`'s detailed node (3) still ended *"After this, Claude stops — PR review is out-of-band."* A reader following the detailed workflow would never bundle, and the two halves of the same document disagreed.
+
+This is the exact failure the kit has documented since v1.43.x: *Claude reliably applies what's in the loaded C4 region and reliably misses content that's only in non-C4 prose*, so a region edit obliges sweeping the mirrors. That lesson is written into this repo's own changelog and was reproduced anyway. Nodes (3) and (4) now carry the conditional bundled sub-steps, including constraint (4)'s mechanical-findings-only limit.
+
+**Finding 2: A-005 named two of the three affected files.** The entry listed `CLAUDE.md` and `CONTRIBUTING.md` but omitted `WORKFLOW.md`, whose C4 region this PR also changes byte-exact. Worse than a documentation gap — the Affects list is what an adopter follows, so it would have produced a project that synced two of three tiers and then failed `check-rule-consistency.sh` with no clue why. The entry now names all three, says explicitly that they must move together and why, and directs adopters to update the `WORKFLOW.md` node prose alongside the region.
+
+Both findings were mechanical under B-048's own constraint (4) — a stale prose mirror and a missing filename, neither requiring interpretation — so both were fixable in a bundled address-review round, which is the behaviour v1.49.0 introduced.
+
+Touches: `WORKFLOW.md` (nodes 3 and 4), `ADOPTION.md` (A-005 Affects + Adopt), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. C4 region untouched and verified still byte-exact. All 5 linters green. Patch bump (address-review fixes; no rule change to B-048).
+
 ## v1.49.0 — 2026-08-20
 
 **Review requests bundle into the PR-open and address-review nodes (B-048 + D-032).** Where a project has a reviewer that can be invoked non-interactively, PR-open becomes atomic over `gh pr create` → request review → relay verbatim, and each address-review node over fix commit → push → `gh pr edit` → re-request → relay. One `gogogo!` per node instead of two. Where review is manual or out-of-band, both nodes are unchanged.
