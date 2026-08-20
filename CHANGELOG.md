@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.51.0 — 2026-08-20
+
+**The adoption-journal obligation is now mechanically checked (B-050).** `scripts/check-adoption-journal.sh` fails when a tracked file under `templates/` differs from the merge-base and `ADOPTION.md` has gained no new `## A-NNN` heading. Wired into `template-self-test.yml` alongside the other five linters, bringing the set to six.
+
+**This closes a deferral that lasted exactly one commit.** D-031 recorded the mechanical check as deferred-not-rejected, reasoning that "the obligation is stated in B-047 and reviewable in a PR diff today" and that the format should survive a few real changes before mechanising. The very next `templates/` change omitted its entry (PR #16) and nothing caught it but a reviewer reading the diff. One commit was the answer to how long the format needed to settle.
+
+**The check is deliberately shallow, and that is the design.** It verifies an entry was *added*, never that the entry is correct. PR #17's second Block finding was an adoption entry that existed but named two of three affected files — this script would have passed it. A linter that appeared to guarantee correct entries would make that miss *more* likely, not less, by displacing the review attention that actually caught it. What it buys is narrow and real: the entry can no longer be forgotten entirely, which is the failure that occurred.
+
+**Escape hatch with a cost.** `ADOPTION_SKIP=1` covers a `templates/` change consumers genuinely need not mirror — a typo in a template comment, say, which the script cannot distinguish from a rule change. Using it obliges saying why in the commit message, because an unexplained override is precisely the failure the script exists to prevent.
+
+**Planted-violation tested before shipping**, which caught a real bug: an inline bash pluralization (`$( (( x )) == 1 && ... )`) was a syntax error that made the script exit 2 on every invocation. It would have failed CI on arrival. All four paths now verified — templates/ change with no entry exits 1 and names the file; adding an entry exits 0; `ADOPTION_SKIP=1` exits 0 with the justification notice; a branch touching only `scripts/` exits 0 as not applicable.
+
+Touches: `scripts/check-adoption-journal.sh` (new), `.github/workflows/template-self-test.yml`, `templates/manifest.yaml`, `docs/spec.md` (B-050 frozen + D-031 option (e) marked closed), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. **No `templates/` content change**, so no adoption entry is required — the new linter confirms this itself. All 6 linters green. Minor bump (new frozen block + new shipped check).
+
 ## v1.50.0 — 2026-08-20
 
 **Proposals end with a command list, not a sentence (B-049 + D-033).** The invitation line becomes the valid inputs rendered as inline-code spans on one comma-separated line — `` `1 gogogo!`, `2 gogogo!`, `1 2 gogogo!` or `3` `` — replacing prose the reader had to decode into digits. Every entry is typed or tapped verbatim.

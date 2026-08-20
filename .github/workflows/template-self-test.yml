@@ -22,5 +22,8 @@ jobs:
         run: ./scripts/check-spec-consistency.sh
       - name: check manifest (B-033)
         run: ./scripts/check-manifest.sh
+
+      - name: Adoption-journal linter (B-050)
+        run: ./scripts/check-adoption-journal.sh
       - name: template smoke test (B-014)
         run: ./scripts/smoke-test.sh
