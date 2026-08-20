@@ -14,7 +14,9 @@ Review happens **out-of-band**: Claude opens the PR after a `gogogo!`-authorized
 2. **Per-commit coverage is mandatory.** Walk every commit `main..HEAD` in order. Each commit gets at least one comment on GitHub. Concrete commands below are for the `gh api` path; reviewers with native PR-comment integrations use those instead and the same per-commit rule still applies:
    - inline comments on specific lines (`gh api -X POST repos/<owner>/<repo>/pulls/<N>/comments -f path=... -F line=... -F commit_id=<sha> -f body=...`),
    - or a commit-level review (`gh api -X POST repos/<owner>/<repo>/pulls/<N>/reviews -F commit_id=<sha> -f event=COMMENT -f body=... -F 'comments[]=...'`),
-   - or — for a clean commit — an explicit "no findings on `<sha>` — `<subject>`" comment (see 2).
+   - or — for a clean commit — an explicit "no findings on `<sha>` — `<subject>`" comment (see 3).
+
+   **Any one of these satisfies coverage for that commit.** Inline comments carrying `commit_id` count — a commit that received inline findings does not additionally need a commit-scoped comment. What is never acceptable is a commit with no comment of any kind.
 3. **Clean commits are NOT silently skipped.** A commit with no findings still gets a comment that says so explicitly. Silence is indistinguishable from "the reviewer forgot this commit"; the explicit "no findings" comment closes that gap and makes the audit trail complete.
 4. **Plus one overall summary review at the end** with findings rolled up by severity (Block / Strong / Nit per the rubric below).
 5. **Never produce instead of comments:** local files (`review.md`, `findings.txt`, etc. — don't even draft them locally), chat-only summaries (ephemeral), Slack/email/PR-description edits (the description belongs to the author).
