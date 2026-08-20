@@ -15,9 +15,9 @@
 # Deliberate limits, so the check stays honest rather than merely strict:
 #
 #   - It cannot judge whether a templates/ change is consumer-relevant.
-#     A typo fix in a template comment needs no entry; the script cannot
-#     tell it from a rule change. Hence ADOPTION_SKIP below, which records
-#     the judgement in the commit rather than skipping silently.
+#     A typo fix in a template comment needs no action from consumers; the
+#     script cannot tell it from a rule change. It does not try — it asks
+#     for an entry either way, and the entry says "no action required".
 #   - It checks that an entry was ADDED, not that the entry is correct.
 #     Whether A-NNN names the right files, or its Check actually works, is
 #     review's job — PR #17 had exactly that failure and a linter would not
@@ -33,18 +33,25 @@
 # Exit codes: 0 = satisfied or not applicable, 1 = templates/ changed with
 # no new adoption entry.
 #
-# Override: an `Adoption-Skip: <reason>` trailer in any commit message on
-# the branch. For a templates/ change consumers genuinely need not mirror —
-# e.g. registering a meta-only script in templates/manifest.yaml, which is
-# never exported to consumers.
+# There is deliberately NO exemption mechanism. Three were tried and each
+# leaked:
 #
-#   The trailer, not an environment variable, is the mechanism on purpose.
-#   The first version of this script used ADOPTION_SKIP=1, which CI cannot
-#   see: the override worked locally and the build failed anyway. A trailer
-#   travels with the commit, is visible to CI, and puts the justification in
-#   permanent history instead of a shell invocation nobody can audit later.
-#   ADOPTION_SKIP=1 still works for a local one-off run, but it does NOT
-#   satisfy CI — use the trailer for anything that needs to merge.
+#   branch-wide trailer  — a meta-only commit's justified trailer covered a
+#                          later consumer-facing change on the same branch.
+#   per-commit trailer   — closed that, but an earlier untrailered commit
+#                          could then only be justified by rewriting pushed
+#                          history; it blocked its own branch.
+#   per-file trailer     — closed that, but a skip carried forward forever:
+#                          a typo exemption on templates/CLAUDE.md silently
+#                          covered a rule change to the same file later.
+#
+# Every leak was found by review, not by design, and each fix moved the hole
+# rather than closing it. So: every templates/ change needs a journal entry,
+# including changes consumers need not act on. Write the entry and say so —
+# "no action required, <reason>" is a fine entry and costs one line. That is
+# cheaper than an exemption that has been wrong three times, and it leaves
+# the journal a complete record of what touched templates/ rather than a
+# record with invisible gaps.
 
 set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -52,13 +59,6 @@ cd "$REPO_ROOT"
 
 BASE="${ADOPTION_BASE:-main}"
 JOURNAL="ADOPTION.md"
-
-if [[ -n "${ADOPTION_SKIP:-}" ]]; then
-  echo "SKIP: overridden locally via ADOPTION_SKIP."
-  echo "      NOTE: CI cannot see this. Use an 'Adoption-Skip: <reason>' commit"
-  echo "      trailer for anything that needs to merge."
-  exit 0
-fi
 
 # Resolve the base ref. A CI checkout has full history under fetch-depth: 0
 # but creates no local branch for the base — only origin/<base> exists. The
@@ -87,51 +87,7 @@ if [[ -z "$MERGE_BASE" ]]; then
   exit 0
 fi
 
-# An Adoption-Skip trailer justifies the templates/ FILES changed in the
-# commit carrying it — and those files stay justified wherever else they
-# change on the branch. Two failure modes bracket this choice:
-#
-#   Branch-wide (first version): any trailer anywhere skipped everything.
-#   A harmless meta-only commit could carry a justified trailer and a later
-#   consumer-facing change would bypass the journal entirely.
-#
-#   Strictly per-commit (second version): closed that hole but made an
-#   earlier untrailered commit impossible to justify without rewriting
-#   pushed history. It blocked this very branch, where templates/manifest.yaml
-#   was touched by two commits and only the later one carried a trailer.
-#
-# Per-file is the resolution. The justified set is the union of templates/
-# files from every trailered commit; anything changed outside that set still
-# needs a journal entry. A trailer for manifest.yaml never licenses a change
-# to CLAUDE.md, but it does cover manifest.yaml wherever it moved.
-declare -A JUSTIFIED=()
-while read -r sha; do
-  [[ -z "$sha" ]] && continue
-  reason="$(git log -1 --format=%B "$sha" | sed -n 's/^Adoption-Skip:[[:space:]]*//p' | head -1 || true)"
-  [[ -z "$reason" ]] && continue
-  files="$(git show --name-only --format= "$sha" -- templates/ || true)"
-  [[ -z "$files" ]] && continue
-  echo "SKIP: ${sha:0:7} — $reason"
-  while read -r f; do [[ -n "$f" ]] && JUSTIFIED["$f"]=1; done <<< "$files"
-done < <(git rev-list "$MERGE_BASE"..HEAD)
-
-ALL_CHANGED="$(git diff --name-only "$MERGE_BASE"...HEAD -- templates/ || true)"
-declare -a UNJUSTIFIED=()
-while read -r f; do
-  [[ -z "$f" ]] && continue
-  [[ -n "${JUSTIFIED[$f]:-}" ]] || UNJUSTIFIED+=("$f")
-done <<< "$ALL_CHANGED"
-
-if [[ ${#UNJUSTIFIED[@]} -eq 0 ]]; then
-  if [[ ${#JUSTIFIED[@]} -gt 0 ]]; then
-    echo "OK: every changed templates/ file is covered by an Adoption-Skip trailer."
-  else
-    echo "OK: no templates/ changes on this branch — no adoption entry required."
-  fi
-  exit 0
-fi
-
-CHANGED="$(printf '%s\n' "${UNJUSTIFIED[@]}" | sort -u)"
+CHANGED="$(git diff --name-only "$MERGE_BASE"...HEAD -- templates/ || true)"
 if [[ -z "$CHANGED" ]]; then
   echo "OK: no templates/ changes on this branch — no adoption entry required."
   exit 0
@@ -177,10 +133,14 @@ fi
   echo "$JOURNAL has ${before_headings:-0} entry/entries at the merge-base and ${after_headings:-0} now,"
   echo "and no substantive edit to an existing entry."
   echo
-  echo "B-047: a change consuming projects must mirror obliges an adoption-journal"
-  echo "entry in the SAME PR. Add one, or — if consumers genuinely need not mirror"
-  echo "this change — add an 'Adoption-Skip: <reason>' trailer to a commit on"
-  echo "this branch. The trailer is visible to CI and lands in permanent history;"
-  echo "the ADOPTION_SKIP env var is local-only and will not make CI pass."
+  echo "B-047: a templates/ change obliges an adoption-journal entry in the SAME PR."
+  echo "There is no exemption mechanism — three were tried and each leaked."
+  echo
+  echo "If consumers need not act on this change, that is still an entry:"
+  echo "  ## A-NNN — <what changed>"
+  echo "  **Check:** n/a   **Adopt:** nothing to do — <why>"
+  echo
+  echo "One line is cheaper than an exemption that has been wrong three times,"
+  echo "and it keeps the journal a complete record rather than one with gaps."
 } >&2
 exit 1
