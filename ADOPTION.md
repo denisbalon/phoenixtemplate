@@ -52,7 +52,7 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 The resolution distinguishes **choosing** a session from **recalling a choice already made**. `/review` now reads a pin from `~/.claude/codex-review-sessions.json`, keyed by GitHub repo, written only after you name a session. Recording a pin you did not choose is still forbidden.
 
-The picker also excludes sessions Codex spawned itself (`thread_source = 'subagent'`). A subagent is a child of some parent run, exists only for that run, and holds no reviewer context — dispatching into one injects the command into a worker. Its folder and repo look identical to a real session in the listing, so the exclusion happens at selection rather than relying on you to spot it.
+The picker now lists **only sessions that have posted to the repository you are in**, and never numbers a subagent (`thread_source = 'subagent'`) in any mode. A subagent is a child of some parent run with no reviewer context — dispatching into one injects the command into a worker — and its folder and repo look identical to a real session's, so it is excluded at selection rather than left for you to spot.
 
 Also replaces the reviewer-busy check. It used `ps | grep codex` — a proxy over the whole process table that cannot tell which thread is held, and was observed reporting a lock that did not exist. It now checks that specific thread's lock file and whether an owner is alive, and treats the dispatch error as the authority.
 
