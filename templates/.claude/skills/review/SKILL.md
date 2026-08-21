@@ -87,36 +87,42 @@ Do not rank the entries, do not recommend one, and **do not proceed on a single 
 
 **Changing or clearing a pin** is a normal request — rewrite the entry, or delete the key so the next run asks again.
 
-### 2. Check the session is free — authoritatively, not by guessing
+### 2. Check that session is free — before proposing, and authoritatively
 
-A thread has **exactly one writer**. An interactive Codex client holding the chosen thread makes dispatch fail with `already has an active writer`.
+A thread has **exactly one writer**. B-048 requires this checked **before** the bundled node is proposed: a proposal that half-executes is worse than two proposals, so dispatch-time failure cannot serve as the gate.
 
-Check the lock for **that specific thread**, and confirm its owner is actually alive:
+Run it with the session id resolved in step 1 — substitute it for `<uuid>`:
 
 ```sh
-python3 - <<'PY'
-import os, sys
-CODEX=os.environ.get('CODEX_HOME') or os.path.expanduser('~/.codex')
-uuid=sys.argv[1] if len(sys.argv)>1 else os.environ.get('SESSION','')
-lock=os.path.join(CODEX,'thread-writer-locks',f'{uuid}.lock')
-if not uuid:
-    print('no session id given')
-elif not os.path.exists(lock):
-    print('FREE — no lock file for this thread')
+CODEX="${CODEX_HOME:-$HOME/.codex}" SESSION=<uuid> python3 - <<'PY'
+import os, glob
+codex=os.environ['CODEX']; uuid=os.environ['SESSION']
+lock=os.path.join(codex,'thread-writer-locks',f'{uuid}.lock')
+if not os.path.exists(lock):
+    print(f'FREE — no writer lock for {uuid[:8]}'); raise SystemExit(0)
+# A lock file can outlive its process, so attribute it: a Codex client holds
+# the thread open by keeping a descriptor on the lock. Scan /proc for one.
+holder=None
+for fd in glob.glob('/proc/[0-9]*/fd/*'):
+    try:
+        if os.path.realpath(fd)==os.path.realpath(lock):
+            holder=fd.split('/')[2]; break
+    except OSError:
+        continue
+if holder:
+    try: cmd=open(f'/proc/{holder}/cmdline','rb').read().decode('utf8','replace').replace('\0',' ').strip()
+    except OSError: cmd='(exited)'
+    print(f'HELD by pid {holder} — {cmd[:70]}')
 else:
-    # A lock file alone proves nothing: it can outlive the process that made
-    # it. Report it as held only if some live codex process could own it.
-    live=[p for p in os.listdir('/proc') if p.isdigit()
-          and 'codex' in open(f'/proc/{p}/cmdline','rb').read().decode('utf8','replace')]
-    print(f'lock present; live codex processes: {live or "none"}')
-    print('FREE — lock is stale, no codex process running' if not live
-          else 'MAY BE HELD — try the dispatch; the error names the thread if so')
+    print(f'FREE — lock file for {uuid[:8]} is stale, no process holds it')
 PY
 ```
 
-**Never use a bare `ps | grep codex` as the check.** It is a proxy over the whole process table: it cannot tell which thread a process holds, matches unrelated Codex work in other repos, and matches a dispatch this session started itself. It reports a lock that does not exist and blocks a dispatch that would have succeeded — an observed failure, not a theoretical one.
+**`HELD`** → do not propose the bundled node. Name the pid and what it is, and say which thread is held. Do not kill it; it may hold context the user is mid-way through.
 
-**The dispatch itself is the authority.** If the lock state is ambiguous, attempt it: the error is specific, names the thread, and changes nothing when it fails. Only if it fails with `already has an active writer` do you tell the user which client to close — and then say *which thread* is held, not merely that some Codex process exists.
+**`FREE`** → the thread is dispatchable and the bundled node may be proposed.
+
+**Never substitute `ps | grep codex`.** It is a proxy over the whole process table: it cannot tell which thread a process holds, matches unrelated Codex work in other repositories, and matches a dispatch this session started itself. It was observed reporting a lock that did not exist and asking the user to close a client already closed. Attributing the lock file to a live file descriptor answers the actual question — *is this thread held* — rather than *does any Codex process exist*.
 
 ### 3. Dispatch
 
@@ -142,6 +148,8 @@ Show every finding in full. If nothing was posted, say that plainly — do not d
 ### 5. Then stop
 
 Wait for the user. When they decide what to act on, propose the fixes as a normal concrete proposal + `gogogo!`.
+
+**The only file this skill writes is the session pin** (`~/.claude/codex-review-sessions.json`), and only after the user names a session. That is a user-scoped preference record outside every repository — the same class of write the gate already exempts. It edits no tracked file, no project file, and nothing under the repository. Acting on a finding is always a separate proposal.
 
 ## Notes
 

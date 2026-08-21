@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.52.3 — 2026-08-21
+
+**Two Block findings on PR #21 — both defects introduced by the fix on that same PR.**
+
+**1. The lock check never ran.** It read the session id from `sys.argv[1]` or `$SESSION`, and nothing supplied either — so it printed *"no session id given"* and checked nothing, every invocation. v1.52.2 replaced a check that guessed wrong with one that did not execute. It also said *"if the lock state is ambiguous, attempt it"*, which is dispatch-time failure — precisely what B-048 forbids as the gate, since a bundled proposal that half-executes is worse than two proposals.
+
+It now takes the session id resolved in step 1, and answers the real question by **attributing the lock file to a live file descriptor** in `/proc`: a Codex client holds a thread by keeping the lock open, so a lock with no holder is stale and a lock with one names the pid and its command line. Verified both ways against this box — `HELD by pid 14076` and `HELD by pid 360417` for two live threads, `FREE` for an unheld one. That answers *is this thread held*, where `ps | grep codex` only ever answered *does any Codex process exist*.
+
+**2. B-051 contradicted itself.** It required `/review` to record a pin at `~/.claude/codex-review-sessions.json` while the same Rule and Test still said the skill *"never edits a file."* The pin is necessarily a write. This is the same class of defect as the B-048/B-051 conflict that PR #21 exists to resolve — introduced in the fix for it, a few hours later.
+
+The contract now states the boundary rather than asserting an absolute that was already false: **the skill writes exactly one thing, the pin, and only after the user names the session.** That is a user-scoped preference record outside every repository, in `$HOME`, of the same class the gate already exempts (`~/.claude/**`, `.claude/settings.local.json`). It edits no tracked file, no project file, and nothing under the repository. Recording a choice the user made is bookkeeping; editing a file in response to a review is work that must be proposed and gated.
+
+Touches: `templates/.claude/skills/review/SKILL.md` (step 2 rewritten, step 5 boundary stated), `docs/spec.md` (B-051 Rule and Test 5), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump (address-review fixes).
+
 ## v1.52.2 — 2026-08-20
 
 **Two frozen blocks could not both be satisfied, so bundled review never fired. Three reported symptoms, one cause.**
