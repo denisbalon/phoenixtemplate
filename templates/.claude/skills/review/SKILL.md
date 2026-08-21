@@ -53,10 +53,25 @@ CODEX=os.environ.get('CODEX_HOME') or os.path.expanduser('~/.codex')
 st=sqlite3.connect(f'file:{CODEX}/state_5.sqlite?mode=ro', uri=True)
 hi=sqlite3.connect(f'file:{CODEX}/thread_history_1.sqlite?mode=ro', uri=True)
 ALL = os.environ.get('ALL')
-rows=list(st.execute("select id,updated_at_ms,cwd from threads "
+# thread_source is 'user' for a session a person started and 'subagent' for
+# one Codex spawned itself. Only user sessions are dispatchable review
+# targets: a subagent is a child of some parent run, exists for that run's
+# duration, and resuming one would inject `review-post!` into a worker with
+# no reviewer context. Their cwd and repo look identical to a real session
+# in this listing, so they are indistinguishable once shown — filter at the
+# query, not by eye.
+rows=list(st.execute("select id,updated_at_ms,cwd,thread_source from threads "
   "where archived is null or archived=0 order by updated_at_ms desc"))
-seen=set(); shown=[]; older=0; norepo=0
-for i,up,cwd in rows:
+seen=set(); shown=[]; older=0; norepo=0; sub=0
+for i,up,cwd,src in rows:
+    if src=='subagent':
+        # Spawned by Codex itself, not started by a person. A subagent is a
+        # child of some parent run, lives only for that run, and has no
+        # reviewer context -- dispatching review-post! into one would inject
+        # the command into a worker. Its cwd and repo look identical to a real
+        # session here, so it is indistinguishable by eye once listed.
+        sub+=1
+        if not ALL: continue
     repos=collections.Counter()
     for (ij,) in hi.execute("select item_json from thread_items "
         "where thread_id=? and item_type='commandExecution'", (i,)):
@@ -75,10 +90,11 @@ print(f"  {'#':<4}{'last used':<14}{'github repo':<34}{'launched in':<22}session
 for n,(up,folder,repo,i) in enumerate(shown,1):
     when=datetime.datetime.fromtimestamp((up or 0)/1000, datetime.UTC).strftime('%m-%d %H:%M')
     print(f"  {n:<4}{when:<14}{repo:<34}{folder:<22}{i}")
-if not ALL and (older or norepo):
+if not ALL and (older or norepo or sub):
     print()
     if older:  print(f"  {older} older session(s) hidden — a newer one exists for the same repo.")
     if norepo: print(f"  {norepo} session(s) hidden — touched no GitHub repo (or no local transcript).")
+    if sub:    print(f"  {sub} subagent session(s) hidden — spawned by Codex, not dispatchable.")
     print( "  Re-run with ALL=1 to list every session.")
 PY
 ```

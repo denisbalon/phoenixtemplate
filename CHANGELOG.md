@@ -6,6 +6,18 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.52.4 — 2026-08-21
+
+**Exclude Codex subagent sessions from the review picker.** Codex marks every thread `thread_source = 'user'` or `'subagent'` — the latter being sessions it spawned itself. On this box three exist, children of one parent run, carrying agent names (`Hilbert`, `Darwin`, `Arendt`) and paths like `/root/security_review`.
+
+**A subagent is never a valid dispatch target.** It is a child of some parent run, exists only for that run's duration, and holds no reviewer context — `review-post!` sent into one injects the command into a worker rather than a reviewer.
+
+**The exclusion happens at selection, not by asking the user to notice.** A subagent's `cwd` and GitHub repository are *identical* to a real session's in the listing — same folder, same repo, plausible timestamp. Once shown it is indistinguishable by eye, so leaving it visible would mean relying on the reader to catch what the data does not surface. That is the same reasoning that made the picker refuse recency and token-count heuristics: if the display cannot make a wrong choice visible, the wrong choice must not be offered.
+
+Counted rather than silently dropped — the footer reports how many were excluded, and `ALL=1` still lists them, consistent with the other two hidden categories.
+
+Touches: `templates/.claude/skills/review/SKILL.md` (picker query and filter), `docs/spec.md` (B-051 Rule and Test 1), `ADOPTION.md` (A-008 amended — same adoptable change per B-047, not a new entry), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump.
+
 ## v1.52.3 — 2026-08-21
 
 **Two Block findings on PR #21 — both defects introduced by the fix on that same PR.**
