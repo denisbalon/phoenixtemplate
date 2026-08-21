@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.52.5 — 2026-08-21
+
+**`ALL=1` re-enabled the dispatch it was meant to prevent, and the picker showed sessions that could not possibly be the reviewer.**
+
+**The verbose flag was a hole in a safety rule.** v1.52.4 skipped the subagent `continue` when `ALL=1` was set, so subagent rows were appended to the selectable list and became numbered candidates — contradicting B-051's *"never a valid target"* and re-enabling `review-post!` into a worker. A display flag must never widen what can be selected. Subagents are now never numbered in any mode; verbose lists them unnumbered and marked non-selectable.
+
+**The picker also listed every repository's sessions.** A session that never posted to the repo you are in cannot be its reviewer, so listing it was noise the reader had to filter by eye — the same failure the subagent exclusion exists to prevent, one level up. The list is now scoped to the current repository via `gh repo view`.
+
+The effect is stark: in this repo the picker went from **13 rows across 5 repositories to 1** — the actual reviewer — with 51 sessions reported as hidden rather than silently dropped. Verified in three projects; each shows exactly its own reviewer.
+
+Where the repository cannot be determined (not a GitHub repo, or `gh` unavailable) it says so and falls back to showing all, rather than presenting an empty list that would read as "no reviewer exists".
+
+Touches: `templates/.claude/skills/review/SKILL.md` (picker rewritten), `docs/spec.md` (B-051 Rule and Test 1), `ADOPTION.md` (A-008 amended — same adoptable change per B-047), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump.
+
 ## v1.52.4 — 2026-08-21
 
 **Exclude Codex subagent sessions from the review picker.** Codex marks every thread `thread_source = 'user'` or `'subagent'` — the latter being sessions it spawned itself. On this box three exist, children of one parent run, carrying agent names (`Hilbert`, `Darwin`, `Arendt`) and paths like `/root/security_review`.
