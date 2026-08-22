@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.53.0 — 2026-08-22
+
+**Review findings now arrive with the fixes already proposed.** `/review` relayed findings verbatim and then asked *"want me to propose fixes?"* — a question whose answer is always yes. That is a **null option** (B-038 forbids them precisely because the user can simply not respond) and it left the message **without a concrete proposal** (B-027). The skill's own step 5 said "wait for the user, then propose", which produced exactly that. Two frozen rules were being violated by the skill that shipped in the same kit.
+
+The concrete cost, from a real review: three findings — two Block, one Strong, each naming a specific implementation gap — relayed correctly, followed by *"Want that?"* One round-trip spent confirming something already known, on every review.
+
+**Proposing a fix is not judging a finding**, and that distinction is what makes this safe rather than a weakening of the never-judge rule. Judging decides a finding is valid, ranks it, dismisses it, or agrees with it ahead of the user. Proposing states what change would address it *as written* — endorsing nothing. The user still decides; they now decide on a real plan instead of on whether to be shown one.
+
+**Disagreement has a proposal too.** If a finding looks mistaken, the proposed action is to reply on the PR explaining why — a concrete action the user can authorise, which keeps the disagreement on the record where the reviewer can answer it. The alternative, characterising a finding as wrong in the relay, silently overrides the reviewer in the one place the user is relying on not being filtered.
+
+**Mechanical findings never reach this step.** B-048's constraint (4) has already fixed, committed, updated the PR and re-dispatched them inside the bundled node. Only findings requiring judgement arrive at step 5, and they arrive with a plan attached.
+
+Touches: `templates/.claude/skills/review/SKILL.md` (step 5 rewritten), `docs/spec.md` (B-051 Rule and Test 4), `ADOPTION.md` (A-009, same PR per B-047), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Minor bump (behaviour change to a frozen block's Rule).
+
 ## v1.52.5 — 2026-08-21
 
 **`ALL=1` re-enabled the dispatch it was meant to prevent, and the picker showed sessions that could not possibly be the reviewer.**
