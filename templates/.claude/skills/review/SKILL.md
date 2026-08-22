@@ -159,11 +159,27 @@ gh api repos/<owner>/<repo>/pulls/<N>/reviews  --jq '.[] | "[\(.state)] \(.body)
 
 Show every finding in full. If nothing was posted, say that plainly — do not describe what the run *seemed* to do.
 
-### 5. Then stop
+### 5. Propose the fixes in the same message — never ask whether to
 
-Wait for the user. When they decide what to act on, propose the fixes as a normal concrete proposal + `gogogo!`.
+After the verbatim findings, **in the same message**, propose the concrete change that addresses each one. Do not ask *"want me to fix these?"* — the answer is always yes, so the question is a null option (B-038) and a message that ends with it has no concrete proposal (B-027). It costs the user a round-trip to say something you already knew.
 
-**The only file this skill writes is the session pin** (`~/.claude/codex-review-sessions.json`), and only after the user names a session. That is a user-scoped preference record outside every repository — the same class of write the gate already exempts. It edits no tracked file, no project file, and nothing under the repository. Acting on a finding is always a separate proposal.
+**Proposing a fix is not judging a finding.** Judging is deciding a finding is valid, ranking it, dismissing it, or agreeing with it ahead of the user. Proposing is: *given this finding as written, here is the change that addresses it.* The proposal endorses nothing — the user still decides, but decides on a real plan instead of on whether to be shown one.
+
+Each proposed fix names specific files and specific changes, the way any proposal does. Vague restatement of the finding is not a proposal.
+
+**Mechanical findings are already fixed, not proposed.** Under B-048's constraint (4), a bundled address-review node fixes findings needing no interpretation — a broken link, a stale version reference, a missing required entry — commits, updates the PR and re-dispatches. Those never reach this step. Only findings requiring judgement arrive here, and they arrive *with a plan attached*.
+
+Shape the invitation so acting on everything is one keystroke, since that is the common case:
+
+```
+1 gogogo!    fix all three findings
+2 gogogo!    fix the two Blocks only, leave the Strong
+3            discuss finding 2 before deciding
+```
+
+**What this step must never do:** dispute a finding, rank findings by your own severity, tell the user which to skip, or characterise one as wrong. If you believe a finding is mistaken, the fix you propose for it may be *"reply on the PR explaining why this does not apply"* — that is still a concrete action the user can authorise, and it keeps the disagreement on the record where the reviewer can answer it, rather than in your summary where it silently overrides them.
+
+**The only file this skill writes is the session pin** (`~/.claude/codex-review-sessions.json`), and only after the user names a session. That is a user-scoped preference record outside every repository — the same class of write the gate already exempts. It edits no tracked file, no project file, and nothing under the repository. Acting on a finding is always a separate gated proposal.
 
 ## Notes
 

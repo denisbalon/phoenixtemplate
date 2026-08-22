@@ -44,6 +44,26 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-009 — review findings arrive with fixes proposed
+
+**Merged:** 2026-08-22 · **Kit version:** v1.53.0 · **Spec:** B-051 in [`docs/spec.md`](docs/spec.md)
+
+**What:** after relaying a reviewer's findings verbatim, `/review` now proposes the concrete change addressing each one **in the same message**, instead of asking whether fixes are wanted. That question was a null option (B-038) and left the message without a concrete proposal (B-027) — it cost a round-trip to confirm something already known.
+
+Proposing a fix is not judging a finding. Judging decides a finding is valid, ranks it, or dismisses it; proposing states what change would address it as written, endorsing nothing. Where the reviewer is thought mistaken, the proposed action is to **reply on the PR saying why** — keeping the disagreement on the record for the reviewer to answer rather than in a summary that silently overrides it.
+
+Findings needing no interpretation never reach this step: B-048's constraint (4) has already fixed, committed and re-dispatched them inside the bundled node.
+
+**Affects:** `.claude/skills/review/SKILL.md` — step 5.
+
+**Check:** `grep -c 'never ask whether to' .claude/skills/review/SKILL.md` — `0` means not adopted.
+
+**Adopt:** copy [`templates/.claude/skills/review/SKILL.md`](templates/.claude/skills/review/SKILL.md) over your existing one.
+
+**Skip if:** you prefer to see findings first and ask for fixes separately — some reviews are worth reading before deciding anything is wrong. Skipping costs you one extra exchange per review and nothing else.
+
+---
+
 ## A-008 — review session pinning + authoritative lock check
 
 **Merged:** 2026-08-20 · **Kit version:** v1.52.2 · **Spec:** B-048, B-051 in [`docs/spec.md`](docs/spec.md)
