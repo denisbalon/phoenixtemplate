@@ -6,6 +6,34 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.54.0 — 2026-08-24
+
+**A live proposal numbered its plan steps and its options in one sequence, so the command line selected the wrong things.** Observed in `phoenix-mobile-proxy`:
+
+```
+Proposed: open PR + Codex review (atomic, one gogogo!):
+1. gh pr create — head fix/renderer-registry-reload → base main …
+2. codex exec resume 019fea86-… "review-post!"
+3. Fetch + relay verbatim
+4. ✏ [change] PR-open + review + relay
+5. ✏ [change] PR-open only
+6. 👀 [info] Hold
+
+1 gogogo!, 2 gogogo!, or 3
+```
+
+`1 gogogo!` names a plan step, not an option. The options are `4.`–`6.`, and no number offered on the command line resolves to any of them. The user typed `1 gogogo!` and something ran — but which, and whether it matched intent, was down to interpretation in exactly the place the gate exists to remove interpretation.
+
+**Two rules were missing, and a third was being violated.**
+
+**Numbers belong to options, never to plan steps.** A plan is enumerated with bullets or letters; only selectable options carry `1.`, `2.`, `3.`, always starting at `1`, and the command line names those same numbers.
+
+**The three invitation forms never mix.** The moment a proposal offers numbered options it is a `Choose one:` or `Choose any (in order):` and carries that header. `Proposed: <action>` belongs only to a proposal with no options at all. This is the enabling defect: a `Proposed:` header above a numbered list says *one action* while the body offers three, so nothing marks where the plan ends and the choices begin — and the two sequences merge.
+
+**`6. 👀 [info] Hold` is a null option**, already forbidden by B-038 since v1.38.0 ("stop here", "wait", "do nothing" — the user can simply not respond). No rule change needed; it was being ignored.
+
+Touches: the C4 `proposal-format` region byte-exact across `WORKFLOW.md` + `templates/CONTRIBUTING.md` + `templates/CLAUDE.md` (B-022 verified green); `docs/spec.md` (B-049 Rule and a new Test 0); `ADOPTION.md` (A-010, same PR per B-047); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md`. All 6 linters green. Minor bump (C4 region edit + frozen block Rule change).
+
 ## v1.53.2 — 2026-08-24
 
 **The corrected example was still malformed — `Choose any` with mutually exclusive options.** v1.53.1 fixed the missing classification markers but kept `Choose any (in order):` over two `[change]` options that cannot both be selected: *fix all three findings* and *fix the two Blocks only*. Overlapping scopes exclude each other, so the form should have been `Choose one:` — and B-049's required all-`[change]` combination is meaningless for options that cannot be combined.
