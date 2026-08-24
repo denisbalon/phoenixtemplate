@@ -169,15 +169,19 @@ Each proposed fix names specific files and specific changes, the way any proposa
 
 **Mechanical findings are already fixed, not proposed.** Under B-048's constraint (4), a bundled address-review node fixes findings needing no interpretation — a broken link, a stale version reference, a missing required entry — commits, updates the PR and re-dispatches. Those never reach this step. Only findings requiring judgement arrive here, and they arrive *with a plan attached*.
 
-Shape the invitation so acting on everything is one keystroke, since that is the common case:
+The proposal is an ordinary one and must obey the format in full — `Choose any (in order):`, every option prefixed `✏️ **[change]**` or `👀 **[info]**`, closing with the bounded command line (B-049). Shape it so acting on everything is one keystroke, since that is the common case:
 
-```
-1 gogogo!    fix all three findings
-2 gogogo!    fix the two Blocks only, leave the Strong
-3            discuss finding 2 before deciding
-```
+> **Choose any (in order):**
+>
+> 1. ✏️ **[change]** Fix all three findings — `<file>:<line>` each, named concretely.
+> 2. ✏️ **[change]** Fix the two Blocks only, leaving the Strong.
+> 3. 👀 **[info]** Walk finding 2 in detail before deciding.
+>
+> `` `1 gogogo!`, `2 gogogo!` or `3` ``
 
-**What this step must never do:** dispute a finding, rank findings by your own severity, tell the user which to skip, or characterise one as wrong. If you believe a finding is mistaken, the fix you propose for it may be *"reply on the PR explaining why this does not apply"* — that is still a concrete action the user can authorise, and it keeps the disagreement on the record where the reviewer can answer it, rather than in your summary where it silently overrides them.
+**What this step must never do:** dispute a finding, rank findings by your own severity, tell the user which to skip, or characterise one as wrong.
+
+That includes deciding a finding is mistaken and proposing a rebuttal. An earlier draft of this step permitted exactly that, arguing the judgement was acceptable because it was expressed as a proposal. It is not: **deciding a finding is wrong is the judgement**, whatever is done with the conclusion afterwards. Every fix proposed here is strictly responsive to a finding as written. If the user asks what you think, answer then — and a rebuttal is a fine thing to propose *once they have asked*.
 
 **The only file this skill writes is the session pin** (`~/.claude/codex-review-sessions.json`), and only after the user names a session. That is a user-scoped preference record outside every repository — the same class of write the gate already exempts. It edits no tracked file, no project file, and nothing under the repository. Acting on a finding is always a separate gated proposal.
 

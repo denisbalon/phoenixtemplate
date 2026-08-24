@@ -6,6 +6,20 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.53.1 — 2026-08-24
+
+**Two Block findings on PR #22, both in text added by that PR.**
+
+**1. The example invitation violated the proposal format it exists to satisfy.** It had no `Choose any (in order):` header, no `✏️ [change]` / `👀 [info]` classification — options 1 and 2 mutate state while 3 is discussion — and no B-049 command line. A skill instructing sessions how to end a review with a proper proposal was demonstrating an improper one, and every session following it would have emitted unclassified proposals. The example is now a fully formed proposal.
+
+**2. The mistaken-finding carve-out was judgement wearing a proposal's clothes.** v1.53.0 permitted the dispatcher to decide a finding was mistaken and propose a rebuttal, arguing this was acceptable *because* it was expressed as a proposal. That argument is wrong, and the reviewer put it plainly: calling the rebuttal a proposal does not remove the judgement. **Deciding a finding is wrong is the judgement**, whatever is done with the conclusion afterwards — and B-051 forbids exactly that before the user asks.
+
+It is removed. Every fix proposed at step 5 is strictly responsive to a finding as written; a rebuttal may be proposed only once the user asks for the dispatcher's view. The v1.53.0 changelog paragraph presenting the carve-out as a feature is withdrawn.
+
+Worth naming the pattern, since it is the third instance in two days: a rule is written, a case appears that the absolute does not cover, and rather than qualifying the rule an exception gets argued for — here by relabelling the forbidden act. The reviewer has now caught it in `never selects a session`, `never edits a file`, and `never judges a finding`.
+
+Touches: `templates/.claude/skills/review/SKILL.md` (step 5 example and prohibition), `docs/spec.md` (B-051 Rule), `ADOPTION.md` (A-009), `CHANGELOG.md` (v1.53.0 paragraph withdrawn), `VERSION`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump (address-review fixes).
+
 ## v1.53.0 — 2026-08-22
 
 **Review findings now arrive with the fixes already proposed.** `/review` relayed findings verbatim and then asked *"want me to propose fixes?"* — a question whose answer is always yes. That is a **null option** (B-038 forbids them precisely because the user can simply not respond) and it left the message **without a concrete proposal** (B-027). The skill's own step 5 said "wait for the user, then propose", which produced exactly that. Two frozen rules were being violated by the skill that shipped in the same kit.
@@ -13,8 +27,6 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 The concrete cost, from a real review: three findings — two Block, one Strong, each naming a specific implementation gap — relayed correctly, followed by *"Want that?"* One round-trip spent confirming something already known, on every review.
 
 **Proposing a fix is not judging a finding**, and that distinction is what makes this safe rather than a weakening of the never-judge rule. Judging decides a finding is valid, ranks it, dismisses it, or agrees with it ahead of the user. Proposing states what change would address it *as written* — endorsing nothing. The user still decides; they now decide on a real plan instead of on whether to be shown one.
-
-**Disagreement has a proposal too.** If a finding looks mistaken, the proposed action is to reply on the PR explaining why — a concrete action the user can authorise, which keeps the disagreement on the record where the reviewer can answer it. The alternative, characterising a finding as wrong in the relay, silently overrides the reviewer in the one place the user is relying on not being filtered.
 
 **Mechanical findings never reach this step.** B-048's constraint (4) has already fixed, committed, updated the PR and re-dispatched them inside the bundled node. Only findings requiring judgement arrive at step 5, and they arrive with a plan attached.
 
