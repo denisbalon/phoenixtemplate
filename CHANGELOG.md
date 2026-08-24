@@ -6,6 +6,16 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.53.2 — 2026-08-24
+
+**The corrected example was still malformed — `Choose any` with mutually exclusive options.** v1.53.1 fixed the missing classification markers but kept `Choose any (in order):` over two `[change]` options that cannot both be selected: *fix all three findings* and *fix the two Blocks only*. Overlapping scopes exclude each other, so the form should have been `Choose one:` — and B-049's required all-`[change]` combination is meaningless for options that cannot be combined.
+
+The step now shows **both forms and the rule for choosing between them**: `Choose one:` when fix scopes overlap, with no combination listed; `Choose any (in order):` when the options are genuinely independent — one per finding, each fixable alone — and then the all-`[change]` combination must appear. A review with two unrelated Blocks is the second case; a review offering *all* versus *some* is the first.
+
+Third round on the same example. Getting a demonstration of the proposal format to actually satisfy the proposal format took: classification markers (v1.53.1), then the right invitation form for the option shape (here). The rule was correct in B-049 throughout — what kept failing was applying it to a concrete case, which is precisely what the example exists to show.
+
+Touches: `templates/.claude/skills/review/SKILL.md` (step 5 example), `VERSION`, `CHANGELOG.md`, `PROJECT_STARTER.md`. All 6 linters green. Patch bump.
+
 ## v1.53.1 — 2026-08-24
 
 **Two Block findings on PR #22, both in text added by that PR.**

@@ -169,15 +169,27 @@ Each proposed fix names specific files and specific changes, the way any proposa
 
 **Mechanical findings are already fixed, not proposed.** Under B-048's constraint (4), a bundled address-review node fixes findings needing no interpretation — a broken link, a stale version reference, a missing required entry — commits, updates the PR and re-dispatches. Those never reach this step. Only findings requiring judgement arrive here, and they arrive *with a plan attached*.
 
-The proposal is an ordinary one and must obey the format in full — `Choose any (in order):`, every option prefixed `✏️ **[change]**` or `👀 **[info]**`, closing with the bounded command line (B-049). Shape it so acting on everything is one keystroke, since that is the common case:
+The proposal is an ordinary one and must obey the format in full — every option prefixed `✏️ **[change]**` or `👀 **[info]**`, closing with the bounded command line (B-049). Put acting on everything first, since that is the common case.
 
-> **Choose any (in order):**
+**Pick the invitation form by whether the fix options exclude each other.** Scopes that overlap — *fix all* versus *fix a subset* — are mutually exclusive, so the form is `Choose one:` and no combination is listed:
+
+> **Choose one:**
 >
 > 1. ✏️ **[change]** Fix all three findings — `<file>:<line>` each, named concretely.
 > 2. ✏️ **[change]** Fix the two Blocks only, leaving the Strong.
 > 3. 👀 **[info]** Walk finding 2 in detail before deciding.
 >
 > `` `1 gogogo!`, `2 gogogo!` or `3` ``
+
+Use `Choose any (in order):` only when the options are genuinely independent — one per finding, each fixable alone — and then the all-`[change]` combination **must** appear in the command line:
+
+> **Choose any (in order):**
+>
+> 1. ✏️ **[change]** Fix the `0600` ledger mode finding — `<file>:<line>`.
+> 2. ✏️ **[change]** Fix the generation-retention finding — `<file>:<line>`.
+> 3. 👀 **[info]** Walk either finding in detail first.
+>
+> `` `1 gogogo!`, `2 gogogo!`, `1 2 gogogo!` or `3` ``
 
 **What this step must never do:** dispute a finding, rank findings by your own severity, tell the user which to skip, or characterise one as wrong.
 
