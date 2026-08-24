@@ -44,6 +44,24 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-010 — numbers belong to options, not plan steps
+
+**Merged:** 2026-08-24 · **Kit version:** v1.54.0 · **Spec:** B-049 in [`docs/spec.md`](docs/spec.md)
+
+**What:** a multi-step plan inside a proposal is enumerated with **bullets or letters**; only the selectable options carry `1.`, `2.`, `3.`, always starting at `1`, and the command line names those same numbers. And **the three invitation forms never mix** — a proposal offering numbered options is a `Choose one:` or `Choose any (in order):` and carries that header; `Proposed: <action>` belongs only to a proposal with no options.
+
+Numbering plan steps in the option sequence pushes the options to `4.`–`6.` while the command line still offers `1 gogogo!` — so the token selects a plan step that was never an option. Observed live: a PR-open proposal with three numbered plan steps, options at `4.`–`6.`, and a command line reading `` `1 gogogo!`, `2 gogogo!`, or `3` ``.
+
+**Affects:** `WORKFLOW.md`, `CLAUDE.md` and `CONTRIBUTING.md` — the C4 `proposal-format` region (**byte-exact**, all three together).
+
+**Check:** `grep -c 'numbers belong to options' CLAUDE.md` — `0` means not adopted.
+
+**Adopt:** replace the `proposal-format` C4 region byte-exact from [`templates/CLAUDE.md`](templates/CLAUDE.md) / [`templates/CONTRIBUTING.md`](templates/CONTRIBUTING.md) in every file carrying it. Run `scripts/check-rule-consistency.sh` afterwards.
+
+**Skip if:** nothing — this one is hard to skip usefully. It costs a line of the region and prevents a proposal whose command line selects the wrong thing.
+
+---
+
 ## A-009 — review findings arrive with fixes proposed
 
 **Merged:** 2026-08-22 · **Kit version:** v1.53.0 · **Spec:** B-051 in [`docs/spec.md`](docs/spec.md)
