@@ -50,7 +50,7 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 **What:** after relaying a reviewer's findings verbatim, `/review` now proposes the concrete change addressing each one **in the same message**, instead of asking whether fixes are wanted. That question was a null option (B-038) and left the message without a concrete proposal (B-027) — it cost a round-trip to confirm something already known.
 
-Proposing a fix is not judging a finding. Judging decides a finding is valid, ranks it, or dismisses it; proposing states what change would address it as written, endorsing nothing. Where the reviewer is thought mistaken, the proposed action is to **reply on the PR saying why** — keeping the disagreement on the record for the reviewer to answer rather than in a summary that silently overrides it.
+Proposing a fix is not judging a finding. Judging decides a finding is valid, ranks it, or dismisses it; proposing states what change would address it as written, endorsing nothing. Deciding a finding is mistaken and proposing a rebuttal is **not** permitted — that decision is the judgement itself, and wrapping it in a proposal does not remove it. Proposed fixes are strictly responsive to each finding as written; a rebuttal may be proposed only once you ask for the dispatcher's view.
 
 Findings needing no interpretation never reach this step: B-048's constraint (4) has already fixed, committed and re-dispatched them inside the bundled node.
 
