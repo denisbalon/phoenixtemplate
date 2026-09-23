@@ -93,7 +93,7 @@ a code change and the doc text that describes it go in the **same** commit; doc-
 
 ### Phase 5 — Emit
 1. Write `docs/audit-{{RUN_ID}}.md` (§8).
-2. `git checkout -b audit/{{RUN_ID}}` (refuse if the branch exists); apply the P3 bump the subject names — bump `{{VERSION_FILES}}` and add a `CHANGELOG.md` entry `## v<X.Y.Z> — <date>` for the audit — then `git add docs/audit-{{RUN_ID}}.md {{VERSION_FILES}} CHANGELOG.md`; verify `git diff --cached --stat` lists **only** the artifact plus exactly those P3 metadata files and nothing else; commit through `{{GATE}}` with subject `docs: audit {{RUN_ID}} — <n> findings, <m> commits planned v<X.Y.Z>` following P3. The audit commit is the project's ordinary per-commit shape (P3), not an exception to it.
+2. `git checkout -b audit/{{RUN_ID}}` (refuse if the branch exists). **Guard the metadata files first:** if any of `{{VERSION_FILES}}` or `CHANGELOG.md` already carried a staged or unstaged change at Phase 0 (Phase 0 records a dirty worktree but never cleans it), do **not** fold it into the audit commit — a blanket `git add` on a file the user was already editing absorbs their change while the filename-only `--stat` check still passes. Instead save the artifact as a **draft** (§3), commit nothing, and report which metadata file is dirty, preserving the user's edits. Otherwise apply the P3 bump the subject names — bump `{{VERSION_FILES}}` and add a `CHANGELOG.md` entry `## v<X.Y.Z> — <date>` for the audit — then stage those exact paths (`git add docs/audit-{{RUN_ID}}.md {{VERSION_FILES}} CHANGELOG.md`) and verify the staged **hunks** (`git diff --cached`, not only `--stat`) are the audit's own additions and nothing else; commit through `{{GATE}}` with subject `docs: audit {{RUN_ID}} — <n> findings, <m> commits planned v<X.Y.Z>` following P3. The audit commit is the project's ordinary per-commit shape (P3), not an exception to it.
 
 ---
 
@@ -191,6 +191,7 @@ reviewer notes:   <what to challenge>
 - [ ] no history file (CHANGELOG, archive, superseded entries) appears as a finding
 - [ ] no unresolved {{placeholder}} remains in this file
 - [ ] `git diff --cached --stat` lists only this artifact plus the P3 version/changelog metadata the bump requires
+- [ ] no version/changelog file that was already dirty at Phase 0 was folded into the audit commit (the run drafted and stopped instead)
 ```
 
 ---
