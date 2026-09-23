@@ -44,6 +44,24 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-011 — `/audit` project-audit skill
+
+**Merged:** 2026-09-23 · **Kit version:** v1.55.0 · **Spec:** B-052, D-035 in [`docs/spec.md`](docs/spec.md)
+
+**What:** an `/audit` skill (also fired by the phrase `project-audit!`) that runs a phased, read-only audit of the project it is in — verifies the kit contracts, runs **only** the commands your project declares, sweeps every active `B-`/`D-` spec entry against the code its Test clause names, and produces one `docs/audit-<id>.md` with typed-evidence findings and a commit plan. `project-audit!` is a launch phrase, not an authorization token: nothing under the repo is written until the artifact commit, which lands on its own `audit/<id>` branch through the normal `gogogo!` gate. It never applies its own findings' fixes.
+
+**Affects:** `.claude/skills/audit/SKILL.md` (new file) and your project's manifest, if it keeps one.
+
+**Check:** `test -f .claude/skills/audit/SKILL.md && echo adopted || echo not-adopted`
+
+**Adopt:** copy [`templates/.claude/skills/audit/SKILL.md`](templates/.claude/skills/audit/SKILL.md) into place, either at `~/.claude/skills/audit/SKILL.md` (**user-level — one install covers every project on that machine**) or `.claude/skills/audit/SKILL.md` for this project alone. Prefer user-level if you run several projects from one machine. New projects bootstrapped at v1.55.0 or later get the per-project copy automatically.
+
+**Check (user-level):** `test -f ~/.claude/skills/audit/SKILL.md && echo adopted || echo not-adopted` — a user-level install satisfies this entry for every project on the machine, so the per-project Check above may report `not-adopted` while `/audit` works fine.
+
+**Skip if:** your project is not built from the kit — the skill relies on the spec id grammar, the version/CHANGELOG convention, the `docs/audit-*.md` convention and the `gogogo!` gate, and does not pretend to be portable to arbitrary repos.
+
+---
+
 ## A-010 — numbers belong to options, not plan steps
 
 **Merged:** 2026-08-24 · **Kit version:** v1.54.0 · **Spec:** B-049 in [`docs/spec.md`](docs/spec.md)

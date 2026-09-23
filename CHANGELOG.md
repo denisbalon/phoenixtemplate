@@ -6,6 +6,10 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.55.0 — 2026-09-23
+
+**Kit ships a project-audit skill (B-052 + D-035).** `/audit` — also fired by the phrase `project-audit!` — runs a phased, read-only audit of the project it is in: verifies the kit contracts (P1–P6), runs **only** the commands the project declares (CI / `CONTRIBUTING.md` / `Makefile`), sweeps every active `B-`/`D-` spec entry against the code its Test clause names, and emits one `docs/audit-<id>.md` with typed-evidence findings and a commit plan. Every finding carries the evidence its `kind` requires or is demoted to a lead — never dropped, never invented; failing declared commands become `execution-failure` findings while blocked/timed-out/not-run ones are recorded as coverage limits, not findings. **`project-audit!` is a launch phrase, not an authorization token** (B-040 unbroken): the sweep mutates nothing, and the skill's only tracked write is the Phase-5 artifact commit, on its own `audit/<id>` branch through the ordinary `gogogo!` gate. It never applies its own findings' fixes — an audit that half-executes them is worse than none. Kit-scoped by design; not offered as portable. Adoptable as A-011 (same PR per B-047). Touches: `templates/.claude/skills/audit/SKILL.md` (new); `templates/manifest.yaml`; `docs/spec.md` (B-052 frozen + D-035); `ADOPTION.md`; `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md`. All linters green. Minor bump (new shipped template file).
+
 ## v1.54.0 — 2026-08-24
 
 **A live proposal numbered its plan steps and its options in one sequence, so the command line selected the wrong things.** Observed in `phoenix-mobile-proxy`:
