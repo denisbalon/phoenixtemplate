@@ -168,6 +168,12 @@ files:
     placeholders: []
     exported_by_starter: true
 
+  - path: templates/.claude/skills/audit/SKILL.md
+    purpose: project-audit skill — verifies spec Blocks/decisions vs code, runs only declared checks, emits a gated docs/audit-<id>.md (B-052)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
   # ----- templates/.github/ --------------------------------------------
 
   - path: templates/.github/workflows/ci.yml

@@ -659,6 +659,19 @@ Every numbered proposal ends with a **command line** — one line listing the va
 **Decision:** D-034
 
 
+### Block B-052: the kit ships a project-audit skill
+
+**Rule:** `templates/.claude/skills/audit/SKILL.md` ships with the kit, invoked as `/audit` or on the phrase `project-audit!`. It runs a phased, read-only audit of the project it is in: verifies the kit contracts (P1–P6), runs **only** the commands the project declares (CI / `CONTRIBUTING.md` / `Makefile`), sweeps every active `B-`/`D-` entry against the code its Test clause names, and gives every finding the typed evidence its `kind` requires or demotes it to a lead — never dropped, never invented. `project-audit!` is a **launch phrase, not an authorization token**: it starts the sweep and authorizes no write. The skill writes freely only under the session scratchpad and touches no tracked file until its Phase-5 artifact `docs/audit-<id>.md`, committed on its own `audit/<id>` branch through the ordinary `gogogo!` gate. Failing declared commands become `execution-failure` findings; blocked/timed-out/not-run ones are recorded as coverage limits, not findings. It never applies its own findings' fixes; on a consequential fix choice it pauses once, asks, and on silence saves a draft and commits nothing.
+
+**Rationale:** an audit that reads tests instead of running them reports red suites as green; typed evidence and the lead/finding split stop a weaker model both inventing and silently dropping claims. `project-audit!` stays out of the gate because the sweep mutates nothing, and the single artifact commit is the project's ordinary gated cadence — an audit that half-applies fixes is worse than none (B-040 unbroken). Kit-scoped by design: it relies on the spec id grammar, the version/CHANGELOG convention, the `docs/audit-*.md` convention and the write gate, and does not pretend to be portable to arbitrary repos.
+
+**Test:** manual — (1) `/audit` and `project-audit!` both launch it; (2) a failing declared command becomes an `execution-failure` finding while a blocked one appears under Coverage, not Findings; (3) no tracked file changes until the Phase-5 commit, on an `audit/<id>` branch under `gogogo!`, whose `git diff --cached --stat` lists only `docs/audit-<id>.md` plus the P3 version/changelog metadata, and a version/changelog file already dirty at Phase 0 is not folded in (the run drafts and stops); (4) a finding lacking its kind's required evidence appears as a lead; (5) an unanswered decision question yields a draft artifact and no commit; (6) `./scripts/check-manifest.sh` lists the skill with no orphan.
+
+**Status:** frozen
+
+**Decision:** D-035
+
+
 ## Decision log
 
 One entry per architectural decision. Decisions live forever; chat history that produced them does not. Decisions marked `Superseded` retain their original Chose/Considered/Why content for audit trail; the supersession note explains what replaced them.
@@ -1223,6 +1236,14 @@ Refines / extends B-016 (live doc references resolve to shipped files or are exp
 **Considered:** (a) keep B-010 intact and leave the skill host-local (rejected — it was the position held for most of the session that produced it, and it left the skill in one unversioned file with no history after eight iterations; more importantly the reasoning behind B-010 no longer applied); (b) parameterise the dispatch command so the kit names no specific reviewer (rejected for now — one more indirection for a single-operator kit, and the concrete command is what makes the skill usable on arrival; revisit if the kit gains users with a different reviewer); (c) ship it as a Makefile target rather than a skill (rejected — B-008/B-009 already tried command-shaped wrappers and they could not satisfy the per-commit posting contract, and a target cannot stop and ask which session to use); (d) auto-select the session by recency instead of asking (rejected on evidence — recency picked a session that had drifted to fleet SSH hardening, and token count picked a stale thread because an active session's count *falls* after compaction).
 **Why:** B-010's reasoning was sound for one-shot launchers and stopped applying when the reviewer became a long-lived per-repository session. The measured difference is not marginal: warm dispatch cost 10–34k tokens against a median 6.6M for the cold sessions it replaces, and 75% of all Codex consumption on this box had been cold-start review sessions. The skill's job is to make the cheap path the default, because resuming by session id is harder by hand than opening a new tab. The never-judge rule is what preserves what B-010 protected — a second model's value is that it is not the first one, so relaying findings through Claude's judgement removes the thing that made it worth having (B-007). The refusal to auto-select is not caution for its own sake: dispatch sends an autonomous agent with write access into whichever session is named, and both automatic heuristics were observed choosing wrong.
 **Implemented in:** v1.52.0. Touches: `templates/.claude/skills/review/SKILL.md` (new); `templates/manifest.yaml`; `docs/spec.md` (B-051 frozen, this D-034, B-010 status extended); `ADOPTION.md` (A-007, same PR per B-047); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md`.
+
+
+### D-035 (2026-09-23) Ship a project-audit skill (B-052)
+
+**Chose:** Ship `/audit` (also fired by `project-audit!`) in the kit — a phased, read-only audit that verifies the kit contracts, runs only declared commands, sweeps active spec entries against code with typed-evidence findings, and emits one gated `docs/audit-<id>.md` plus a commit plan.
+**Considered:** (a) keep it host-local as one unversioned file (rejected — same reasoning as D-034: no history, no adoption path, and every project on the kit wants it); (b) make `project-audit!` a write-authorizing token like `review-post!` (rejected — the sweep mutates nothing and the one artifact commit is already `gogogo!`-gated, so a second token widens the gate surface for no gain, against B-040); (c) let the skill apply its findings' fixes in the audit run (rejected — an audit that half-executes fixes is worse than none; execution is the project's ordinary gated cadence, and the artifact's value is as a reviewable record).
+**Why:** the audit's worth is honest, executed evidence — reading tests reports suites green that are red, and untyped findings let a weaker model both invent and silently drop claims. Bounding writes to one gated artifact keeps the read-only sweep safe to launch on a bare phrase while preserving the gate for anything that changes the repo. Kit-scoped deliberately.
+**Implemented in:** v1.55.0. Touches: `templates/.claude/skills/audit/SKILL.md` (new); `templates/manifest.yaml`; `docs/spec.md` (B-052 frozen + this D-035); `ADOPTION.md` (A-011, same PR per B-047); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md`.
 
 
 ## Open project-level decisions
