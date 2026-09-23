@@ -62,7 +62,7 @@ Slices are lenses that **may overlap**; the orchestrator dedups by root cause. E
 | A rules | every `B-` block in `{{SPEC}}` | the code its Test clause names | every block has a row `verified` / `finding` / `no-test-named` |
 | B decisions | every `D-` entry **not marked superseded** | its "Implemented in" targets | every active entry has a row |
 | C standalone specs | `docs/specs/**` | the component each describes | every numbered requirement has a row |
-| D runbooks | `docs/runbooks/**` | every script/flag/path/port a runbook cites | every code block in every runbook checked |
+| D runbooks | `docs/runbook.md` + `docs/runbooks/**` (+ any runbook named in project docs) | every script/flag/path/port a runbook cites | every code block in every runbook checked |
 | E units + deploy | service/timer units, deploy script | installed set (remote read-only if permitted) | every unit accounted for both ways |
 | F env contract | `.env.example` | every `environ`/`getenv` read | every variable accounted for both ways |
 | G handoff | README/NOTES/CONTRIBUTING | can a cold reader run tests, deploy, find state? | the seven handoff questions answered |
@@ -93,8 +93,7 @@ a code change and the doc text that describes it go in the **same** commit; doc-
 
 ### Phase 5 — Emit
 1. Write `docs/audit-{{RUN_ID}}.md` (§8).
-2. `git checkout -b audit/{{RUN_ID}}` (refuse if the branch exists); `git add docs/audit-{{RUN_ID}}.md`; verify `git diff --cached --stat` lists **only** that file; commit through `{{GATE}}` with subject `docs: audit {{RUN_ID}} — <n> findings, <m> commits planned v<X.Y.Z>` following P3.
-3. Record the artifact commit SHA in the artifact's header on the next line (audited SHA ≠ artifact SHA).
+2. `git checkout -b audit/{{RUN_ID}}` (refuse if the branch exists); apply the P3 bump the subject names — bump `{{VERSION_FILES}}` and add a `CHANGELOG.md` entry `## v<X.Y.Z> — <date>` for the audit — then `git add docs/audit-{{RUN_ID}}.md {{VERSION_FILES}} CHANGELOG.md`; verify `git diff --cached --stat` lists **only** the artifact plus exactly those P3 metadata files and nothing else; commit through `{{GATE}}` with subject `docs: audit {{RUN_ID}} — <n> findings, <m> commits planned v<X.Y.Z>` following P3. The audit commit is the project's ordinary per-commit shape (P3), not an exception to it.
 
 ---
 
@@ -173,7 +172,6 @@ reviewer notes:   <what to challenge>
 
 ```
 # Audit {{RUN_ID}} — base <BASE_SHA> (<branch>, v<X.Y.Z>, worktree clean|dirty)   status: complete | draft
-artifact commit: <filled after Phase 5>
 ## Prerequisites            P1–P6 with found/missing
 ## Baseline                 table from Phase 0
 ## Coverage                 blocked/timed_out/not_run commands · slices complete/partial · files_excluded · search boundaries
@@ -192,7 +190,7 @@ artifact commit: <filled after Phase 5>
 - [ ] Coverage lists every blocked/timed_out/not_run command and every partial slice
 - [ ] no history file (CHANGELOG, archive, superseded entries) appears as a finding
 - [ ] no unresolved {{placeholder}} remains in this file
-- [ ] `git diff --cached --stat` lists only this file
+- [ ] `git diff --cached --stat` lists only this artifact plus the P3 version/changelog metadata the bump requires
 ```
 
 ---
