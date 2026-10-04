@@ -152,18 +152,21 @@ Send **exactly** `review-post!` and nothing else. The session already knows the 
 
 **Enumerate the open PRs live before collecting — never reuse a PR number from the transcript.** Run `gh pr list --state open --json number,headRefName,headRefOid` and collect only for the numbers it returns; a PR number, branch, or head SHA from earlier in this session is not a valid target without that live confirmation. If the live list is empty, say so and name what was checked.
 
-Fetch what actually landed on GitHub — not what the transcript claims:
+Fetch what actually landed on GitHub — not what the transcript claims. Record the live head SHA and keep each artifact's `commit_id` (the head it was submitted against) — step 5's clean determination depends on it:
 
 ```sh
-gh api repos/<owner>/<repo>/pulls/<N>/comments --jq '.[] | "\(.path):\(.line)\n\(.body)\n"'
-gh api repos/<owner>/<repo>/pulls/<N>/reviews  --jq '.[] | "[\(.state)] \(.body)\n"'
+HEAD=$(gh pr view <N> --json headRefOid -q .headRefOid)
+gh api repos/<owner>/<repo>/pulls/<N>/comments --jq '.[] | "\(.path):\(.line)  (commit \(.commit_id))\n\(.body)\n"'
+gh api repos/<owner>/<repo>/pulls/<N>/reviews  --jq '.[] | "[\(.state)] (commit \(.commit_id))\n\(.body)\n"'
 ```
 
-Show every finding in full. If nothing was posted, say that plainly — do not describe what the run *seemed* to do.
+Show every finding in full — relay **all** artifacts, from every head, verbatim. If nothing was posted, say that plainly — do not describe what the run *seemed* to do. (Relay is unfiltered; only the step-5 clean/merge decision filters by head.)
 
 ### 5. Propose the fixes in the same message — never ask whether to
 
-**If the relay shows zero findings at every severity, do not propose fixes — there are none. Auto-advance the PR to merge + deploy per B-054:** `gh pr merge --rebase --delete-branch <PR#>` → `git checkout main && git pull --ff-only origin main` → deploy, with no separate `gogogo!`. The clean verdict must be the one just produced against the live-queried head (B-053), not a stale one. Any finding at **any** severity (including a single Nit) instead falls through to the fix proposal below.
+**The clean verdict is head-correlated, not a count over the whole PR history.** A review counts as clean only when a **completed overall review was submitted against the live `headRefOid`** carrying zero findings at every severity, with per-commit coverage for that head. Before deciding, **filter the collected artifacts to those whose `commit_id` equals the live head** — artifacts from prior heads do not count, in either direction: an earlier finding carried over from a previous head must not block a genuinely clean re-review, and a stale clean package from a prior head must not pass for a verdict on the current head. (Step 4 fetches the whole history for verbatim relay; this decision uses only the head-matching subset.)
+
+**If that head-correlated package is clean, do not propose fixes — there are none. Auto-advance the PR to merge + deploy per B-054:** `gh pr merge --rebase --delete-branch <PR#>` → `git checkout main && git pull --ff-only origin main` → deploy, with no separate `gogogo!`. If the latest review was not submitted against the live head (e.g. a fix landed after it), the verdict is stale — re-review before any merge. Any finding at **any** severity (including a single Nit) on the live head instead falls through to the fix proposal below.
 
 After the verbatim findings, **in the same message**, propose the concrete change that addresses each one. Do not ask *"want me to fix these?"* — the answer is always yes, so the question is a null option (B-038) and a message that ends with it has no concrete proposal (B-027). It costs the user a round-trip to say something you already knew.
 
