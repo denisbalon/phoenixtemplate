@@ -44,6 +44,22 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-012 — review builds its target list from live state
+
+**Merged:** 2026-10-04 · **Kit version:** v1.56.0 · **Spec:** B-053, D-036 in [`docs/spec.md`](docs/spec.md)
+
+**What:** a reviewer — and the review-dispatch skill — must build its review-target list from a **live** GitHub open-PR query at dispatch time, never from a PR number, branch, or head SHA carried in prior conversation or session context without live confirmation. A review that finds no commits reports the PR number, branch, and live head it checked instead of producing nothing silently. Closes a live failure where a stale in-context summary was trusted over live GitHub state and the wrong target was reviewed.
+
+**Affects:** `docs/pr_review_instructions.md` (a live-target paragraph at the top of the output contract) and, if you keep a per-project copy of the review skill, `.claude/skills/review/SKILL.md` (step 4 collect-from-live guard).
+
+**Check:** `grep -q 'Build the review target list from live state' docs/pr_review_instructions.md && echo adopted || echo not-adopted`
+
+**Adopt:** copy the **"Build the review target list from live state first."** paragraph to the top of your `docs/pr_review_instructions.md` output contract from [`templates/docs/pr_review_instructions.md`](templates/docs/pr_review_instructions.md). If your review skill is a per-project copy, also sync step 4 of [`templates/.claude/skills/review/SKILL.md`](templates/.claude/skills/review/SKILL.md); a user-level review skill symlinked to the kit picks up the skill change automatically.
+
+**Skip if:** your project has no reviewer that reads `docs/pr_review_instructions.md` and does not use the review skill — the guard is inert without one, and adopting it anyway is harmless.
+
+---
+
 ## A-011 — `/audit` project-audit skill
 
 **Merged:** 2026-09-23 · **Kit version:** v1.55.0 · **Spec:** B-052, D-035 in [`docs/spec.md`](docs/spec.md)
