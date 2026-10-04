@@ -6,6 +6,10 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.57.8 — 2026-10-04
+
+**Finding-wins tie rule for equal-timestamp artifacts in the clean predicate (addresses PR #25 re-review — 1 Block).** v1.57.7 made step 5 sort by retained `submitted_at`/`created_at`, but GitHub exposes those at **second precision**, so concurrent artifacts can share an ordering key and the sort had no tiebreak — an equal-time clean could arbitrarily beat a finding and trigger a false clean auto-merge. Fix: step 5 of `templates/.claude/skills/review/SKILL.md` resolves ties **finding-wins** — a finding is superseded only by a **strictly-later** no-finding/resolution artifact on the same commit, an equal-timestamp finding stays unresolved, and a tied non-clean tip verdict keeps the PR unclean. A tie can therefore never yield a false clean (the safe direction); the only cost is a false-negative a strictly-later re-review clears. B-054 Rule tightened and Test (13) added. D-037 `Implemented in` extended; A-013 range → `v1.57.0..v1.57.8`. All linters + smoke-test green. Patch bump.
+
 ## v1.57.7 — 2026-10-04
 
 **Retain artifact timestamps/IDs so latest-artifact-wins is deterministic (addresses PR #25 re-review — 1 Block).** v1.57.6 made the clean verdict depend on the *latest* overall review and each commit's *most-recent* artifact by `submitted_at`/`created_at`, but step 4's collection `--jq` only emitted body/state/`commit_id` — discarding the timestamps and IDs (`id`, `pull_request_review_id`) the predicate needs, so "latest" would fall back to endpoint return order and could select a stale clean result. Fix: step 4 of `templates/.claude/skills/review/SKILL.md` now retains `submitted_at`/`created_at`, `id`, and `pull_request_review_id` for each artifact, and step 5 selects "latest" by **explicitly sorting** on those fields (associating comments to their review) rather than trusting endpoint order. B-054 Rule tightened and Test (12) added. D-037 `Implemented in` extended; A-013 range → `v1.57.0..v1.57.7`. All linters + smoke-test green. Patch bump.
