@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.57.6
+**Template version:** v1.57.7
 **Last updated:** 2026-08-24
 
 The entry-point index for the **phoenixtemplate** kit: a reusable bootstrap for new software projects worked on with Claude Code. The kit's process layer (the `gogogo!` propose-and-confirm gate, on-branch per-node `gogogo!` cadence with N≥1 atomic commits per branch, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric) is stack-agnostic; the language preset (Python/uv/FastAPI/VPS) is Python-only today, multi-preset is roadmap (D-009 in `docs/spec.md`).
@@ -31,6 +31,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.57.7 | 2026-10-04 | **Retain artifact timestamps/IDs so latest-artifact-wins is deterministic (PR #25 re-review — 1 Block).** v1.57.6 keyed "latest" on `submitted_at`/`created_at`, but step 4 discarded those fields and the artifact IDs, so selection would fall back to endpoint order and could pick a stale clean result. Step 4 now retains `submitted_at`/`created_at`, `id`, `pull_request_review_id`; step 5 sorts on them explicitly. B-054 Rule tightened, Test (12) added. A-013 range → v1.57.0..v1.57.7. Patch bump. |
 | 1.57.6 | 2026-10-04 | **Resolve superseded findings via the latest tip verdict in the clean predicate (self-caught before merge).** Fixes land as new commits, so earlier commits and their finding comments stay in range — v1.57.5's "no finding across the current set" would have blocked an already-resolved finding and called an all-clear PR unclean. Step 5 now resolves supersession latest-artifact-wins: clean = latest zero-finding overall review against the tip + per-commit coverage + no commit's most-recent artifact an unresolved finding. B-054 Rule tightened, Test (11) added. A-013 range → v1.57.0..v1.57.6. Patch bump. |
 | 1.57.5 | 2026-10-04 | **Derive each PR's commit range from live GitHub refs, not the local checkout (PR #25 re-review — 1 Block).** v1.57.4 used local `git rev-list origin/main..HEAD`, but `review-post!` reviews every open PR — so for any other PR the local HEAD is the wrong branch and a stale local `origin/main` skews the range. Step 5 now derives each target's commits from live GitHub (`gh api .../pulls/<N>/commits`, tip via `gh pr view`). Same live-state discipline as B-053. B-054 Rule tightened, Test (10) added. A-013 range → v1.57.0..v1.57.5. Patch bump. |
 | 1.57.4 | 2026-10-04 | **Scope the clean verdict to the `main..HEAD` range, preserving per-commit coverage (PR #25 re-review — 1 Block).** v1.57.3 filtered artifacts to the tip SHA, but per-commit coverage comments carry each commit's own SHA — so multi-commit PRs could never qualify as clean. Step 5 now scopes by `git rev-list origin/main..HEAD`: clean = overall zero-finding review against the tip + a no-finding coverage artifact for every commit at its own SHA + no finding across the current set; out-of-range artifacts excluded. B-054 Rule tightened, Test (9) added. A-013 range → v1.57.0..v1.57.4. Patch bump. |
