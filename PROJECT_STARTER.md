@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.57.3
+**Template version:** v1.57.4
 **Last updated:** 2026-08-24
 
 The entry-point index for the **phoenixtemplate** kit: a reusable bootstrap for new software projects worked on with Claude Code. The kit's process layer (the `gogogo!` propose-and-confirm gate, on-branch per-node `gogogo!` cadence with N≥1 atomic commits per branch, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric) is stack-agnostic; the language preset (Python/uv/FastAPI/VPS) is Python-only today, multi-preset is roadmap (D-009 in `docs/spec.md`).
@@ -31,6 +31,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.57.4 | 2026-10-04 | **Scope the clean verdict to the `main..HEAD` range, preserving per-commit coverage (PR #25 re-review — 1 Block).** v1.57.3 filtered artifacts to the tip SHA, but per-commit coverage comments carry each commit's own SHA — so multi-commit PRs could never qualify as clean. Step 5 now scopes by `git rev-list origin/main..HEAD`: clean = overall zero-finding review against the tip + a no-finding coverage artifact for every commit at its own SHA + no finding across the current set; out-of-range artifacts excluded. B-054 Rule tightened, Test (9) added. A-013 range → v1.57.0..v1.57.4. Patch bump. |
 | 1.57.3 | 2026-10-04 | **Clean verdict requires the whole live-head artifact set finding-free (PR #25 re-review — 1 Block).** v1.57.2 excluded prior-head artifacts but still accepted *a* clean package for the head, so a clean package from one reviewer could override a concurrent same-head finding from another and auto-merge. Step 5 now evaluates the clean condition aggregate over every live-head artifact (≥1 completed review + per-commit coverage + zero findings from any reviewer on that head). B-054 Rule tightened, Test (8) added. A-013 range → v1.57.0..v1.57.3. Patch bump. |
 | 1.57.2 | 2026-10-04 | **Correlate the clean-review verdict to the live head SHA (PR #25 review — 1 Block).** B-054 said "clean is judged against the live head," but the shipped mechanism decided from the unfiltered PR history: a prior-head finding blocked every clean re-review, and a stale clean package could merge a head it never reviewed. The review skill (step 4/5) now records the live head + each artifact's `commit_id` and decides "clean" only from the head-correlated package (filtering prior-head artifacts both ways); relay stays unfiltered. B-054 Rule/Test tightened (new Test 7). A-013 range → v1.57.0..v1.57.2. Patch bump. |
 | 1.57.1 | 2026-10-04 | **Sweep non-C4 merge-gating prose for B-054.** Mirror sweep after v1.57.0: seven prose spots outside the byte-exact C4 regions (in `CLAUDE.md`, `CONTRIBUTING.md`, `WORKFLOW.md`) that still implied merge is always gated now note the clean-review auto-advance (zero findings at every severity → same three sub-steps, no separate `gogogo!`; any finding keeps the gated merge). Review-publishing "`review-post!` is the one exception" mirrors left intact (different rule). No spec change; A-013 spans v1.57.0..v1.57.1. Patch bump. |
