@@ -44,6 +44,22 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-013 — clean review auto-advances to merge + deploy
+
+**Merged:** 2026-10-04 · **Kit version:** v1.57.0..v1.57.1 · **Spec:** B-054, D-037 in [`docs/spec.md`](docs/spec.md)
+
+**What:** a review that returns **zero findings at every severity** auto-advances its PR to merge + deploy with no separate `gogogo!` — a second scoped exception to the gate alongside `review-post!`. Any finding at any severity (including a single Nit) halts to the normal gated merge; "clean" is judged against the live head (B-053); a *fix* still needs its own `gogogo!` (B-048 (4) intact). **This reverses a deliberately-held safety stance** (D-029 option (c) / B-051(4) / B-007 — "keep the human between two models") for the clean-review path: merge + deploy run without a human checkpoint on a clean review. Adopt it only if you want that.
+
+**Affects:** the C4 `gate-clause` and `proposal-format` regions across every tier your project carries them in (`CLAUDE.md` + `CONTRIBUTING.md`, plus `WORKFLOW.md` if present), and `.claude/skills/review/SKILL.md` (step 5 zero-finding auto-advance) if you keep a per-project copy. v1.57.1 sweeps the non-C4 review prose mirrors in the same tiers — adopt both versions together.
+
+**Check:** `grep -q 'auto-advances that PR to merge' CLAUDE.md && echo adopted || echo not-adopted`
+
+**Adopt:** sync the two C4 regions **byte-exact** from the kit across every tier your project carries them in (`scripts/check-rule-consistency.sh` must stay green), sweep the matching non-C4 prose, and sync step 5 of the review skill if it is a per-project copy. Because this reverses a safety default, decide deliberately.
+
+**Skip if:** you want merge + deploy to remain a human-gated `gogogo!` even on a clean review — skipping leaves your project on the safer default with no incoherence.
+
+---
+
 ## A-012 — review builds its target list from live state
 
 **Merged:** 2026-10-04 · **Kit version:** v1.56.0 · **Spec:** B-053, D-036 in [`docs/spec.md`](docs/spec.md)

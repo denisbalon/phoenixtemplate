@@ -163,6 +163,8 @@ Show every finding in full. If nothing was posted, say that plainly — do not d
 
 ### 5. Propose the fixes in the same message — never ask whether to
 
+**If the relay shows zero findings at every severity, do not propose fixes — there are none. Auto-advance the PR to merge + deploy per B-054:** `gh pr merge --rebase --delete-branch <PR#>` → `git checkout main && git pull --ff-only origin main` → deploy, with no separate `gogogo!`. The clean verdict must be the one just produced against the live-queried head (B-053), not a stale one. Any finding at **any** severity (including a single Nit) instead falls through to the fix proposal below.
+
 After the verbatim findings, **in the same message**, propose the concrete change that addresses each one. Do not ask *"want me to fix these?"* — the answer is always yes, so the question is a null option (B-038) and a message that ends with it has no concrete proposal (B-027). It costs the user a round-trip to say something you already knew.
 
 **Proposing a fix is not judging a finding.** Judging is deciding a finding is valid, ranking it, dismissing it, or agreeing with it ahead of the user. Proposing is: *given this finding as written, here is the change that addresses it.* The proposal endorses nothing — the user still decides, but decides on a real plan instead of on whether to be shown one.
