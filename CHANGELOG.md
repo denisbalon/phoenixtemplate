@@ -6,6 +6,10 @@ Format: `## v<X.Y.Z> — YYYY-MM-DD` followed by bullets, optionally grouped by 
 
 ---
 
+## v1.56.0 — 2026-10-04
+
+**Review builds its target list from live GitHub state, never prior context (B-053 + D-036).** A live failure: a reviewer privileged a stale in-context summary over live GitHub state and acted on the wrong target. B-045 already scoped the target set to "every PR open at the moment the command is received," but "the moment" was being read from memory, not GitHub — so a merged, renumbered, or advanced PR went unnoticed. B-053 makes the live query mandatory: before reading any diff or reusing a PR number, enumerate open PRs live and build the target list from that; a PR number, branch, or head from conversation context is never valid without live confirmation; and a no-op review must report the PR number, branch, and live head it checked rather than failing silently. The guard lands in both surfaces — `templates/docs/pr_review_instructions.md` (output contract) and `templates/.claude/skills/review/SKILL.md` (step 4 collects from a live open-PR enumeration). Adoptable as A-012. Minor bump (new frozen spec block + changed consumer-facing rubric/skill).
+
 ## v1.55.2 — 2026-09-23
 
 **Address Codex follow-up on PR #24 (1 Strong) — B-052.** The v1.55.1 reconciliation introduced a regression: Phase 5's blanket `git add {{VERSION_FILES}} CHANGELOG.md` could absorb a user's *pre-existing* uncommitted edit to one of those files — in the Python preset `pyproject.toml` is both a version marker and the dependency/tool config — while the filename-only `--stat` check still passed. Phase 5 now **guards the metadata files first**: if any version/changelog target was already dirty at Phase 0, the run saves the artifact as a draft and stops rather than folding the change in, and otherwise verifies the staged **hunks** (not just filenames) are the audit's own. Self-check and B-052's Test updated to match. Global `~/.claude/skills/audit/` copy re-synced. All 6 linters + smoke-test green. Patch bump.

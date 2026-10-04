@@ -150,6 +150,8 @@ Send **exactly** `review-post!` and nothing else. The session already knows the 
 
 ### 4. Collect and relay
 
+**Enumerate the open PRs live before collecting — never reuse a PR number from the transcript.** Run `gh pr list --state open --json number,headRefName,headRefOid` and collect only for the numbers it returns; a PR number, branch, or head SHA from earlier in this session is not a valid target without that live confirmation. If the live list is empty, say so and name what was checked.
+
 Fetch what actually landed on GitHub — not what the transcript claims:
 
 ```sh

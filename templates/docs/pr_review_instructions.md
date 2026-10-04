@@ -6,6 +6,8 @@ Review happens **out-of-band**: Claude opens the PR after a `gogogo!`-authorized
 
 ## Output contract — read this before anything else
 
+**Build the review target list from live state first.** Before reading any diff or reusing a PR number, query all open PRs live (`gh pr list` / `gh api`) and build the review-target list from that result. A PR number, branch, or head SHA carried in prior conversation or session context is **never** a valid review target without live confirmation against GitHub. If a resolved target has no commits to review, report the PR number, branch, and live head SHA that were checked rather than producing nothing silently.
+
 **The deliverable of every review is GitHub comments, posted via `gh api` (or the reviewer's native PR-comment integration), one per commit on the branch — including commits with no findings.**
 
 1. **Prepare the full GitHub review package before posting when the reviewer is interactive.** Draft the exact inline comments / commit-level comments / clean-commit comments / overall summary review in final postable wording first. Surface that package in-session, then offer a separate action to publish it. Non-interactive reviewers may post directly, but the GitHub artifact they produce must match this package shape.

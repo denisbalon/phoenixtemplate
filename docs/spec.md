@@ -672,6 +672,19 @@ Every numbered proposal ends with a **command line** — one line listing the va
 **Decision:** D-035
 
 
+### Block B-053: a review builds its target list from live GitHub state, never from prior context
+
+**Rule:** On any review dispatch — including `review-post!` — the reviewer builds its review-target list from a **live query of GitHub open-PR state executed at dispatch time** (`gh pr list` / `gh api`), not from any PR number, branch name, or head SHA carried in prior conversation or session context. Before reading any diff or reusing a PR number, it queries open PRs live and builds the target list from that result; a PR number, branch, or head recorded earlier is never a valid target without live confirmation against GitHub. If a resolved target has no commits to review, the reviewer reports the PR number, branch, and live head SHA it checked rather than silently producing nothing. Refines B-045 (which fixes the target *set* as "every PR open at the moment the command is received" — this fixes *how that set is obtained*) and B-043 (output contract).
+
+**Rationale:** learned from a live failure — a reviewer privileged a stale in-context summary over live GitHub state and acted on the wrong target. B-045 already scoped the set to "every PR open at the moment the command is received," but "the moment" was read from memory rather than from GitHub, so a merged, renumbered, or advanced PR went unnoticed. Making the live query mandatory closes that gap, and the diagnostic-report path ensures a no-op review names the refs it checked rather than failing silently — which is indistinguishable from a reviewer that simply forgot a target.
+
+**Test:** manual — (1) with a stale PR number in context whose PR has since merged or closed, a dispatch queries live and does not act on the stale number; (2) a dispatch with no open PRs reports that, naming the refs checked; (3) a resolved PR with no new commits reports its number, branch, and live head SHA; (4) `templates/docs/pr_review_instructions.md` states the live-target rule in its output contract, and `templates/.claude/skills/review/SKILL.md` collects results from a live open-PR enumeration rather than a transcript-supplied number.
+
+**Status:** frozen
+
+**Decision:** D-036
+
+
 ## Decision log
 
 One entry per architectural decision. Decisions live forever; chat history that produced them does not. Decisions marked `Superseded` retain their original Chose/Considered/Why content for audit trail; the supersession note explains what replaced them.
@@ -1244,6 +1257,13 @@ Refines / extends B-016 (live doc references resolve to shipped files or are exp
 **Considered:** (a) keep it host-local as one unversioned file (rejected — same reasoning as D-034: no history, no adoption path, and every project on the kit wants it); (b) make `project-audit!` a write-authorizing token like `review-post!` (rejected — the sweep mutates nothing and the one artifact commit is already `gogogo!`-gated, so a second token widens the gate surface for no gain, against B-040); (c) let the skill apply its findings' fixes in the audit run (rejected — an audit that half-executes fixes is worse than none; execution is the project's ordinary gated cadence, and the artifact's value is as a reviewable record).
 **Why:** the audit's worth is honest, executed evidence — reading tests reports suites green that are red, and untyped findings let a weaker model both invent and silently drop claims. Bounding writes to one gated artifact keeps the read-only sweep safe to launch on a bare phrase while preserving the gate for anything that changes the repo. Kit-scoped deliberately.
 **Implemented in:** v1.55.0. Touches: `templates/.claude/skills/audit/SKILL.md` (new); `templates/manifest.yaml`; `docs/spec.md` (B-052 frozen + this D-035); `ADOPTION.md` (A-011, same PR per B-047); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md`.
+
+### D-036 (2026-10-04) Review target list is built from live state, never prior context (B-053)
+
+**Chose:** Require every review dispatch to enumerate its targets from a live GitHub open-PR query at dispatch time, forbid reusing a PR number, branch, or head from conversation context without live confirmation, and require a no-op review to report the refs it checked. Land the guard in both the rubric (`templates/docs/pr_review_instructions.md`) and the dispatch skill's collect step (`templates/.claude/skills/review/SKILL.md`).
+**Considered:** (a) treat it as already implied by B-045's "every PR open at the moment" and change nothing — rejected, because the live failure happened *under* B-045: "the moment" was read from memory, so the implication was not load-bearing without an explicit execution guard; (b) put the guard only in the rubric — insufficient alone, since the dispatch/relay skill also reuses PR numbers when collecting results; (c) spec block + rubric + skill-relay guard — chosen.
+**Why:** the gate's job is to keep a misread cheap, and a reviewer acting on a stale target is a misread the existing rules did not catch. An execution guard ("query live first, never trust in-context PR identity") is stronger than repeating the scope, and the report-what-was-checked clause turns a silent no-op into a diagnosable one. Refines B-045 and B-043.
+**Implemented in:** v1.56.0. Touches: `docs/spec.md` (B-053 + this D-036); `templates/docs/pr_review_instructions.md` (output-contract live-target paragraph); `templates/.claude/skills/review/SKILL.md` (step 4 collect-from-live guard); `ADOPTION.md` (A-012, same PR per B-047); `VERSION` + `CHANGELOG.md` + `PROJECT_STARTER.md` per B-002.
 
 
 ## Open project-level decisions
