@@ -126,7 +126,7 @@ Per-node atomic. Each step below is its own `gogogo!` — not all bundled in one
 
 4. **Address-review iterations** — 0+ atomic commits, each its own `gogogo!`. Same per-commit shape as step 2. No branch creation, no second PR open. **Each address-review commit that extends the version range obligates a `gh pr edit <PR#> --title "..." --body "..."` in the same turn as the commit's push**, so PR metadata stays in sync with the branch's commits (the PR title carries the version range covered by the branch — that range advances as new commits land). **With a non-interactively invocable reviewer, this node is additionally atomic over re-requesting review and relaying its findings verbatim** (B-048): fix commit → push → `gh pr edit` → re-request → relay. Bundled fixes are limited to **mechanical** findings — a broken link, a missing required entry, an absent flag; any finding requiring interpretation stops and is surfaced to the user unfixed.
 
-5. **Merge** — separate `gogogo!`, atomic over three sub-steps: `gh pr merge <PR#> --rebase --delete-branch` → `git fetch origin && git checkout main && git pull --ff-only origin main && git fetch --prune` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; the merge `gogogo!` covers all three atomically.
+5. **Merge** — separate `gogogo!`, atomic over three sub-steps: `gh pr merge <PR#> --rebase --delete-branch` → `git fetch origin && git checkout main && git pull --ff-only origin main && git fetch --prune` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; the merge `gogogo!` covers all three atomically. A review returning zero findings at every severity auto-advances these same three sub-steps with no separate `gogogo!` (B-054); any finding at any severity keeps the gated merge.
 
 If a step fails (spec unclear, push rejected, `gh pr create` errors), stop and surface — do not fake-complete the sequence.
 
@@ -259,7 +259,7 @@ Each round of fixes follows the full `gogogo!` workflow. New commits go on the s
 
 Only after the user `gogogo!`s a merge proposal Claude surfaced. Never implicit. The bare word "merge" without `gogogo!` does NOT authorize, and a proposal without `gogogo!` doesn't either.
 
-**The merge `gogogo!` is atomic over three sub-steps** — `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; one merge `gogogo!` covers all three atomically. With branch protection on (set up per [`BOOTSTRAP.md` → "Branch protection on `main`"](BOOTSTRAP.md#branch-protection-on-main)), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked by the local `.githooks/pre-push` hook (and by server-side protection where available).
+**The merge `gogogo!` is atomic over three sub-steps** — `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; one merge `gogogo!` covers all three atomically. A review returning zero findings at every severity auto-advances these same three sub-steps with no separate `gogogo!` (B-054); any finding at any severity keeps the gated merge. With branch protection on (set up per [`BOOTSTRAP.md` → "Branch protection on `main`"](BOOTSTRAP.md#branch-protection-on-main)), the canonical merge path is `gh pr merge --rebase --delete-branch` — server-side rebase produces linear history; commits land on `main` with new SHAs. Direct `git push origin main` is blocked by the local `.githooks/pre-push` hook (and by server-side protection where available).
 
 ```sh
 gh pr merge <PR#> --rebase --delete-branch
@@ -296,7 +296,7 @@ Use `-d` (safe), not `-D` (force).
 
 ## Deploy timing
 
-**Deploy is bundled with merge.** The merge `gogogo!` is atomic over three sub-steps (`gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy); deploy fires once per merged PR, not once per topic-branch commit. Topic-branch commits do not deploy. If the project has separate dev/stage/live environments, document the alternative timing in the project's `CONTRIBUTING.md`. For meta-repos that ship docs + templates rather than a running service (this kit per B-005), the deploy sub-step is documented-as-no-op rather than skipped — the merge `gogogo!` still names all three sub-steps in the proposal.
+**Deploy is bundled with merge.** The merge `gogogo!` (or the B-054 clean-review auto-advance, which runs the same three sub-steps) is atomic over three sub-steps (`gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy); deploy fires once per merged PR, not once per topic-branch commit. Topic-branch commits do not deploy. If the project has separate dev/stage/live environments, document the alternative timing in the project's `CONTRIBUTING.md`. For meta-repos that ship docs + templates rather than a running service (this kit per B-005), the deploy sub-step is documented-as-no-op rather than skipped — the merge `gogogo!` still names all three sub-steps in the proposal.
 
 ---
 
