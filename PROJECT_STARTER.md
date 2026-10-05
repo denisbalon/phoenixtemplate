@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.57.8
+**Template version:** v1.58.0
 **Last updated:** 2026-08-24
 
 The entry-point index for the **phoenixtemplate** kit: a reusable bootstrap for new software projects worked on with Claude Code. The kit's process layer (the `gogogo!` propose-and-confirm gate, on-branch per-node `gogogo!` cadence with N≥1 atomic commits per branch, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric) is stack-agnostic; the language preset (Python/uv/FastAPI/VPS) is Python-only today, multi-preset is roadmap (D-009 in `docs/spec.md`).
@@ -31,6 +31,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.58.0 | 2026-10-05 | **Server-side `protect-main` ruleset is the primary branch-protection gate (B-055 + D-038).** For Claude Code cloud sessions: a GitHub ruleset (default-branch target, require-PR/0-approvals, block force-push + deletion, Admin-role bypass, Claude App NOT bypass, enforcement active) replaces the "pre-push hook is the only backstop / rulesets 403 on Free" premise — verified rulesets are now free on private repos. Local hook kept, demoted to belt-and-suspenders. Canonical payload shipped at `templates/docs/branch-protection-ruleset.json`; BOOTSTRAP leads with the ruleset. Fleet rollout script follows (Item 2). Minor bump. |
 | 1.57.8 | 2026-10-04 | **Finding-wins tie rule for equal-timestamp artifacts (PR #25 re-review — 1 Block).** GitHub timestamps are second-precision, so v1.57.7's sort could tie and let a clean arbitrarily beat a finding. Step 5 now resolves ties finding-wins: a finding is superseded only by a strictly-later no-finding artifact; equal-time findings stay unresolved; a tied non-clean tip verdict keeps the PR unclean. No tie can produce a false clean. B-054 Rule tightened, Test (13) added. A-013 range → v1.57.0..v1.57.8. Patch bump. |
 | 1.57.7 | 2026-10-04 | **Retain artifact timestamps/IDs so latest-artifact-wins is deterministic (PR #25 re-review — 1 Block).** v1.57.6 keyed "latest" on `submitted_at`/`created_at`, but step 4 discarded those fields and the artifact IDs, so selection would fall back to endpoint order and could pick a stale clean result. Step 4 now retains `submitted_at`/`created_at`, `id`, `pull_request_review_id`; step 5 sorts on them explicitly. B-054 Rule tightened, Test (12) added. A-013 range → v1.57.0..v1.57.7. Patch bump. |
 | 1.57.6 | 2026-10-04 | **Resolve superseded findings via the latest tip verdict in the clean predicate (self-caught before merge).** Fixes land as new commits, so earlier commits and their finding comments stay in range — v1.57.5's "no finding across the current set" would have blocked an already-resolved finding and called an all-clear PR unclean. Step 5 now resolves supersession latest-artifact-wins: clean = latest zero-finding overall review against the tip + per-commit coverage + no commit's most-recent artifact an unresolved finding. B-054 Rule tightened, Test (11) added. A-013 range → v1.57.0..v1.57.6. Patch bump. |

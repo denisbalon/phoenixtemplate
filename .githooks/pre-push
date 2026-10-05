@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Pre-push: refuse direct pushes to `main`. Workflow is branch+PR+merge
-# (see CLAUDE.md / CONTRIBUTING.md / WORKFLOW.md). Server-side branch
-# protection would normally enforce this, but the GitHub Free private-repo
-# tier doesn't support it — this local hook is the partial backstop.
+# (see CLAUDE.md / CONTRIBUTING.md / WORKFLOW.md). The server-side
+# `protect-main` ruleset (B-055) is the primary gate; this local hook is a
+# belt-and-suspenders backstop giving instant feedback before a wasted push.
 #
 # stdin from git: <local-ref> <local-sha> <remote-ref> <remote-sha> per line.
 # Bypass (last resort): git push --no-verify
