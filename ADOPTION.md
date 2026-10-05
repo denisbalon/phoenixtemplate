@@ -46,7 +46,7 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ## A-014 — server-side `protect-main` ruleset is the primary branch-protection gate
 
-**Merged:** 2026-10-05 · **Kit version:** v1.58.0 · **Spec:** B-055, D-038 in [`docs/spec.md`](docs/spec.md)
+**Merged:** 2026-10-05 · **Kit version:** v1.58.0..v1.58.1 · **Spec:** B-055, D-038 in [`docs/spec.md`](docs/spec.md)
 
 **What:** the kit now relies on a **server-side GitHub ruleset** named `protect-main` as the primary gate on your repo's default branch, not just the local `.githooks/pre-push` hook. The ruleset targets the default branch via `~DEFAULT_BRANCH`, requires a PR before updating (**0 approvals** — review is out-of-band), blocks force-pushes and deletion, and grants bypass only to the **Repository Admin role** (so you, the owner, can still direct-push); the **Claude GitHub App is deliberately not a bypass actor**. This matters most if you run **Claude Code cloud sessions** — the Claude GitHub App has write access that can direct-push / force-push / delete the default branch, and the local hook does **not** exist in a cloud clone. **This reverses the old "rulesets 403 on GitHub Free private repos" premise** (B-042/D-026) — rulesets are now free on private + public repos. The local pre-push hook is **kept** but demoted to a belt-and-suspenders local-feedback backstop.
 
@@ -54,7 +54,7 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 **Check:** `gh api repos/{owner}/{repo}/rulesets --jq '.[].name' 2>/dev/null | grep -qx protect-main && echo adopted || echo not-adopted`
 
-**Adopt:** apply the ruleset to your repo — `gh api repos/<owner>/<repo>/rulesets --method POST --input docs/branch-protection-ruleset.json` (copy the payload from the kit if your project predates it), or run the kit's `scripts/apply-github-rulesets.sh --apply`. Then sync the doc/prose mirrors above if you keep them, keeping `scripts/check-rule-consistency.sh` green. Verify: a non-admin direct push to the default branch is rejected while an admin direct push + `gh pr merge --rebase` still succeed.
+**Adopt:** apply the ruleset to your repo — `gh api repos/<owner>/<repo>/rulesets --method POST --input docs/branch-protection-ruleset.json` for a single repo, or run `scripts/apply-github-rulesets.sh --apply` (shipped in v1.58.1; dry-run first without `--apply`) to cover every non-archived repo at once. Copy both `docs/branch-protection-ruleset.json` and `scripts/apply-github-rulesets.sh` from the kit if your project predates them. Then sync the doc/prose mirrors above if you keep them, keeping `scripts/check-rule-consistency.sh` green. Verify: a non-admin direct push to the default branch is rejected while an admin direct push + `gh pr merge --rebase` still succeed.
 
 **Skip if:** your repo is not reachable by any Claude GitHub App / non-admin collaborator and you are content with the local hook alone — skipping leaves you on the weaker local-only backstop with no incoherence, but you lose server-side enforcement (including for any future cloud clone).
 

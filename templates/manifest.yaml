@@ -184,6 +184,12 @@ files:
 
   # ----- templates/scripts/ ---------------------------------------------
 
+  - path: templates/scripts/apply-github-rulesets.sh
+    purpose: apply the canonical protect-main ruleset across all non-archived repos (B-055); dry-run default, --apply to write
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
   - path: templates/scripts/_env-schema-parse.sh
     purpose: shared @directive parser (sourced by bootstrap.sh + check-env.sh)
     tier: common
@@ -285,6 +291,12 @@ files:
     exported_by_starter: true
 
   # ----- Meta-only tooling (lives in meta-repo only; never exported) ----
+
+  - path: scripts/apply-github-rulesets.sh
+    purpose: meta-repo copy of the protect-main ruleset rollout (B-055); applies the fleet policy across all non-archived repos
+    tier: meta-only
+    placeholders: []
+    exported_by_starter: false
 
   - path: scripts/export-starter.sh
     purpose: bundles ROOT_DOCS + templates/ contents into portable archive
