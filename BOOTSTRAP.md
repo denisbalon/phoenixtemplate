@@ -115,17 +115,18 @@ git remote add origin git@github.com:<GITHUB_USER>/$PROJECT_SLUG.git
 
 ### Branch protection on `main`
 
-**Server-side protection is preferred where available.** In **GitHub → Settings → Branches → Add classic branch protection rule** for `main`:
+**The server-side `protect-main` ruleset is the primary gate** (B-055 / D-038 in `docs/spec.md`). Rulesets are free on private and public repos — apply the canonical policy with a single `gh api` call using the shipped payload:
 
-- ✅ Require a pull request before merging
-- ✅ Require linear history
-- ❌ Allow force pushes
-- ❌ Allow deletions
-- ✅ Do not allow bypassing the above settings
+```sh
+gh api repos/<GITHUB_USER>/$PROJECT_SLUG/rulesets \
+  --method POST --input docs/branch-protection-ruleset.json
+```
 
-Don't tick "Require approvals" (you're solo). Don't tick status checks until CI lands.
+That payload creates a ruleset named `protect-main` targeting the repo's **default branch** (`~DEFAULT_BRANCH` — not a hardcoded `main`), with: require a pull request before updating (**0 required approvals** — review is out-of-band, so don't require GitHub approvals or you'll deadlock solo merges), block force-pushes (`non_fast_forward`), block deletion, and a single bypass actor — the **Repository Admin role** — so you (the owner) can still direct-push. The **Claude GitHub App is deliberately not a bypass actor**: Claude Code cloud sessions must go branch → PR. Enforcement is `active`. To apply the same policy across **every** repo at once, use `scripts/apply-github-rulesets.sh` (dry-run by default; `--apply` to write).
 
-**On GitHub Free private repos** both the classic Branch Protection API and the newer Rulesets API return `403: Upgrade to GitHub Pro or make this repository public` — server-side protection is not available. The kit's `.githooks/pre-push` hook is the local backstop: it refuses any push whose `remote_ref` is `refs/heads/main`, blocking direct pushes from this checkout. Activate it via `make install-hooks` (which runs `git config core.hooksPath .githooks`). The hook is shipped under `.githooks/pre-push` and is bypassable via `git push --no-verify` (documented as last-resort). Combined with the workflow rule "never push to `main`", this closes the per-session failure mode reliably enough on GitHub Free; flip to server-side protection if/when the repo moves to a tier that supports it.
+Prefer a GUI? **GitHub → Settings → Rules → Rulesets → New branch ruleset** sets the identical policy; the `gh api` call above is just the scriptable equivalent.
+
+The local `.githooks/pre-push` hook is a **belt-and-suspenders** backstop: it refuses any push whose `remote_ref` is `refs/heads/main`, giving instant local feedback before a wasted push. (The server-side ruleset is what covers fresh/cloud clones, where local `core.hooksPath` never runs.) Activate it via `make install-hooks` (which runs `git config core.hooksPath .githooks`); it is bypassable via `git push --no-verify` (last-resort).
 
 ### Repo merge settings
 
@@ -174,14 +175,14 @@ make install-hooks   # runs `git config core.hooksPath .githooks`; blocks subseq
 git log --oneline -1                 # should show your initial commit
 gh repo view --json visibility,url   # should show your repo
 git config core.hooksPath            # should print `.githooks` after `make install-hooks` ran above
-gh api /repos/<GITHUB_USER>/$PROJECT_SLUG/branches/main/protection 2>&1 | head  # tier-dependent — see below
+gh api repos/<GITHUB_USER>/$PROJECT_SLUG/rulesets --jq '.[].name'   # should list `protect-main`
 ```
 
-Interpret the `gh api .../protection` output by repo tier:
+Interpret the ruleset check:
 
-- **GitHub Pro / Team / Enterprise, or any public repo** — expect `200` with a JSON body describing the protection rule you configured. This means server-side branch protection is live; the local `.githooks/pre-push` hook is a belt-and-suspenders backstop.
-- **GitHub Free private repo** — expect `403 Forbidden` ("Upgrade to GitHub Pro and try again"). The classic Branch Protection API + the newer Rulesets API are both gated behind paid tiers for private repos. On this tier the local `.githooks/pre-push` hook (activated above via `make install-hooks` / `git config core.hooksPath .githooks`) is the **only** backstop blocking direct pushes to `main`; the workflow rule "never push to `main`" backed by the hook is what closes the failure mode. The previous `git config core.hooksPath` line is the verify-step that matters on this tier.
-- **404** — the repo doesn't exist at that path. Re-check `<GITHUB_USER>` and `$PROJECT_SLUG`.
+- **`protect-main` listed** — the server-side gate is live. Confirm it works: a non-admin direct push to the default branch is rejected, while an admin direct push and `gh pr merge --rebase` still succeed. The local `.githooks/pre-push` hook is the belt-and-suspenders backstop.
+- **empty output** — no ruleset yet. Re-run the `gh api ... --method POST --input docs/branch-protection-ruleset.json` call from §"Branch protection on `main`" (or `scripts/apply-github-rulesets.sh --apply`).
+- **`gh: ... (HTTP 404)`** — the repo doesn't exist at that path. Re-check `<GITHUB_USER>` and `$PROJECT_SLUG`.
 
 Bootstrap complete. From here on, all work follows [`WORKFLOW.md`](WORKFLOW.md).
 

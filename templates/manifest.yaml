@@ -210,6 +210,12 @@ files:
 
   # ----- templates/docs/ ------------------------------------------------
 
+  - path: templates/docs/branch-protection-ruleset.json
+    purpose: canonical `protect-main` ruleset payload for `gh api .../rulesets --input` (B-055)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
   - path: templates/docs/setup.md
     purpose: first-time setup procedure (uv install + .env bootstrap)
     tier: python-preset
