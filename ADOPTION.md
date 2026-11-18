@@ -44,6 +44,22 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-015 — tiered test scope: targeted per commit, full suite before merge
+
+**Merged:** 2026-11-18 · **Kit version:** v1.59.0 · **Spec:** B-056, D-039 in [`docs/spec.md`](docs/spec.md)
+
+**What:** per-commit test runs are **targeted** — the edited modules' tests + the tests of every **caller** of a changed symbol (found by a **mandatory** grep of the changed symbols across `src/` + `tests/`), plus `ruff`/`mypy` on the diff — and the **full suite runs once, before merge**, gating both the gated merge and the B-054 clean-review auto-advance (a red full suite blocks the merge and is surfaced). A leaf change (comment/doc/version bump) runs only its own tests; a migration/schema change pulls in the schema/model consumer tests; a "test file for a module" is `test_<module>.py` + any test importing it. **Providers** (the dependency side of a changed interface) are out of scope — consumers only. The kit had **no** explicit test-cadence rule before this, so adopting it **adds** the discipline — nothing breaks if you skip it, but PR iterations stay slower without the targeted-per-commit split.
+
+**Affects:** `CLAUDE.md` (new "Test cadence" standing-rule section), `CONTRIBUTING.md` (per-commit targeted command in §2 Commits + full-suite gate in §6 Merge), `WORKFLOW.md` if you keep it (rationale section), and — if you keep a per-project copy — `.claude/skills/review/SKILL.md` (step 5 runs the full suite before the auto-advance merge). Non-C4 — no byte-exact linter is involved.
+
+**Check:** `grep -q 'Test cadence' CLAUDE.md && echo adopted || echo not-adopted`
+
+**Adopt:** copy the "Test cadence" section into `CLAUDE.md` standing rules, the per-commit targeted command + the §6 full-suite gate into `CONTRIBUTING.md`, the rationale into `WORKFLOW.md` if present, and sync step 5 of the review skill if it is a per-project copy. The pytest wording (`test_<module>.py`, `uv run pytest`, `TEST_DATABASE_URL`) is Python-preset-specific — translate it to your test runner.
+
+**Skip if:** you prefer running the full suite every commit (slower iterations for a marginally earlier catch) — skipping leaves your project coherent on the stricter cadence.
+
+---
+
 ## A-014 — server-side `protect-main` ruleset is the primary branch-protection gate
 
 **Merged:** 2026-10-05 · **Kit version:** v1.58.0..v1.58.1 · **Spec:** B-055, D-038 in [`docs/spec.md`](docs/spec.md)

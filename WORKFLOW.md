@@ -282,6 +282,23 @@ Then retry the merge.
 
 ---
 
+## Test cadence (B-056)
+
+**Targeted per commit, full suite before merge.**
+
+A commit's pre-commit check runs the **targeted** test set, **not** the full suite:
+
+1. the test file(s) for every source module the commit **edits**; and
+2. the test file(s) for every module that **consumes** a symbol the commit changed — its **callers**.
+
+The consumer set is found **mechanically and is mandatory, not discretionary**: grep the changed symbols (functions, constants, classes, schema columns, env vars, migration ids) across `src/` and `tests/`, and run the tests of everything that references them. A commit that touches only a **leaf** — a new private helper, a comment, a doc, a version bump — runs only its own module's tests. Always also run `ruff`/`mypy` on the changed files. A "test file for a module" resolves as `test_<module>.py` **plus** any test file that imports the module; a migration or schema change always pulls in the schema/model consumer tests (its blast radius is wide). DB-gated targeted tests still run with `TEST_DATABASE_URL`.
+
+**The full suite runs once, at the single ship boundary: before merge** — gating both the gated merge `gogogo!` and the B-054 clean-review auto-advance. The full run must be green; a red full suite **blocks the merge** (and halts the auto-advance) and is surfaced. PR-open and address-review iterations run only the targeted set, so review stays fast.
+
+**Rationale:** full-suite-every-commit is minutes of waiting per commit for a catch-rate near zero — the failures that matter live in the changed module's own tests or its direct callers, which the targeted set already runs. Moving the single full net to the merge boundary keeps iteration fast while guarding exactly what ships; the one real risk — a change to a shared symbol breaking a distant test — is covered by the mandatory consumer grep per commit *and* the full suite before merge. The boundary is **merge, not PR-open** (D-039): the reviewer reviews logic, not test-execution, so a second full run at PR-open buys little. **Providers** (the dependency side of a changed interface) are deliberately out of scope — a caller change rarely breaks its provider's tests, and the consumer grep is the real catch. This is the Python-preset concretization (pytest/uv); the stack-agnostic principle is "targeted per commit, full check set before merge" — for this meta-repo the full check set is all linters + the smoke-test.
+
+---
+
 ## Cleanup
 
 `gh pr merge --delete-branch` deletes the remote branch. Locally:

@@ -100,6 +100,10 @@ Slogan: *don't tell the agent what to do — give it success criteria and watch 
 - Don't add backwards-compatibility shims, dead code, or features the spec doesn't ask for.
 - Schema changes go through migrations — never hand-edit production DB.
 
+## Test cadence (B-056)
+
+**Per commit: run the targeted set, not the full suite.** Run the edited modules' tests + the tests of every **caller** of a changed symbol — grep the changed symbols (functions, constants, classes, schema columns, env vars, migration ids) across `src/` + `tests/` and run everything that references them; this is **mandatory, not discretionary** — plus `ruff`/`mypy` on the changed files. A **leaf** change (comment, doc, version bump, a new private helper) runs only its own module's tests. A "test file for a module" = `test_<module>.py` + any test that imports it; a **migration/schema change** pulls in the schema/model consumer tests; DB-gated tests run with `TEST_DATABASE_URL`. **The full suite runs once — before merge** (it gates both the gated merge `gogogo!` and the B-054 clean-review auto-advance); it must be green, or the merge is blocked and surfaced. PR-open and address-review iterations run only the targeted set, so review stays fast.
+
 ## Local run
 
 ```bash
