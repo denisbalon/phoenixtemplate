@@ -78,6 +78,15 @@ Branch naming: kebab-case `<type>/<slug>` where `<type>` is one of `feat`/`fix`/
 - No `--no-verify`. No `--amend` unless explicit.
 - One concern per commit.
 
+### Test cadence per commit (targeted, not the full suite — B-056)
+
+- **Run the targeted set:** `uv run pytest <edited-module tests> <grep'd caller tests> -q` + `ruff`/`mypy` on the diff.
+- **Find the callers mechanically (mandatory):** grep the changed symbols (functions, constants, classes, schema columns, env vars, migration ids) across `src/` + `tests/` and run the tests of everything that references them. A "test file for a module" is `test_<module>.py` **plus** any test that imports the module.
+- A **leaf** change (comment, doc, version bump, a new private helper) runs only its own module's tests.
+- A **migration/schema change** always pulls in the schema/model consumer tests — its blast radius is wide.
+- DB-gated targeted tests run with `TEST_DATABASE_URL`.
+- The **full** suite is **not** run per commit — it runs once, before merge (see §6).
+
 ### Commit message quality (be super clear)
 
 A reviewer reading the commit log six months from now should understand **what changed and why without opening the diff**.
@@ -157,6 +166,8 @@ Each round of fixes follows the full `gogogo!` workflow. New commits go on the s
 ## 6. Merge + deploy
 
 Only after the user `gogogo!`s a merge proposal, or — per B-054 — automatically when a review returns zero findings at every severity (any finding at any severity keeps it gated and explicit). **The merge (gated or auto-advanced) is atomic over three sub-steps** — `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; one merge `gogogo!` covers all three.
+
+**Before the merge, run the full suite (B-056).** This is the single full-suite net — per-commit runs are targeted (§2), so the full `TEST_DATABASE_URL=… uv run pytest -q` run happens here, gating **both** the gated merge and the B-054 auto-advance. It must be green; a red full suite **blocks the merge** and is surfaced (the auto-advance halts). For a docs-only meta-repo the "full suite" is all linters + the smoke-test.
 
 ```sh
 gh pr merge <PR#> --rebase --delete-branch
