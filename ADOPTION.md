@@ -46,7 +46,7 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ## A-015 — tiered test scope: targeted per commit, full suite before merge
 
-**Merged:** 2026-11-18 · **Kit version:** v1.59.0 · **Spec:** B-056, D-039 in [`docs/spec.md`](docs/spec.md)
+**Merged:** 2026-11-18 · **Kit version:** v1.59.0..v1.59.1 · **Spec:** B-056, D-039 in [`docs/spec.md`](docs/spec.md)
 
 **What:** per-commit test runs are **targeted** — the edited modules' tests + the tests of every **caller** of a changed symbol (found by a **mandatory** grep of the changed symbols across `src/` + `tests/`), plus `ruff`/`mypy` on the diff — and the **full suite runs once, before merge**, gating both the gated merge and the B-054 clean-review auto-advance (a red full suite blocks the merge and is surfaced). A leaf change (comment/doc/version bump) runs only its own tests; a migration/schema change pulls in the schema/model consumer tests; a "test file for a module" is `test_<module>.py` + any test importing it. **Providers** (the dependency side of a changed interface) are out of scope — consumers only. The kit had **no** explicit test-cadence rule before this, so adopting it **adds** the discipline — nothing breaks if you skip it, but PR iterations stay slower without the targeted-per-commit split.
 
