@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.59.1
+**Template version:** v1.59.2
 **Last updated:** 2026-08-24
 
 The entry-point index for the **phoenixtemplate** kit: a reusable bootstrap for new software projects worked on with Claude Code. The kit's process layer (the `gogogo!` propose-and-confirm gate, on-branch per-node `gogogo!` cadence with N≥1 atomic commits per branch, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric) is stack-agnostic; the language preset (Python/uv/FastAPI/VPS) is Python-only today, multi-preset is roadmap (D-009 in `docs/spec.md`).
@@ -31,6 +31,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.59.2 | 2026-11-18 | **Bind the auto-advance merge to the verified head SHA (PR #27 re-review — 1 Block).** v1.59.1 re-queried the head but still issued an unqualified `gh pr merge` — a push in the final query-to-merge window could merge untested code. Step 5 now passes `--match-head-commit <headRefOid>`; GitHub rejects a moved-head merge (→ halt + re-review). B-056 Rule + Test (8). Patch bump. |
 | 1.59.1 | 2026-11-18 | **Bind the pre-merge full suite to each target's reviewed head (PR #27 review — 1 Block).** v1.59.0's auto-advance full-suite step didn't bind to the target PR's live `headRefOid` or re-check the head after the run — a multi-PR `review-post!` could test the wrong checkout or merge a push that landed mid-suite. Review skill step 5 now checks out/worktrees the live head, runs the full check set there, and re-queries the head after; a moved head halts for re-review. B-056 Rule + Test (7). Patch bump. |
 | 1.59.0 | 2026-11-18 | **Tiered test scope — targeted per commit, full suite before merge (B-056 + D-039).** Per commit run the edited modules' tests + the tests of every caller of a changed symbol (mandatory grep across `src/`+`tests/`) + `ruff`/`mypy` on the diff; the full suite runs once, before merge (gating the gated merge + the B-054 auto-advance; red blocks). Leaf changes run only their own tests; migrations pull in schema/model consumer tests; providers out of scope. Placed non-C4 (CLAUDE standing rule + CONTRIBUTING §2/§6 + WORKFLOW rationale + review skill step 5). A-015. Minor bump. |
 | 1.58.1 | 2026-10-05 | **Ship `apply-github-rulesets.sh` (PR #26 review — 1 Block).** v1.58.0 documented the fleet-rollout script but didn't ship it; Codex blocked. Operator brought Item 2 forward: `scripts/apply-github-rulesets.sh` + consumer copy `templates/scripts/` apply the canonical `protect-main` payload across every non-archived repo (dry-run default, `--apply`, idempotent POST/PUT-reconcile, `--owner/--create-only/--extra-bypass/--include/--exclude`). Manifest + D-038/A-014 updated. Patch bump. |
