@@ -184,6 +184,8 @@ Interpret the ruleset check:
 - **empty output** — no ruleset yet. Re-run the `gh api ... --method POST --input docs/branch-protection-ruleset.json` call from §"Branch protection on `main`" (or `scripts/apply-github-rulesets.sh --apply`).
 - **`gh: ... (HTTP 404)`** — the repo doesn't exist at that path. Re-check `<GITHUB_USER>` and `$PROJECT_SLUG`.
 
+The scaffold ships `.claude/kit-adopted-through` (the `/updates` **adoption watermark**, B-057) pre-set to the kit's latest `ADOPTION.md` entry — a fresh bootstrap already carries everything through there, so `/updates` starts quiet and only surfaces entries added to the kit *after* this project was created. You do not need to touch it; `/updates` advances it when you adopt newer kit changes.
+
 Bootstrap complete. From here on, all work follows [`WORKFLOW.md`](WORKFLOW.md).
 
 ---

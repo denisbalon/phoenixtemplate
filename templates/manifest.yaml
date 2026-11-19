@@ -144,6 +144,12 @@ files:
 
   # ----- templates/.claude/ --------------------------------------------
 
+  - path: templates/.claude/kit-adopted-through
+    purpose: adoption watermark — highest ADOPTION.md entry this project has decided on; /updates skips entries at or below it (B-057)
+    tier: common
+    placeholders: []
+    exported_by_starter: true
+
   - path: templates/.claude/settings.json
     purpose: gate permissions + SessionStart hook running check-env.sh
     tier: common

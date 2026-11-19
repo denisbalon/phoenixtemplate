@@ -9,9 +9,13 @@
 # motivated this script (D-031 option (e), deferred there, closed here).
 #
 # What it does: compares HEAD against the merge-base with the base branch.
-# If any tracked file under templates/ changed — excluding
-# templates/manifest.yaml, see below — ADOPTION.md must also have gained a
-# new "## A-NNN" heading or a substantive edit to an existing entry.
+# If any tracked file under templates/ changed — excluding the two derived
+# files templates/manifest.yaml and templates/.claude/kit-adopted-through,
+# see below — ADOPTION.md must also have gained a new "## A-NNN" heading or a
+# substantive edit to an existing entry. It also enforces one branch-
+# independent invariant (B-057): the shipped watermark
+# templates/.claude/kit-adopted-through must equal the newest ADOPTION.md
+# entry.
 #
 # Deliberate limits, so the check stays honest rather than merely strict:
 #
@@ -35,9 +39,11 @@
 # no new adoption entry.
 #
 # There is deliberately NO exemption mechanism — no way to wave a change
-# through from a commit message or the environment. One file is excluded by
-# name (templates/manifest.yaml, a derived inventory; see below), which is a
-# fixed property of the script rather than a per-change judgement.
+# through from a commit message or the environment. Two files are excluded by
+# name (templates/manifest.yaml, a derived inventory; and
+# templates/.claude/kit-adopted-through, the derived adoption watermark — see
+# below), which is a fixed property of the script rather than a per-change
+# judgement.
 #
 # Three exemption mechanisms were tried and each leaked:
 #
@@ -61,6 +67,28 @@ cd "$REPO_ROOT"
 
 BASE="${ADOPTION_BASE:-main}"
 JOURNAL="ADOPTION.md"
+WATERMARK="templates/.claude/kit-adopted-through"
+
+# Invariant (B-057): the shipped adoption watermark must equal the newest
+# ADOPTION.md entry, so a freshly bootstrapped project — which already carries
+# everything through the latest entry — starts settled through the latest and
+# /updates surfaces nothing spurious. A stale shipped watermark would make new
+# projects immediately re-see entries they already have. This is branch-
+# independent (it compares two files in the working tree), so it runs on every
+# path including the base branch itself.
+newest_entry="$(grep -oE '^## A-[0-9]+' "$JOURNAL" 2>/dev/null \
+  | grep -oE 'A-[0-9]+' | sort -t- -k2 -n | tail -1)"
+shipped_wm="$(grep -oE 'A-[0-9]+' "$WATERMARK" 2>/dev/null | sort -t- -k2 -n | tail -1)"
+if [[ -n "$newest_entry" && "$shipped_wm" != "$newest_entry" ]]; then
+  {
+    echo "FAIL: $WATERMARK is '$shipped_wm' but the newest $JOURNAL entry is '$newest_entry' (B-057)."
+    echo
+    echo "The shipped adoption watermark must equal the newest adoption entry, so a"
+    echo "freshly bootstrapped project starts settled through the latest entry. Adding"
+    echo "an $JOURNAL entry obliges bumping $WATERMARK to its ID in the same change."
+  } >&2
+  exit 1
+fi
 
 # Resolve the base ref. A CI checkout has full history under fetch-depth: 0
 # but creates no local branch for the base — only origin/<base> exists. The
@@ -101,8 +129,14 @@ fi
 # unchangeable from a commit message — not a per-change judgement anyone can
 # invoke. A real templates/ change alongside a manifest edit still fails,
 # because the other file is still counted.
+# templates/.claude/kit-adopted-through is the shipped adoption WATERMARK
+# (B-057), not consumer-mirrorable content: it is a derived marker that must
+# equal the newest ADOPTION.md entry, enforced by the invariant at the end of
+# this script. Like templates/manifest.yaml it is excluded here by name — it
+# never independently obliges an entry, and when it moves it moves *because* a
+# new A-NNN entry was added (which satisfies the obligation on its own).
 CHANGED="$(git diff --name-only "$MERGE_BASE"...HEAD -- templates/ \
-  | grep -v '^templates/manifest\.yaml$' || true)"
+  | grep -vE '^templates/manifest\.yaml$|^templates/\.claude/kit-adopted-through$' || true)"
 if [[ -z "$CHANGED" ]]; then
   echo "OK: no templates/ changes on this branch — no adoption entry required."
   exit 0
