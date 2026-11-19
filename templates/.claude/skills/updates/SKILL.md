@@ -48,7 +48,10 @@ Adoption is a normal state-mutating change: surface a concrete proposal naming t
 The proposal has **two parts**, and both are gated by the one `gogogo!`:
 
 1. The concrete adoptions — the files and edits for each entry the user chooses to adopt.
-2. **Advance the watermark.** Write the newest journal entry ID into `.claude/kit-adopted-through` (creating the file if absent). The watermark is **decided-through**, not adopted-through: it advances to the newest entry even for entries the user **skips**, because a deliberate skip is a decision and must not re-surface. So after a run over `A-016..A-018` where the user adopts A-016 and A-018 and skips A-017, the watermark becomes `A-018`.
+2. **Advance the watermark.** Write the new watermark into `.claude/kit-adopted-through` (creating the file if absent). The watermark is **decided-through**, not adopted-through, and it advances **only across the contiguous prefix of entries explicitly decided this run** — starting just above the old watermark and stopping at the first entry the user did **not** decide. A deliberate **skip** is a decision ("I don't want this") and does **not** stop the advance; a **defer** ("not now" — the user neither adopts nor skips) is **not** a decision and **halts** the advance at the entry below it, leaving the deferred entry (and everything above it) to surface again next run. Never write a later ID just because a later entry was adopted — that would bury the undecided entry in between. Worked examples over `A-016..A-018`:
+   - adopt A-016, **skip** A-017, adopt A-018 → watermark `A-018` (all three decided).
+   - adopt A-016, **defer** A-017, adopt A-018 → watermark `A-016` (A-017 is undecided and stops the prefix, even though A-018 was adopted — A-017 **and** A-018 re-surface next run).
+   - **defer** A-016 entirely → watermark unchanged.
 
 Two things to carry into the adoption part of that proposal:
 
