@@ -17,16 +17,27 @@ curl -fsSL --connect-timeout 10 --max-time 60 https://raw.githubusercontent.com/
 
 Use `curl` via Bash rather than WebFetch — WebFetch is frequently not permitted, and this is a plain public file. **Keep the timeouts.** `--connect-timeout 10 --max-time 60` are load-bearing, not decoration: without them a stalled DNS, TCP or TLS connection blocks the session indefinitely and the fail-and-stop behaviour below never runs, because `curl` never returns. A hang is worse than an error — an error you can act on. If the fetch fails (no network, a timeout, or the URL 404s), say so plainly and stop. **Do not** guess what the journal says or work from memory of a previous run; a stale answer here is worse than no answer.
 
-### 2. Run each entry's Check
+### 2. Read the watermark, then Check only what is newer
 
-Every entry carries a one-line **Check** command intended to be run as-is in the project root. Run each one and record adopted / not adopted. Entries are IDed `A-NNN` in merge order, newest first.
+The project records an **adoption watermark** — the highest journal entry it has already **decided** on (adopted *or* deliberately skipped) — in `.claude/kit-adopted-through` (B-057). Read it first:
+
+```sh
+grep -oE 'A-[0-9]+' .claude/kit-adopted-through 2>/dev/null | sort -t- -k2 -n | tail -1
+```
+
+- **A watermark exists** (e.g. `A-015`) → every entry at or below it is **settled**: do **not** run its Check, do not mention it. Run the Check **only for entries strictly above** the watermark (`A-016`, `A-017`, …). This is the whole point — settled decisions, including deliberate skips, must not re-surface as "unadopted" every run.
+- **No file, or it is empty** (a project created before B-057, or one that never adopted it) → fall back to the pre-watermark behavior: run **every** entry's Check. The proposal in step 4 will create the file.
+
+Entries are IDed `A-NNN` in merge order, newest first. For each entry above the watermark, run its one-line **Check** as-is in the project root and record adopted / not adopted.
 
 If a Check refers to a file this project does not have, that is not a failure — note it and treat the entry as not applicable rather than not adopted.
 
 ### 3. Report
 
-- **Nothing missing** → say exactly that, in one line, and stop. No table, no summary of what was checked, no restating entries that are already adopted. Being current is the common case and should be quiet.
-- **Something missing** → list only the unadopted entries. For each: the ID, what it changes, which files it affects, and whether the entry marks it optional or says who should skip it.
+Report only over the entries **above the watermark** (or all entries, in the no-watermark fallback).
+
+- **Nothing new** → say exactly that, in one line, and stop. No table, no summary of what was checked, no restating settled entries. Being current is the common case and should be quiet. (If the watermark is already at the newest entry, there is nothing to Check — say so and stop.)
+- **Something missing** → list only the unadopted entries above the watermark. For each: the ID, what it changes, which files it affects, and whether the entry marks it optional or says who should skip it.
 
 Never present an entry as required when its **Skip if** clause applies to this project.
 
@@ -34,7 +45,12 @@ Never present an entry as required when its **Skip if** clause applies to this p
 
 Adoption is a normal state-mutating change: surface a concrete proposal naming the exact files and edits, and wait for `gogogo!`. This skill never edits a file itself.
 
-Two things to carry into that proposal:
+The proposal has **two parts**, and both are gated by the one `gogogo!`:
+
+1. The concrete adoptions — the files and edits for each entry the user chooses to adopt.
+2. **Advance the watermark.** Write the newest journal entry ID into `.claude/kit-adopted-through` (creating the file if absent). The watermark is **decided-through**, not adopted-through: it advances to the newest entry even for entries the user **skips**, because a deliberate skip is a decision and must not re-surface. So after a run over `A-016..A-018` where the user adopts A-016 and A-018 and skips A-017, the watermark becomes `A-018`.
+
+Two things to carry into the adoption part of that proposal:
 
 - **C4 regions must be replaced byte-exact**, and **only regions this project already has.** A project that deliberately dropped a region (because the rule does not apply to it) must not have it re-added — re-imposing a removed rule is a regression, not an update. Run `scripts/check-rule-consistency.sh` afterwards if the project has it; a partial replacement fails it.
 - **Entries flagged as adopt-together must be adopted together.** Taking half of a change that spans versions can leave the project's prose contradicting the region that overrides it.
@@ -42,4 +58,5 @@ Two things to carry into that proposal:
 ## Notes
 
 - The journal is the source of truth for *what to adopt*; the kit's `CHANGELOG.md` is not — it records every kit change, the large majority of which consumers never touch.
-- Record what this project has adopted as an entry ID (`adopted through A-002`), not a kit version. Version numbers do not order reliably: per-commit bumps plus rebase merges let a long-lived branch land commits numbered below what is already on the kit's `main`.
+- The watermark is recorded as an entry **ID** (`A-015`), never a kit version. Version numbers do not order reliably: per-commit bumps plus rebase merges let a long-lived branch land commits numbered below what is already on the kit's `main`.
+- If the user later changes their mind about a **skipped** entry (now below the watermark, so no longer surfaced), they lower the watermark by hand, or read the journal entry directly — the journal is always fully readable.

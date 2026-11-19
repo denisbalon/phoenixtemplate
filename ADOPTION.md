@@ -14,7 +14,7 @@ From a session in a consuming project, run the skill:
 /updates
 ```
 
-It fetches this file, runs each entry's **Check** against the project you are in, and reports only what is missing — one line if nothing is. Nothing is applied automatically: read, decide, then adopt through the normal `gogogo!` flow.
+It fetches this file, reads the project's **adoption watermark** (`.claude/kit-adopted-through` — the highest entry you have already decided on), runs each newer entry's **Check** against the project you are in, and reports only what is missing — one line if nothing is. Entries at or below the watermark are settled and never re-surface. Nothing is applied automatically: read, decide, then adopt through the normal `gogogo!` flow, which also advances the watermark.
 
 ### Don't have `/updates` yet?
 
@@ -38,9 +38,25 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 - **Entries are per adoptable change, not per commit or per version.** A rule introduced in one commit and swept across prose mirrors in the next is one entry, not two — adopting half of it leaves the project self-contradictory.
 - **An entry is created when the change merges**, not when it is committed. Unmerged work is not adoptable, so it is not listed. A branch that sat unmerged for months gets its entry at merge time and appears after everything already merged, regardless of the version numbers it carries.
-- **Entry IDs (`A-NNN`) are assigned in merge order** and never reused or renumbered. Record what you have adopted as an ID (`adopted through A-002`), not a kit version — with per-commit version bumps and rebase merges, a long-lived branch can land commits numbered below what is already on `main`, so version numbers do not reliably order.
+- **Entry IDs (`A-NNN`) are assigned in merge order** and never reused or renumbered. A project records the highest entry it has **decided** on (adopted *or* deliberately skipped) as its **watermark** in `.claude/kit-adopted-through` — an ID (`A-015`), not a kit version, because with per-commit version bumps and rebase merges a long-lived branch can land commits numbered below what is already on `main`, so version numbers do not reliably order. `/updates` skips every entry at or below the watermark and only Checks newer ones (B-057); the adoption proposal advances it.
 - **Adoption is optional unless an entry says otherwise.** Skipping an entry must leave the project in a coherent state.
 - **C4 regions:** replace only regions your project already has. Some projects deliberately drop a region that does not apply to them, and re-adding it re-imposes a rule they removed on purpose. C4 regions must match the kit **byte-exact** across every tier the project carries them in, or `scripts/check-rule-consistency.sh` fails.
+
+---
+
+## A-016 — adoption watermark: `/updates` tracks what you have decided
+
+**Merged:** 2026-11-19 · **Kit version:** v1.60.0 · **Spec:** B-057, D-040 in [`docs/spec.md`](docs/spec.md)
+
+**What:** `/updates` no longer re-runs **every** entry's Check on every invocation. The project now records an **adoption watermark** — the highest entry it has **decided** on (adopted *or* deliberately skipped) — in a dedicated file `.claude/kit-adopted-through` (one `A-NNN` token). `/updates` reads it, **skips** every entry at or below it (their Check never runs, they never re-surface), and Checks only entries **above** it; the gated adoption proposal **advances** the watermark to the newest decided entry (advancing even over skipped entries — a skip is a decision). This fixes settled entries — ones you adopted in a form a grep missed, or deliberately declined — re-appearing as "unadopted" every run. A project with no watermark file falls back to the old check-everything behavior, and the first adoption proposal establishes the file.
+
+**Affects:** `.claude/kit-adopted-through` (new file — the watermark) and, if you keep a per-project copy, `.claude/skills/updates/SKILL.md` (step 2 reads the watermark, skips ≤ it, Checks only > it; step 4 advances it). A user-level review/updates skill symlinked to the kit picks up the skill change automatically.
+
+**Check:** `test -f .claude/kit-adopted-through && echo adopted || echo not-adopted`
+
+**Adopt:** create `.claude/kit-adopted-through` containing the highest entry ID you have already decided on — if you are adopting through this `/updates` run, that is the newest entry in this journal (**A-016**); if you are still catching up on older entries, set it to the highest you have actually dealt with. Then, if your `/updates` skill is a per-project copy, re-copy [`templates/.claude/skills/updates/SKILL.md`](templates/.claude/skills/updates/SKILL.md) so it reads and advances the watermark. A user-level skill (`~/.claude/skills/updates/`) symlinked to the kit needs no copy.
+
+**Skip if:** you prefer `/updates` to re-Check every entry each run (so a past skip keeps re-surfacing until re-dismissed). Skipping leaves the project coherent on the noisier old behavior — but then also skip creating the file, since a present-but-ignored watermark is confusing.
 
 ---
 
