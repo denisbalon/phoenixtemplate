@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  smoke:
+  linters:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,5 +31,9 @@ jobs:
 
       - name: Adoption-journal linter (B-050)
         run: ./scripts/check-adoption-journal.sh
-      - name: template smoke test (B-014)
-        run: ./scripts/smoke-test.sh
+
+      # The full suite — the smoke-test (B-014) — is NOT run here per push.
+      # Per B-058 it is the merge-node pre-merge gate: run once against the
+      # reviewed head as part of merge -> rebase -> deploy (review-skill step 5
+      # / the merge node), not on every PR iteration. The fast linters above
+      # are the per-iteration CI checks.
