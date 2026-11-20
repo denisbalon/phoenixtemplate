@@ -167,7 +167,9 @@ Each round of fixes follows the full `gogogo!` workflow. New commits go on the s
 
 Only after the user `gogogo!`s a merge proposal, or — per B-054 — automatically when a review returns zero findings at every severity (any finding at any severity keeps it gated and explicit). **The merge (gated or auto-advanced) is atomic over three sub-steps** — `gh pr merge --rebase --delete-branch` → `git checkout main && git pull --ff-only origin main` → deploy. The deploy step must NOT be surfaced as a separate `gogogo!` after the merge; one merge `gogogo!` covers all three.
 
-**Before the merge, run the full suite (B-056).** This is the single full-suite net — per-commit runs are targeted (§2), so the full `TEST_DATABASE_URL=… uv run pytest -q` run happens here, gating **both** the gated merge and the B-054 auto-advance. It must be green; a red full suite **blocks the merge** and is surfaced (the auto-advance halts). For a docs-only meta-repo the "full suite" is all linters + the smoke-test.
+**Before the merge, run the full suite (B-056).** This is the single full-suite net — per-commit runs are targeted (§2), so the full `TEST_DATABASE_URL=… uv run pytest -q` run happens here, gating **both** the gated merge and the B-054 auto-advance. It must be green; a red full suite **blocks the merge** and is **reported with concrete fixes proposed** (not merely surfaced) so you decide on a real plan, not on whether to see one (B-058). For a docs-only meta-repo the "full suite" is all linters + the smoke-test.
+
+**The full suite runs here, in the merge node — never on every PR iteration in CI (B-058).** CI on a PR push runs only the fast checks (`ruff` + `mypy`); the full suite is deliberately kept out of per-iteration CI, because a PR with many address-review rounds would re-run the whole suite on every push for near-zero marginal value. The reviewed head gets its one full-suite run here, before the merge.
 
 ```sh
 gh pr merge <PR#> --rebase --delete-branch

@@ -1,7 +1,7 @@
 # Project Starter
 
-**Template version:** v1.60.1
-**Last updated:** 2026-11-19
+**Template version:** v1.61.0
+**Last updated:** 2026-11-20
 
 The entry-point index for the **phoenixtemplate** kit: a reusable bootstrap for new software projects worked on with Claude Code. The kit's process layer (the `gogogo!` propose-and-confirm gate, on-branch per-node `gogogo!` cadence with N≥1 atomic commits per branch, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric) is stack-agnostic; the language preset (Python/uv/FastAPI/VPS) is Python-only today, multi-preset is roadmap (D-009 in `docs/spec.md`).
 
@@ -31,6 +31,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.61.0 | 2026-11-20 | **Full suite is the merge-node gate, not a per-iteration CI job (B-058 + D-041).** The shipped CI ran the full suite on every PR push, re-running it each address-review round. Now CI on a PR push runs only fast checks (`ruff` + `mypy` / the fast linters); the full suite runs once at the merge boundary (B-056's local pre-merge gate, against the reviewed head). A red pre-merge suite reports + proposes fixes (not just "surfaced"). `ci.yml` + `template-self-test.yml` drop the full-suite job. ADOPTION A-017. Minor bump. |
 | 1.60.1 | 2026-11-19 | **Advance the watermark only across a contiguous decided prefix (PR #28 review — 1 Block).** v1.60.0 wrote the newest entry ID regardless of which entries the user chose, so a **deferred** entry between adoptions got silently buried. Now the watermark advances only across the contiguous prefix of explicitly-decided entries (a deliberate skip counts; a defer halts it). B-057 Rule + Test (5); updates skill step 4. Patch bump. |
 | 1.60.0 | 2026-11-19 | **Adoption watermark — `/updates` tracks what has been decided (B-057 + D-040).** `/updates` re-Checked every entry every run, so settled entries (adopted-then-reworded, or deliberately skipped) re-surfaced as "unadopted." A project now records a **watermark** — the highest entry it has decided on (adopted or skipped) — in `.claude/kit-adopted-through`; `/updates` skips entries ≤ it and Checks only newer ones, and the adoption proposal advances it (decided-through, so a skip advances it too). Template ships the file at the latest entry (A-016); `check-adoption-journal.sh` enforces watermark == newest `A-NNN`. ADOPTION A-016. Minor bump. |
 | 1.59.2 | 2026-11-18 | **Bind the auto-advance merge to the verified head SHA (PR #27 re-review — 1 Block).** v1.59.1 re-queried the head but still issued an unqualified `gh pr merge` — a push in the final query-to-merge window could merge untested code. Step 5 now passes `--match-head-commit <headRefOid>`; GitHub rejects a moved-head merge (→ halt + re-review). B-056 Rule + Test (8). Patch bump. |

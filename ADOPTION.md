@@ -44,6 +44,22 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-017 — full suite is the merge-node gate, not a per-iteration CI job
+
+**Merged:** 2026-11-20 · **Kit version:** v1.61.0 · **Spec:** B-058, D-041 in [`docs/spec.md`](docs/spec.md)
+
+**What:** the shipped CI workflow ran the **full test suite** (`uv run pytest`) on **every** PR push, so a PR with many address-review rounds re-ran the whole suite each iteration. B-058 removes the full suite from per-iteration CI: CI on a PR push runs only the **fast checks** (`ruff` + `mypy`), and the full suite runs **once, at the merge boundary** — the local merge-node pre-merge gate (B-056), against the reviewed head, before `gh pr merge`. GitHub CI has no "the review is green" trigger, so the only place that is both after-green-review and before-merge is the local merge node, which already owns the single full-suite run. Also: a **red** pre-merge full suite now **reports and proposes concrete fixes** rather than merely being "surfaced." Trade-off: a repo merged **outside** the local cadence (e.g. the GitHub UI) no longer gets an automated full-suite gate from CI — the local merge-node run is the gate by design.
+
+**Affects:** `.github/workflows/ci.yml` (drop the full-`pytest` `test` job; keep `ruff` + `mypy`) and, if you keep per-project copies: `.claude/skills/review/SKILL.md` (step 5 red-suite path → report + propose fixes), and the Test-cadence prose in `CLAUDE.md` / `CONTRIBUTING.md` / `WORKFLOW.md` (red-suite wording + CI-exclusion clause). Non-C4 — no byte-exact linter involved.
+
+**Check:** `grep -q 'B-058' .github/workflows/ci.yml 2>/dev/null && echo adopted || echo not-adopted`
+
+**Adopt:** edit your `.github/workflows/ci.yml` to remove the job that runs the full test suite on `pull_request` (keep the fast `ruff`/`mypy` jobs) — copy the shape from [`templates/.github/workflows/ci.yml`](templates/.github/workflows/ci.yml). Make sure your merge flow actually runs the full suite before merge (the review skill step 5 / your merge node already does if you adopted B-056). If you keep per-project copies of the review skill or the test-cadence prose, sync the red-suite "report + propose fixes" wording. Translate the `pytest`/`ruff`/`mypy` job names to your stack.
+
+**Skip if:** you want CI to keep running the full suite on every PR push — e.g. you merge via the GitHub UI and rely on CI (not the local cadence) as your full-suite gate. Skipping leaves your project coherent on the per-iteration-CI behavior; you keep the redundant runs as the cost of a CI-enforced gate.
+
+---
+
 ## A-016 — adoption watermark: `/updates` tracks what you have decided
 
 **Merged:** 2026-11-19 · **Kit version:** v1.60.0 · **Spec:** B-057, D-040 in [`docs/spec.md`](docs/spec.md)
