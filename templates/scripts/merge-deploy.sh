@@ -29,17 +29,44 @@
 # direct push — B-055). (An earlier `merge-queue.yml`, kit v1.62.0 / A-018, took
 # the server-side route; it was withdrawn for exactly this incompatibility.)
 #
-# Usage: scripts/merge-deploy.sh <PR#> <reviewed-head-sha>
+# DEPLOY IS THE NODE'S OPTIONAL TAIL (D-044). The full suite gates the MERGE,
+# not the deploy, so the two are separable: pass --no-deploy to merge + sync
+# `main` and STOP before `scripts/deploy.sh` -- for a docs change, or to hold /
+# batch the deploy and run `scripts/deploy.sh` yourself later. The mandatory
+# part -- suite -> head-binding -> merge -> pull -- is IDENTICAL either way;
+# only the final deploy is skipped. It is an EXPLICIT flag, never diff-
+# detection: "this is docs" and "I want to wait" are caller intent, not
+# readable off the diff, and guessing would skip a wanted deploy (or run an
+# unwanted one). The B-054 clean-review auto-advance stays deploy-on -- there
+# is no human in that path to hold it; --no-deploy is for a hand-run merge you
+# mean to hold.
+#
+# Usage: scripts/merge-deploy.sh <PR#> <reviewed-head-sha> [--no-deploy]
 #   <reviewed-head-sha> is the SHA the caller established as clean-reviewed
 #   (the review skill passes the headRefOid its B-054 clean verdict was bound
 #   to). The script merges that SHA and no other.
-# Exit codes: 0 merged+deployed · 2 full suite red (not merged)
-#             3 live head is not the reviewed SHA (stale/unreviewed, or moved
-#               during the suite) — re-review, nothing merged
+#   --no-deploy  merge + sync main, but SKIP scripts/deploy.sh (hold the deploy).
+# Exit codes: 0 merged (and deployed unless --no-deploy) · 2 full suite red
+#             (not merged) · 3 live head is not the reviewed SHA (stale/
+#             unreviewed, or moved during the suite) -- re-review, nothing
+#             merged · 64 bad usage (unknown argument)
 set -euo pipefail
 
-PR="${1:?usage: scripts/merge-deploy.sh <PR#> <reviewed-head-sha>}"
-REVIEWED="${2:?usage: scripts/merge-deploy.sh <PR#> <reviewed-head-sha> (SHA the caller verified clean-reviewed)}"
+PR="${1:?usage: scripts/merge-deploy.sh <PR#> <reviewed-head-sha> [--no-deploy]}"
+REVIEWED="${2:?usage: scripts/merge-deploy.sh <PR#> <reviewed-head-sha> [--no-deploy] (SHA the caller verified clean-reviewed)}"
+shift 2
+# Optional flags. --no-deploy holds the deploy: merge + sync main, then stop
+# before scripts/deploy.sh (docs work, or a deploy you mean to run later). The
+# suite + merge are unaffected -- deploy is the node's separable tail (D-044).
+DEPLOY=1
+for arg in "$@"; do
+  case "$arg" in
+    --no-deploy) DEPLOY=0 ;;
+    *) echo "x unknown argument: $arg" >&2
+       echo "  usage: scripts/merge-deploy.sh <PR#> <reviewed-head-sha> [--no-deploy]" >&2
+       exit 64 ;;
+  esac
+done
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
@@ -96,9 +123,16 @@ fi
 echo "-> merging #$PR at $REVIEWED"
 gh pr merge --rebase --delete-branch --match-head-commit "$REVIEWED" "$PR"
 
-# 5. Sync main and deploy — synchronous, inline.
+# 5. Sync main, then deploy -- synchronous, inline. Deploy is the node's
+#    OPTIONAL tail (D-044): --no-deploy merges + syncs main but holds the
+#    deploy, to run scripts/deploy.sh yourself later. The merge above already
+#    happened; only this final step is conditional.
 git checkout -q main
 git pull --ff-only -q origin main
-echo "-> deploying"
-"$ROOT/scripts/deploy.sh"
-echo "ok merged + deployed #$PR"
+if [[ "$DEPLOY" -eq 1 ]]; then
+  echo "-> deploying"
+  "$ROOT/scripts/deploy.sh"
+  echo "ok merged + deployed #$PR"
+else
+  echo "ok merged #$PR -- deploy HELD (--no-deploy); run scripts/deploy.sh when ready"
+fi

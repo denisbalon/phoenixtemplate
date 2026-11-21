@@ -222,7 +222,7 @@ files:
     exported_by_starter: true
 
   - path: templates/scripts/merge-deploy.sh
-    purpose: executable merge->deploy node — takes <PR#> <reviewed-head-sha>, refuses a live-head mismatch, runs the full suite (first step) against the reviewed head, then merge --match-head-commit then pull + deploy.sh; the local executable gate (B-060)
+    purpose: executable merge->deploy node — takes <PR#> <reviewed-head-sha> [--no-deploy], refuses a live-head mismatch, runs the full suite (first step) against the reviewed head, then merge --match-head-commit then pull + deploy.sh; --no-deploy holds the deploy (merge only — D-044); the local executable gate (B-060)
     tier: python-preset
     placeholders: []
     exported_by_starter: true
