@@ -1,6 +1,6 @@
 # Project Starter
 
-**Template version:** v1.62.0
+**Template version:** v1.63.0
 **Last updated:** 2026-11-20
 
 The entry-point index for the **phoenixtemplate** kit: a reusable bootstrap for new software projects worked on with Claude Code. The kit's process layer (the `gogogo!` propose-and-confirm gate, on-branch per-node `gogogo!` cadence with N≥1 atomic commits per branch, spec-block format, Karpathy standing rules, reviewer-agnostic PR rubric) is stack-agnostic; the language preset (Python/uv/FastAPI/VPS) is Python-only today, multi-preset is roadmap (D-009 in `docs/spec.md`).
@@ -31,6 +31,7 @@ Update the **Template version** at the top of this document and add a row here w
 
 | Version | Date | Notes |
 |---|---|---|
+| 1.63.0 | 2026-11-21 | **Executable merge→deploy node, not a server-side merge queue (B-060 + D-043; supersedes B-059/D-042).** The v1.62.0 merge-queue workflow broke synchronous merge→deploy (GitHub's merge queue makes merges asynchronous, so the inline `merge → git pull → deploy` can't run). Withdrawn and replaced by `scripts/merge-deploy.sh <PR#>` — an executable node whose mandatory first step is the full suite (red → nothing merges), then the bound merge, then pull + deploy, inline. A local executable gate (a GitHub-UI merge bypasses it — accepted trade-off for staying synchronous). `merge-queue.yml` removed; ADOPTION A-018 withdrawn, A-019 ships the node. Minor bump. |
 | 1.62.0 | 2026-11-21 | **Enforceable merge-node gate — optional merge-queue full-suite workflow (B-059 + D-042).** A real consumer adopting A-017 (drop the per-push full suite) drew a Strong finding: removing the CI `pytest` job left no executable gate (no required check, no merge wrapper). Fix (keeps B-058): A-017's Adopt/Skip now names the enforceable-merge-node-gate precondition as load-bearing, and the kit ships `merge-queue.yml` — the full suite on `merge_group`, the machine-enforced merge-node gate (once per merge, not per push), dormant until the merge queue + required check are enabled. ADOPTION A-018. Minor bump. |
 | 1.61.0 | 2026-11-20 | **Full suite is the merge-node gate, not a per-iteration CI job (B-058 + D-041).** The shipped CI ran the full suite on every PR push, re-running it each address-review round. Now CI on a PR push runs only fast checks (`ruff` + `mypy` / the fast linters); the full suite runs once at the merge boundary (B-056's local pre-merge gate, against the reviewed head). A red pre-merge suite reports + proposes fixes (not just "surfaced"). `ci.yml` + `template-self-test.yml` drop the full-suite job. ADOPTION A-017. Minor bump. |
 | 1.60.1 | 2026-11-19 | **Advance the watermark only across a contiguous decided prefix (PR #28 review — 1 Block).** v1.60.0 wrote the newest entry ID regardless of which entries the user chose, so a **deferred** entry between adoptions got silently buried. Now the watermark advances only across the contiguous prefix of explicitly-decided entries (a deliberate skip counts; a defer halts it). B-057 Rule + Test (5); updates skill step 4. Patch bump. |
