@@ -4,4 +4,4 @@
 # below it, and only runs Checks for entries ABOVE it. Adoption advances it.
 # Shipped value is the kit's latest entry at the version this project was
 # created from; a fresh bootstrap already carries everything through here.
-A-018
+A-019

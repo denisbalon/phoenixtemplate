@@ -188,11 +188,6 @@ files:
     placeholders: []
     exported_by_starter: true
 
-  - path: templates/.github/workflows/merge-queue.yml
-    purpose: optional enforceable merge-node full-suite gate — `uv run pytest` on `merge_group`, dormant until the merge queue + required check are enabled (B-059)
-    tier: python-preset
-    placeholders: []
-    exported_by_starter: true
 
   # ----- templates/scripts/ ---------------------------------------------
 
@@ -224,6 +219,12 @@ files:
     purpose: rsync src + restart systemd unit on remote VPS + healthz curl
     tier: python-preset
     placeholders: [DOMAIN, HOST, PROJECT_NAME]
+    exported_by_starter: true
+
+  - path: templates/scripts/merge-deploy.sh
+    purpose: executable merge->deploy node — full suite (first step, against the reviewed head) then merge --match-head-commit then pull + deploy.sh; the local executable gate (B-060)
+    tier: python-preset
+    placeholders: []
     exported_by_starter: true
 
   # ----- templates/docs/ ------------------------------------------------
