@@ -44,6 +44,22 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-018 — enforceable merge-node gate: optional merge-queue full-suite workflow
+
+**Merged:** 2026-11-21 · **Kit version:** v1.62.0 · **Spec:** B-059, D-042 in [`docs/spec.md`](docs/spec.md)
+
+**What:** A-017 removed the full suite from per-iteration CI on the premise that **the merge node runs the full suite**. That premise holds for a project that merges through the local cadence (B-044/B-056 — the operator runs the suite against the reviewed head before `gh pr merge`), but a project that merges **outside** that cadence (e.g. straight from the GitHub UI) has no such gate, so adopting A-017 removes its **only** full-suite gate and leaves the merge-node requirement as documentation only. B-059 closes this: it makes the precondition **load-bearing** in A-017 (below), and ships `templates/.github/workflows/merge-queue.yml` — the full suite (`uv run pytest`) on the `merge_group` event. Made a **required status check** with GitHub's **merge queue** enabled, it runs the suite once on the merge candidate (PR + base) **per merge, not per PR push** — the machine-enforced form of the merge-node gate, satisfying A-017's "no per-iteration full suite" intent **and** closing the enforceability gap. The file ships **dormant** (the `merge_group` event fires only when the merge queue is enabled), so it is inert until you opt in.
+
+**Affects:** `.github/workflows/merge-queue.yml` (new, optional). No change to `ci.yml` beyond A-017. Non-C4.
+
+**Check:** `test -f .github/workflows/merge-queue.yml && echo adopted || echo not-adopted`
+
+**Adopt:** only needed if you adopted A-017 (dropped the per-push full suite) **and** you do **not** merge through the local cadence — i.e. you need a machine-enforced gate. Copy [`templates/.github/workflows/merge-queue.yml`](templates/.github/workflows/merge-queue.yml) into `.github/workflows/`, then **activate** it: make the `full-suite` job a **required status check** on your `protect-main` ruleset (A-014/B-055) and **enable the merge queue** on the default branch (Settings → Pull Requests → Merge queue, or the ruleset's merge-queue rule). Translate `pytest` to your stack. Leave it dormant (or skip) if your merges already run the full suite at the merge node.
+
+**Skip if:** you merge through the local cadence (B-044/B-056), so the operator already runs the full suite against the reviewed head before merge — you have the gate A-017 presumes and need no merge queue. Skipping leaves your project coherent: the enforceable variant is for repos **without** that cadence.
+
+---
+
 ## A-017 — full suite is the merge-node gate, not a per-iteration CI job
 
 **Merged:** 2026-11-20 · **Kit version:** v1.61.0 · **Spec:** B-058, D-041 in [`docs/spec.md`](docs/spec.md)
@@ -54,9 +70,11 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 **Check:** `grep -q 'B-058' .github/workflows/ci.yml 2>/dev/null && echo adopted || echo not-adopted`
 
-**Adopt:** edit your `.github/workflows/ci.yml` to remove the job that runs the full test suite on `pull_request` (keep the fast `ruff`/`mypy` jobs) — copy the shape from [`templates/.github/workflows/ci.yml`](templates/.github/workflows/ci.yml). Make sure your merge flow actually runs the full suite before merge (the review skill step 5 / your merge node already does if you adopted B-056). If you keep per-project copies of the review skill or the test-cadence prose, sync the red-suite "report + propose fixes" wording. Translate the `pytest`/`ruff`/`mypy` job names to your stack.
+**Precondition (load-bearing — B-059):** removing the full suite from CI is safe **only if the full suite is actually enforced at your merge node.** That enforcement exists if you merge through the local cadence (B-044/B-056 — the operator runs the suite against the reviewed head before `gh pr merge`) **or** you have a required merge-queue check (A-018). If **neither** holds — e.g. you merge straight from the GitHub UI with no required status check — then deleting the CI full-suite job removes your **only** full-suite gate, and a red integration/DB test can land unblocked. In that case **do not adopt as written**: either keep the CI full-suite job (skip below), or adopt the enforceable variant **A-018** (the merge-queue workflow) so the dedup and an enforced gate come together.
 
-**Skip if:** you want CI to keep running the full suite on every PR push — e.g. you merge via the GitHub UI and rely on CI (not the local cadence) as your full-suite gate. Skipping leaves your project coherent on the per-iteration-CI behavior; you keep the redundant runs as the cost of a CI-enforced gate.
+**Adopt:** *(only once the precondition above holds)* edit your `.github/workflows/ci.yml` to remove the job that runs the full test suite on `pull_request` (keep the fast `ruff`/`mypy` jobs) — copy the shape from [`templates/.github/workflows/ci.yml`](templates/.github/workflows/ci.yml). Confirm your merge flow actually runs the full suite before merge — the review skill step 5 / your merge node does if you adopted B-056; a required merge-queue check does if you adopted A-018. If you keep per-project copies of the review skill or the test-cadence prose, sync the red-suite "report + propose fixes" wording. Translate the `pytest`/`ruff`/`mypy` job names to your stack.
+
+**Skip if:** you merge via the GitHub UI (or any path with no merge-node full-suite gate) and rely on CI as your full-suite gate, and you do not want to adopt the merge-queue variant (A-018). Skipping leaves your project coherent on the per-iteration-CI behavior; you keep the redundant runs as the cost of a CI-enforced gate.
 
 ---
 

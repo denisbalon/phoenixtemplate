@@ -183,7 +183,13 @@ files:
   # ----- templates/.github/ --------------------------------------------
 
   - path: templates/.github/workflows/ci.yml
-    purpose: per-project CI (uv sync + ruff + mypy + pytest)
+    purpose: per-project CI — fast per-push checks only (uv sync + ruff + mypy); full suite is the merge-node gate (B-058)
+    tier: python-preset
+    placeholders: []
+    exported_by_starter: true
+
+  - path: templates/.github/workflows/merge-queue.yml
+    purpose: optional enforceable merge-node full-suite gate — `uv run pytest` on `merge_group`, dormant until the merge queue + required check are enabled (B-059)
     tier: python-preset
     placeholders: []
     exported_by_starter: true
