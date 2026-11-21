@@ -1,0 +1,30 @@
+name: merge-queue
+
+# Enforceable merge-node full-suite gate (B-059).
+#
+# The full suite (`uv run pytest`) is deliberately OUT of per-iteration CI
+# (B-058) — it runs once, on the merge candidate, when a PR enters GitHub's
+# merge queue. This is the MACHINE-ENFORCED form of the merge-node gate
+# (B-056): a required status check that runs the whole suite on the merged
+# result (PR + base), once per merge rather than once per PR push.
+#
+# This file is DORMANT until you opt in. To activate:
+#   1. Make `full-suite` a REQUIRED status check on your `protect-main`
+#      ruleset / branch-protection (B-055).
+#   2. Enable the merge queue on the default branch (Settings → General →
+#      Pull Requests → "Merge queue", or the ruleset's merge-queue rule).
+# Then a merge cannot land with a red full suite, even for a repo that does
+# NOT merge through the kit's local merge-node cadence (B-044/B-056) — the
+# precondition B-058 depends on. A repo that DOES merge through the local
+# cadence already has that gate and can leave this file dormant or delete it.
+on:
+  merge_group:
+
+jobs:
+  full-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --frozen
+      - run: uv run pytest
