@@ -44,6 +44,22 @@ Failing that, this file is readable on its own — each entry's **Check** is a p
 
 ---
 
+## A-020 — `--no-deploy`: deploy is the merge→deploy node's optional tail
+
+**Merged:** 2026-11-21 · **Kit version:** v1.64.0 · **Spec:** B-060, D-044 in [`docs/spec.md`](docs/spec.md)
+
+**What:** `scripts/merge-deploy.sh` (A-019) ran `scripts/deploy.sh` unconditionally as its final step — so a **docs-only** merge, or a merge you wanted to **batch or time** rather than ship immediately, was forced to deploy on merge. D-044 adds an optional **`--no-deploy`** flag: `scripts/merge-deploy.sh <PR#> <reviewed-head-sha> --no-deploy` runs the full suite, head-binding, and merge **identically**, then syncs `main` and **stops before `scripts/deploy.sh`** (printing a "deploy HELD; run scripts/deploy.sh when ready" line). The full suite still gates the **merge** (it is the unconditional first step) — only the deploy is held, so the gate is not weakened. The flag is **explicit**, never inferred from the diff ("this is docs" / "I want to wait" are caller intent). The B-054 clean-review **auto-advance** path stays **deploy-on** by default; `--no-deploy` is for a hand-run merge you mean to hold.
+
+**Affects:** `scripts/merge-deploy.sh` if you adopted A-019 (new optional flag + conditional final step), and `.claude/skills/review/SKILL.md` step 5 if you keep a per-project copy (it notes the flag). Non-C4. Backward-compatible: without the flag, behavior is unchanged (merge **and** deploy).
+
+**Check:** `grep -q -- '--no-deploy' scripts/merge-deploy.sh && echo adopted || echo not-adopted`
+
+**Adopt:** re-sync `scripts/merge-deploy.sh` from [`templates/scripts/merge-deploy.sh`](templates/scripts/merge-deploy.sh) (the flag is additive — your `full_suite()` edits are the only part to carry over), or hand-add the flag: parse an optional `--no-deploy` after the two required args into a `DEPLOY` toggle, and make the final `scripts/deploy.sh` call conditional on it. Then merge a docs change (or a deploy you want to defer) with `scripts/merge-deploy.sh <PR#> <reviewed-head-sha> --no-deploy` and run `scripts/deploy.sh` yourself when ready.
+
+**Skip if:** you never want to merge without deploying (every merge on your project should ship immediately) — then the flag is simply unused and adopting it changes nothing; it is purely additive, so there is no incoherence either way.
+
+---
+
 ## A-019 — executable merge→deploy node (replaces the A-018 merge queue)
 
 **Merged:** 2026-11-21 · **Kit version:** v1.63.0 · **Spec:** B-060, D-043 in [`docs/spec.md`](docs/spec.md)
